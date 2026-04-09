@@ -1,0 +1,89 @@
+# 🛡️ Budget Battle 核心防閹割檢查表 & 修改紀錄
+
+這份文件用於追蹤《Budget Battle 省錢大作戰》的核心模組狀態，確保在組件拆分與重構過程中，沒有任何「情緒價值」、「社交壓力」與「硬核數值博弈」被閹割。
+
+## 🟢 開發進度追蹤 (Current Status)
+
+### [1. 智能解析與交易確認 (AI Parsing & Pending Modal)]
+- [x] 自然語言/發票輸入後，呼叫 Gemini 解析 JSON 的邏輯。
+- [x] **PendingTxModal (情報解析完成)**：攔截扣血，允許手動修改分類/金額後發動攻擊。
+- [x] 大廳的「模擬發票 Sync」按鈕與其隨機生成的消費項目庫。
+
+### [2. 會員階級與權限鎖定 (Tier System & Monetization)]
+- [x] Free / Pro / Prime 狀態切換邏輯。
+- [x] Free 會員人格鎖定 (Lock 圖示與阻擋提示)。
+- [x] Prime 專屬特權：自定義靈魂 (Custom Persona) UI。
+- [x] Prime 專屬特權：記帳金幣獲得量提升 (+15~20)。
+
+### [3. 三層預算與血條系統 (Triple HP System)]
+- [x] Daily, Weekly, Monthly 三層獨立預算池與扣血 UI。
+- [x] 「戰略預算部署 (Budget Setup)」可手動修改金額並即時連動。
+- [x] **羅馬柱 UI (Roman Pillars)**：垂直大理石羅馬柱，具備低血量碎裂視覺。
+- [x] 自動重置邏輯：每日(Daily)、每週一(Weekly)、每月1號(Monthly) 自動清空花費。
+
+### [4. 完整人格與台詞庫 (Persona & Dialogue Library)]
+- [x] 5 大預設人格切換（含特殊 Persona：負債超人）。
+- [x] 完整針對性台詞庫與動態身分連動（願望清單、債務金額帶入 Prompt）。
+- [x] 週契約鎖定 (7-Day Cooldown) 與冷卻倒數 UI。
+
+### [5. 極限懲罰與重建儀式 (Punishment & Rituals)]
+- [x] **暴走模式 (Berserk)**：HP <= 0 時的專屬絕情台詞與全螢幕紅色警報。
+- [x] **冷戰永久分手**：冷戰期買「飲料/其他」，好感度歸零、冷戰時間延長。
+- [x] **情感清零機制**：進入斷絕狀態時，當前人格好感度 (Intimacy) **立即強制歸零**。
+- [x] **地獄記帳系統**：斷絕期絕對禁止封鎖記帳框，改為符合個性的冷血台詞（哼，誰管你有沒有錢），且記帳會火上澆油（延長冷戰）。
+- [x] **專屬重建儀式**：老媽 50 字反省文 (門檻提升)、同事扣 500 金幣（可負債重生）、另一半 72 小時冷戰。
+
+### [6. 意志力硬核博弈 (Willpower Stake & Anti-Cheat)]
+- [x] **意志力豪賭**：扣押 500 金幣啟動倒數，手動領獎/認輸機制。
+- [x] **AI 偵探 (Liar Detection)**：領押金後 24 小時內偷買該物品，重罰 500 金幣與倒扣好感度。
+- [x] **強制冷靜門檻 (Hard Cap)**：未報備大額消費 (> $2000)，加罰 200 金幣與額外 20% HP 傷害。
+- [x] **負債系統 (Debt Superman)**：罰金不足時轉為債務，強制稱號鎖定為『負債超人』，全域視覺變更（灰階/紅標）。
+
+### [7. 社交競技與戰鬥日誌 (Arena & Battle Log)]
+- [x] **模式選擇菜單**：隨機 1v1、團隊 5v5、好友雷達。
+- [x] **團隊 5v5 共享血池** 與 **隨機戰犯警報** (隊友小明買了 $15000 PS5...)。
+- [x] **好友 Spy 系統** (模擬資料展示)。
+- [x] **Battle Log (對戰日誌)**：標註來源是 [發票] 還是 [手動]。
+- [x] **戰損聯動報告**：歷史紀錄顯示 `DMG:` 暴擊傷害與罰金標籤。
+
+### [8. 養成與炫耀視覺 (Progression & Showcase)]
+- [x] **視覺錢包演化**：4 階段 (🛍️ -> 👛 -> 💼 -> 🏦) 動態變化圖示、名稱與顏色。
+- [x] **每週限定金卡 (Weekly Legend)**：英雄殿堂底部的漸層金屬卡片。
+- [x] **月度回顧戰報**：歷史頁面新增月份選單、月度總戰損、分類佔比長條圖。
+- [x] **本月願望清單**：手動編輯名稱，且 AI 台詞動態連動。
+
+---
+## 📝 修改紀錄 (Changelog)
+
+* **2026-04-09**: 建立核心防閹割檢查表，盤點 React 拆分後遺失的硬核機制。
+* **2026-04-09**: 完成全硬核模組植入：三層羅馬柱、5v5 共享血池、AI 偵探、視覺錢包演化。
+* **2026-04-09**: 升級硬核處罰機制：
+    - 亞洲家長反省文提升至 **50 字**。
+    - 抓謊罰金調整為 **500 金幣**。
+    - 新增 **負債系統**：稱號鎖定為 **『負債超人』**。
+* **2026-04-09**: 確立 **「地獄記帳」** 協議：斷絕期絕對禁止封鎖記帳框，改為情感清零與冷戰延長懲罰。
+
+* **2026-04-09**: *(Claude Code)* 分析頁 UX 改進：
+    - History 頁頂部新增**月份選單**，自動從紀錄提取出現過的月份（由新到舊），點選後長條圖與列表同步篩選。
+    - AI 評語卡移入 History 頁，位於長條圖與紀錄列表之間（永遠可見，不需進入對戰模式）。
+
+* **2026-04-09**: *(Claude Code)* 全面 Bug 修復：
+    - 修正 `processTransaction` 的 `isAiProcessing` 防重複鎖失效（參數未傳入 hook）。
+    - 補上 **localStorage 持久化**：所有狀態現在會寫回本地，重整頁面不再 reset。
+    - 修正 `onAuthStateChanged` unsubscribe 記憶體洩漏。
+    - `hpData` 改用實際 `weeklyPools` / `monthlyPools` 的 limit，不再硬編碼 3000 / 8000。
+    - `onKeyPress`（已棄用）改為 `onKeyDown`。
+    - 修正 `handleGiveUpChallenge` 的 closure 依賴問題，改為直接扣懲罰金。
+    - 修正 `simulateInvoice` 改用 `setPendingTx` 直接觸發，移除對 `processTransaction` 的不穩定依賴。
+    - 補上缺失的 state：`userFrame`、`currentTier`、`salaryInput`、`isStudent`、`currency`、`lastPersonaSwitch`、`showCustomModal`。
+    - `BudgetSetupModal` 薪資試算、身份、幣別、層級全部連上真實 state。
+    - `ShopModal` `setUserFrame` 接真實 setter，購買框架現在生效。
+    - `CustomPersonaModal` 修正 `show={false}` 硬編碼，`onSave` 連上 `handleSaveCustomPersona`。
+    - `HeroHallView` PRO 會員人格切換冷卻計時現在正常運作。
+
+* **2026-04-09**: **重大架構重構 (Modularization)**：
+    - 將所有戰鬥邏輯、5v5 模擬、重置、處罰、偵探機制抽離至 `useBattleCore.js`。
+    - 解決了 `App.jsx` 檔案過長導致系統截斷與瀏覽器空白的問題。
+* **2026-04-09**: **地獄重生機制修復**：
+    - 允許「負債重生」，解決沒錢賠償導致無法執行儀式的死循環。
+    - 修正了 50 字反省文的 UI 計數與邏輯判定。
