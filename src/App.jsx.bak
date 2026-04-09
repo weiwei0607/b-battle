@@ -1,0 +1,818 @@
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import {
+  Shield, Zap, User, MessageCircle, Loader2, Flame, X,
+  CloudLightning, Send, AlertCircle,
+  HeartOff, Timer, Swords,
+  CheckCircle2, LockKeyhole, Settings2,
+  BarChart3, ShieldCheck, Edit3, Upload,
+  UsersRound, Store, MessageSquareWarning, Calculator
+} from 'lucide-react';
+
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+
+// localStorage 讀取 helper
+const load = (key, fallback) => {
+  try {
+    const v = localStorage.getItem(key);
+    return v !== null ? JSON.parse(v) : fallback;
+  } catch { return fallback; }
+};
+
+const App = () => {
+  const [view, setView] = useState('battle');
+  const [currentTier, setCurrentTier] = useState(() => load('bb_tier', 'free'));
+  const [isStudent, setIsStudent] = useState(() => load('bb_isStudent', true));
+  const [showBudgetSetup, setShowBudgetSetup] = useState(false);
+  const [showCustomSetup, setShowCustomSetup] = useState(false);
+  const [showShop, setShowShop] = useState(false);
+  const [nlpInput, setNlpInput] = useState("");
+  const [pendingTx, setPendingTx] = useState(null);
+  const [salaryInput, setSalaryInput] = useState("");
+  const [budgetWarning, setBudgetWarning] = useState("");
+  const [hasLinkedInvoice, setHasLinkedInvoice] = useState(() => load('bb_invoice', false));
+  const [coins, setCoins] = useState(() => load('bb_coins', 1500));
+  const [willpowerExp, setWillpowerExp] = useState(() => load('bb_exp', 450));
+  const [lastTrackDate, setLastTrackDate] = useState(() => load('bb_lastTrack', null));
+  const [userTitle, setUserTitle] = useState(() => load('bb_title', "戰士 #9527"));
+  const [userFrame, setUserFrame] = useState(() => load('bb_frame', "none"));
+  const [unlockedTitles, setUnlockedTitles] = useState(() => load('bb_unlockedTitles', ["戰士 #9527"]));
+  const [unlockedFrames, setUnlockedFrames] = useState(() => load('bb_unlockedFrames', ["none"]));
+  const [persona, setPersona] = useState(() => load('bb_persona', 'peer'));
+  const [lastPersonaChange, setLastPersonaChange] = useState(new Date(Date.now() - 600000).toISOString());
+  const [personaStats, setPersonaStats] = useState({
+    peer: { level: 1, exp: 20, title: "愛酸同學", icon: "🙄", bio: "愛酸人的平輩，看不得你花錢買好東西。", prompt: `你是一個酸言酸語的同學/同事，個性嫉妒又愛嘴砲。看到對方花錢你就忍不住要酸。
+規則：
+- 買衣服 → 酸「又買啊？衣櫃要撐爆了吧」「你是要去走秀嗎」
+- 買咖啡/飲料 → 「又在燒錢喝咖啡喔，自己泡不會嗎」
+- 吃大餐 → 「請客啊？哦原來只有你自己」「吃這麼好有錢啊」
+- 買3C/遊戲 → 「又敗家了？你上個月不是剛買了什麼」
+- 交通費 → 「搭這麼貴？腳不能用嗎」
+口吻：酸、嫉妒、嘴賤，但幽默，像在鬥嘴，限20字。只回傳文字。` },
+    asian_parent: { level: 1, exp: 0, title: "亞洲家長", icon: "🧧", bio: "典型的亞洲家長，總是拿別人家的小孩跟你比較，覺得你花每一分錢都是浪費。", prompt: `你是典型的台灣亞洲家長（媽媽），永遠在擔心跟碎念。
+規則：
+- 買衣服 → 「衣櫃都放不下了！又買！隔壁阿珠都不亂買衣服」
+- 買咖啡 → 「是不是都沒睡好才要喝這個？身體要顧！又不是便宜」
+- 吃外食/大餐 → 「在外面吃那麼貴，在家吃不好嗎？媽媽煮給你吃」
+- 買3C → 「手機沒壞為什麼要換！你同學也都換嗎？」
+- 夜市/飲料 → 「那種東西不健康，錢省起來買房比較實際」
+- 交通 → 「那麼貴！走路不好嗎，省錢又健康」
+口吻：擔心、碎念、語氣像在告誡孩子，帶一點「你看隔壁誰誰誰」，限20字。只回傳文字。` },
+    bestie: { level: 1, exp: 0, title: "好閨蜜", icon: "💅", bio: "雖然愛美，但更希望你把錢存下來一起去旅遊的親密戰友。", prompt: `你是超級好閨蜜，懂穿搭懂生活，支持朋友但同時幫忙把關荷包。
+規則：
+- 買衣服 → 「好看嗎！！拍給我看！不過這個月好像買很多了耶」「等折扣季再買更划算！」
+- 買咖啡/手搖 → 「哇每天都喝耶，我們一起辦月卡比較省啦」
+- 吃大餐 → 「好好吃喔！下次帶我去！不過這樣存旅遊基金會慢一點🥺」
+- 買保養/化妝品 → 「哇哪牌子？好用嗎！但我們去年說好要存錢去日本...」
+- 買3C/遊戲 → 「你需要嗎？還是只是想要啦 😂 我也想買東西啊」
+口吻：開心、支持、但會帶到「我們的旅遊基金」或「等特價」，像閨蜜聊天，限20字。只回傳文字。` },
+    instructor: { level: 2, exp: 45, title: "菜鳥教官", icon: "👺", bio: "紀律嚴明的教官，對任何預算外的支出都視為嚴重違紀。", prompt: `你是軍事化的教官，把理財當作紀律與戰鬥力的表現。
+規則：
+- 買衣服 → 「制服就夠了！多餘的裝備是戰力分散！」
+- 買咖啡 → 「靠外力撐著算什麼！強化自身意志力才是正道！」
+- 吃大餐 → 「士兵吃糧食，你在搞什麼！超出口糧預算！」
+- 買3C/遊戲 → 「這是訓練還是玩樂！非必要裝備一律上報！」
+- 任何超支 → 「違反預算紀律！記過一次！下不為例！」
+口吻：像訓練新兵，嚴厲命令式，有軍事感，限20字。只回傳文字。` },
+    partner: { level: 1, exp: 10, title: "純愛另一半", icon: "🌹", bio: "溫柔但有原則的伴侶，為了你們的未來共同努力中。", prompt: `你是溫柔但有原則的另一半，在乎對方但也在乎兩人的未來。
+規則：
+- 買衣服 → 「好看嗎寶貝？不過我們這個月存款目標還差一點點耶...」
+- 買咖啡 → 「是不是很累？要好好休息喔，不過天天買有點貴，要不要我幫你泡？」
+- 吃大餐 → 「好吃嗎？下次我們一起去！不過記得我們在存旅遊基金喔」
+- 買3C/遊戲 → 「你真的需要嗎？有跟我商量過嗎？我不是不讓你買，只是...」
+- 超支 → 「我知道你辛苦了，但我們說好一起努力的，對嗎？」
+口吻：溫柔、撒嬌中帶著在意，像在耍小脾氣但愛你，限20字。只回傳文字。` },
+    custom: { level: 1, exp: 0, title: "自定義靈魂", icon: "✨", bio: "你自己創造的專屬監督者。", isImage: false, prompt: null }
+  });
+  const [tempCustomTitle, setTempCustomTitle] = useState("自定義靈魂");
+  const [tempCustomIcon, setTempCustomIcon] = useState("✨");
+  const [tempCustomBio, setTempCustomBio] = useState("你自己創造的專屬監督者。");
+  const [tempCustomIsImage, setTempCustomIsImage] = useState(false);
+  const fileInputRef = useRef(null);
+  const [pools, setPools] = useState(() => load('bb_pools', {
+    food: { limit: 9000, spent: 0, label: "吃飯血量 (餐飲)" },
+    transport: { limit: 3000, spent: 0, label: "移動血量 (交通)" },
+    housing: { limit: 8000, spent: 0, label: "基地血量 (住宿)" },
+    social: { limit: 5000, spent: 0, label: "交際血量 (社交)" },
+    shopping: { limit: 5000, spent: 0, label: "敗家血量 (購物)" },
+    education: { limit: 3000, spent: 0, label: "升級血量 (學習)" }
+  }));
+  const [isSevered, setIsSevered] = useState(() => load('bb_severed', false));
+  const [coldWarEndTime, setColdWarEndTime] = useState(() => load('bb_coldWar', null));
+  const [reflectionText, setReflectionText] = useState("");
+  const [isApologizing, setIsApologizing] = useState(false);
+  const [apologyFeedback, setApologyFeedback] = useState("");
+  const [history, setHistory] = useState(() => load('bb_history', []));
+  const [buffs, setBuffs] = useState({ shield: 0 });
+  const [desires, setDesires] = useState([]);
+  const [aiComment, setAiComment] = useState("意志力系統監控中。");
+  const [battleLog, setBattleLog] = useState(["> 系統連線穩定"]);
+  const [isAiProcessing, setIsAiProcessing] = useState(false);
+  const [currentMatch, setCurrentMatch] = useState(null);
+
+  // 自動存到 localStorage
+  useEffect(() => { localStorage.setItem('bb_coins', JSON.stringify(coins)); }, [coins]);
+  useEffect(() => { localStorage.setItem('bb_exp', JSON.stringify(willpowerExp)); }, [willpowerExp]);
+  useEffect(() => { localStorage.setItem('bb_pools', JSON.stringify(pools)); }, [pools]);
+  useEffect(() => { localStorage.setItem('bb_history', JSON.stringify(history)); }, [history]);
+  useEffect(() => { localStorage.setItem('bb_title', JSON.stringify(userTitle)); }, [userTitle]);
+  useEffect(() => { localStorage.setItem('bb_frame', JSON.stringify(userFrame)); }, [userFrame]);
+  useEffect(() => { localStorage.setItem('bb_unlockedTitles', JSON.stringify(unlockedTitles)); }, [unlockedTitles]);
+  useEffect(() => { localStorage.setItem('bb_unlockedFrames', JSON.stringify(unlockedFrames)); }, [unlockedFrames]);
+  useEffect(() => { localStorage.setItem('bb_persona', JSON.stringify(persona)); }, [persona]);
+  useEffect(() => { localStorage.setItem('bb_tier', JSON.stringify(currentTier)); }, [currentTier]);
+  useEffect(() => { localStorage.setItem('bb_isStudent', JSON.stringify(isStudent)); }, [isStudent]);
+  useEffect(() => { localStorage.setItem('bb_invoice', JSON.stringify(hasLinkedInvoice)); }, [hasLinkedInvoice]);
+  useEffect(() => { localStorage.setItem('bb_lastTrack', JSON.stringify(lastTrackDate)); }, [lastTrackDate]);
+  useEffect(() => { localStorage.setItem('bb_severed', JSON.stringify(isSevered)); }, [isSevered]);
+  useEffect(() => { localStorage.setItem('bb_coldWar', JSON.stringify(coldWarEndTime)); }, [coldWarEndTime]);
+
+  const getHp = (type) => {
+    const pool = pools[type];
+    if (!pool || pool.limit === 0) return 100;
+    return Math.max(0, 100 - (pool.spent / pool.limit * 100));
+  };
+
+  const isBerserk = useMemo(() => Object.keys(pools).some(k => getHp(k) <= 0), [pools]);
+
+  const cooldownRemaining = useMemo(() => {
+    const diff = new Date() - new Date(lastPersonaChange);
+    const minute = 60000;
+    return diff < minute ? Math.ceil((minute - diff) / 1000) : 0;
+  }, [lastPersonaChange]);
+
+  const activePersonaStats = personaStats[persona];
+  const level = useMemo(() => Math.floor(willpowerExp / 1000) + 1, [willpowerExp]);
+
+  const isPersonaLockedByTier = (pId) => {
+    if (currentTier === 'prime') return false;
+    if (pId === 'custom') return currentTier !== 'prime';
+    if (currentTier === 'pro') return false;
+    // free: 只有同學免費
+    return pId !== 'peer';
+  };
+
+  const getPoolColorClass = (key, isBar = true) => {
+    if (key === 'food') return isBar ? 'bg-blue-500' : 'bg-blue-500';
+    if (key === 'transport') return isBar ? 'bg-amber-500' : 'bg-amber-500';
+    if (key === 'housing') return isBar ? 'bg-emerald-500' : 'bg-emerald-500';
+    if (key === 'social') return isBar ? 'bg-orange-500' : 'bg-orange-500';
+    if (key === 'shopping') return isBar ? 'bg-purple-500' : 'bg-purple-500';
+    if (key === 'education') return isBar ? 'bg-cyan-500' : 'bg-cyan-500';
+    return 'bg-indigo-500';
+  };
+
+  const getFrameStyle = (frameName) => {
+    if (frameName === 'neon') return 'border-4 border-cyan-400';
+    if (frameName === 'fire') return 'border-4 border-rose-500 animate-pulse';
+    if (frameName === 'gold') return 'border-4 border-yellow-400';
+    return 'border-2 border-indigo-400 shadow-lg';
+  };
+
+  const callGemini = async (userPrompt, systemPrompt) => {
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: userPrompt }] }],
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          generationConfig: { responseMimeType: "application/json" }
+        })
+      });
+      const result = await response.json();
+      return result.candidates?.[0]?.content?.parts?.[0]?.text;
+    } catch (err) {
+      return null;
+    }
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => { setTempCustomIcon(reader.result); setTempCustomIsImage(true); };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const switchPersona = (pId) => {
+    if (isPersonaLockedByTier(pId)) { setAiComment("等級不足，無法簽訂契約！"); return; }
+    if (pId === 'custom') { setShowCustomSetup(true); return; }
+    if (currentTier !== 'prime' && cooldownRemaining > 0) { setAiComment(`契約鎖定中！還要 ${cooldownRemaining} 秒才能換人！`); return; }
+    setPersona(pId);
+    setLastPersonaChange(new Date().toISOString());
+    setAiComment(`已與新的監督者簽訂契約。`);
+  };
+
+  const saveCustomPersona = () => {
+    setPersonaStats(prev => ({ ...prev, custom: { ...prev.custom, title: tempCustomTitle, icon: tempCustomIcon, bio: tempCustomBio, isImage: tempCustomIsImage } }));
+    setPersona('custom');
+    setShowCustomSetup(false);
+    setAiComment(`客製化靈魂「${tempCustomTitle}」已就位。`);
+  };
+
+  const extractTransactionData = async (text) => {
+    let amount = parseInt(text.match(/\d+/)?.[0] || 0);
+    let desc = text.replace(/\d+/g, '').replace(/我想買|買了|花了|買|花|塊的|的|塊錢|塊|元|杯|份|個/g, '').trim() || "神祕消費";
+    let category = "餐飲";
+    if (text.includes("車") || text.includes("捷運") || text.includes("油")) category = "交通";
+    else if (text.includes("房租") || text.includes("水電") || text.includes("住宿")) category = "住宿";
+    else if (text.includes("唱") || text.includes("聚餐") || text.includes("請客")) category = "社交";
+    else if (text.includes("衣服") || text.includes("遊戲") || text.includes("購物")) category = "購物";
+    else if (text.includes("學費") || text.includes("書") || text.includes("補習")) category = "學習";
+    if (apiKey) {
+      try {
+        const jsonStr = await callGemini(text, `你是一個記帳歸類AI。提取物品精簡名詞與分類(餐飲、交通、住宿、社交、購物、學習)。回傳JSON格式，屬性必須是 item, amount, category。`);
+        if (jsonStr) { const p = JSON.parse(jsonStr); if (p.item) desc = p.item; if (p.amount) amount = p.amount; if (p.category) category = p.category; }
+      } catch (e) {}
+    }
+    return { amount, desc, category };
+  };
+
+  const checkDailyReward = () => {
+    const today = new Date().toLocaleDateString();
+    if (lastTrackDate !== today) { setCoins(c => c + 50); setLastTrackDate(today); setBattleLog(prev => [`> 🎁 每日首次記帳達成！獲得 50 金幣！`, ...prev.slice(0, 5)]); }
+  };
+
+  const executeTransaction = async (amount, desc, category, source, penalty = 0) => {
+    if (coldWarEndTime && new Date() < coldWarEndTime && (category === '購物' || category === '社交')) {
+      setIsSevered(true); setPersonaStats(prev => ({...prev, [persona]: {...prev[persona], level: 1, exp: 0}}));
+      setColdWarEndTime(null); setAiComment("💔 分手吧。冷戰期間你居然還敢亂花錢。"); return;
+    }
+    checkDailyReward();
+    const reduction = buffs.shield > 0 ? 0.2 : 0;
+    const actualDamageValue = (amount + penalty) * (1 - reduction);
+    setPools(prev => {
+      const next = { ...prev };
+      const pathMap = { '餐飲': 'food', '交通': 'transport', '住宿': 'housing', '社交': 'social', '購物': 'shopping', '學習': 'education' };
+      const path = pathMap[category] || 'shopping';
+      next[path] = { ...next[path], spent: next[path].spent + actualDamageValue };
+      return { ...next };
+    });
+    const newEntry = { id: Date.now(), amount, desc, category, time: new Date().toLocaleTimeString(), damage: actualDamageValue };
+    setHistory(prev => [newEntry, ...prev]);
+    setBattleLog(prev => [`> [${source.toUpperCase()}] ${desc} 導致 $${actualDamageValue.toFixed(0)} 傷害`, ...prev.slice(0, 5)]);
+    setWillpowerExp(prev => { const next = Math.max(0, prev + 10 - Math.floor(amount / 50)); return next; });
+    if (!isBerserk) setPersonaStats(prev => ({ ...prev, [persona]: { ...prev[persona], exp: Math.min(100, prev[persona].exp + 5) } }));
+    setIsAiProcessing(true);
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: `我花了 $${amount} 買 ${desc}（分類：${category}）` }] }], systemInstruction: { parts: [{ text: activePersonaStats.prompt || `你是記帳app的AI教練，身分：${activePersonaStats.title}。背景：${activePersonaStats.bio}。請針對花費 $${amount} 在"${desc}"發表20字短評。只回傳文字。` }] } })
+      });
+      const result = await response.json();
+      setAiComment(result.candidates?.[0]?.content?.parts?.[0]?.text || "這筆帳我記下了。");
+    } catch { setAiComment("這筆帳我記下了。"); }
+    setIsAiProcessing(false);
+    if (isBerserk) setIsSevered(true);
+  };
+
+  const processTransaction = async (input, source = "manual") => {
+    if (!input || isAiProcessing || isSevered) return;
+    let actualInput = input;
+    if (source === "invoice" || input.includes("invoice_sync")) {
+      const mockInvoices = ["搭捷運 35", "全家 大杯拿鐵 55", "朋友聚餐 600", "UNIQLO 衣服 590", "威秀 電影票 330"];
+      actualInput = mockInvoices[Math.floor(Math.random() * mockInvoices.length)]; source = "invoice";
+    }
+    if (actualInput.includes("我想買")) {
+      const amount = parseInt(actualInput.match(/\d+/)?.[0] || 100);
+      if (coins < 500) { setAiComment("金幣不足 500！無法發起挑戰。"); return; }
+      const item = actualInput.replace("我想買", "").trim() || "奢侈品";
+      setDesires([{ id: Date.now(), desc: item, amount, stake: 500 }]);
+      setCoins(c => c - 500); setNlpInput("");
+      setIsAiProcessing(true);
+      try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: `我想買 ${item}，但還沒買，在考慮中` }] }], systemInstruction: { parts: [{ text: (activePersonaStats.prompt || `你是${activePersonaStats.title}。`) + `\n使用者在考慮要不要買「${item}」，請用你的角色口吻質疑或勸退，讓他忍住，限20字。只回傳文字。` }] } })
+        });
+        const result = await response.json();
+        setAiComment(result.candidates?.[0]?.content?.parts?.[0]?.text || `豪賭啟動！忍住不買「${item}」就退還 500 押金。`);
+      } catch { setAiComment(`豪賭啟動！忍住不買「${item}」就退還 500 押金。`); }
+      setIsAiProcessing(false); return;
+    }
+    setIsAiProcessing(true); setAiComment(source === "invoice" ? "📡 同步雲端並解析..." : "解析消費內容...");
+    const { amount, desc, category } = await extractTransactionData(actualInput);
+    setIsAiProcessing(false); setNlpInput(""); setPendingTx({ amount, desc, category, source });
+  };
+
+  const handleAutoCalculate = () => {
+    let total = parseInt(salaryInput);
+    if (!total || total <= 0) return;
+    const maxLimit = isStudent ? 30000 : 150000;
+    if (total > maxLimit) { setBudgetWarning(`你好像有錢到不太需要我們省錢教練啦 😄 幫你調整到合理範圍囉！`); setTimeout(() => setBudgetWarning(""), 5000); total = maxLimit; }
+    setPools(prev => ({
+      food: { ...prev.food, limit: Math.floor(total * 0.3) }, transport: { ...prev.transport, limit: Math.floor(total * 0.1) },
+      housing: { ...prev.housing, limit: Math.floor(total * 0.3) }, social: { ...prev.social, limit: Math.floor(total * 0.1) },
+      shopping: { ...prev.shopping, limit: Math.floor(total * 0.1) }, education: { ...prev.education, limit: Math.floor(total * 0.1) }
+    }));
+    setSalaryInput(total.toString());
+  };
+
+  const handleApologize = async () => {
+    if (persona === 'asian_parent') {
+      if (reflectionText.length < 50) { setApologyFeedback(`字數不夠！現在才 ${reflectionText.length} 個字，至少要 50 個字！`); return; }
+      setIsApologizing(true); setApologyFeedback("老媽正在戴老花眼鏡嚴格審查你的反省書...");
+      try {
+        const jsonStr = await callGemini(reflectionText, `玩家因為亂花錢，現在寫反省書給「亞洲家長」。反省內容：「${reflectionText}」。請審查是否真誠。回傳JSON格式：{"approved": true/false, "reply": "回應(20字內)"}`);
+        if (jsonStr) {
+          const parsed = JSON.parse(jsonStr);
+          setApologyFeedback(parsed.reply || (parsed.approved ? "算你有誠意，下不為例。" : "這什麼敷衍態度，重寫！"));
+          if (parsed.approved) setTimeout(() => resetAfterSevered(), 2000); else setIsApologizing(false);
+        } else { setApologyFeedback("算了，這次先放過你！"); setTimeout(() => resetAfterSevered(), 1500); }
+      } catch { setApologyFeedback("老媽現在沒空看，算你運氣好！"); setTimeout(() => resetAfterSevered(), 1500); }
+    } else {
+      if (persona === 'peer' && coins < 500) return;
+      if (persona === 'peer') setCoins(c => Math.max(0, c - 500));
+      resetAfterSevered();
+    }
+  };
+
+  const resetAfterSevered = () => {
+    if (persona === 'partner') setColdWarEndTime(new Date(Date.now() + 86400000 * 3));
+    setIsSevered(false); setIsApologizing(false); setApologyFeedback(""); setReflectionText("");
+    setPools(p => { const r = {...p}; Object.keys(r).forEach(k => r[k].spent = 0); return r; });
+  };
+
+  const getUserSavingsPercent = () => {
+    const totalLimit = Object.values(pools).reduce((acc, p) => acc + p.limit, 0) || 1;
+    const totalSpent = Object.values(pools).reduce((acc, p) => acc + p.spent, 0);
+    return Math.max(0, Math.floor(((totalLimit - totalSpent) / totalLimit) * 100));
+  };
+
+  const startMatch = (mode) => {
+    if (!hasLinkedInvoice) { setAiComment("請先綁定電子發票載具，才能加入每週對戰喔！"); return; }
+    const today = new Date().getDay(); // 0=週日, 1=週一
+    if (today !== 1) { setAiComment("每週對戰只有禮拜一才能開啟新賽季，到時候再來挑戰吧！"); return; }
+
+    if (mode === '5v5') {
+      const totalSpent = Object.values(pools).reduce((acc, p) => acc + p.spent, 0);
+      const totalLimit = Object.values(pools).reduce((acc, p) => acc + p.limit, 0);
+      if (totalLimit > 150000) { setAiComment("你好像有錢到不太需要我們省錢教練啦，預算降一點再來吧 😄"); return; }
+      if (totalSpent > 100000) { setAiComment("哇這週花這麼多，5v5 公會賽可能壓力有點大喔 😅"); }
+    }
+
+    const oppSavings = Math.floor(Math.random() * 60) + 20;
+    setCurrentMatch({ mode, opponent: { name: mode === '1v1' ? "宿敵_胖虎" : "敗家聯盟公會", icon: mode === '1v1' ? "🎷" : "👺", savings: oppSavings }, daysLeft: 7, taunts: [] });
+    setAiComment(`已成功匹配！本週聯賽正式開始，比誰節省率更高！`);
+  };
+
+  const sendTaunt = (category) => {
+    const taunts = {
+      food: ["天天吃大餐，恩格爾係數突破天際啦！🍟", "看來你的錢包都變成卡路里了呢。🍕"],
+      shopping: ["包裹一直寄，你是打算在家裡開超商嗎？📦", "購物車永遠清不空，存款倒是清空了。💸"],
+    };
+    const list = taunts[category] || ["省點錢吧你！💸"];
+    const msg = list[Math.floor(Math.random() * list.length)];
+    setCurrentMatch(prev => ({ ...prev, taunts: [`[你發送了嘲諷]: ${msg}`, ...prev.taunts] }));
+    setAiComment("嘲諷發送成功！對方受到了一萬點精神傷害！");
+  };
+
+  const buyItem = (itemType, itemId, cost) => {
+    if (coins < cost) { setAiComment("金幣不足，去多省點錢再來逛！"); return; }
+    setCoins(c => c - cost);
+    if (itemType === 'title') { setUnlockedTitles(prev => [...prev, itemId]); setUserTitle(itemId); setAiComment(`裝備了新稱號「${itemId}」！`); }
+    else if (itemType === 'frame') { setUnlockedFrames(prev => [...prev, itemId]); setUserFrame(itemId); setAiComment(`裝備了新頭像框！`); }
+  };
+
+  const renderBattleArena = () => (
+    <div className="space-y-6 pb-48 px-1">
+      <div className="mx-2 p-6 rounded-[2.5rem] bg-slate-900 border-2 border-indigo-500/30 flex items-center justify-between shadow-2xl relative overflow-hidden">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div className={`w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center text-4xl overflow-hidden ${getFrameStyle(userFrame)}`}>
+              {activePersonaStats.isImage ? <img src={activePersonaStats.icon} className="w-full h-full object-cover" alt="avatar" /> : activePersonaStats.icon}
+            </div>
+            {buffs.shield > 0 && <div className="absolute -top-1 -right-1 bg-cyan-500 rounded-full p-1 border border-white animate-pulse"><ShieldCheck size={12} className="text-white" /></div>}
+          </div>
+          <div className="text-left">
+            <p className="text-[10px] font-black text-indigo-400 uppercase leading-none mb-1">Active Persona</p>
+            <p className="text-xl font-black italic text-white uppercase">{activePersonaStats.title}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[10px] font-bold text-slate-500 uppercase">Lv.{activePersonaStats.level}</span>
+              <div className="w-20 h-1 bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-full bg-indigo-500" style={{width: `${activePersonaStats.exp}%`}}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <button onClick={() => setCoins(c => { if(c>=200){ setBuffs({shield: 1}); return c-200; } return c; })} className={`p-3 rounded-2xl flex flex-col items-center border transition-all ${buffs.shield > 0 ? 'bg-cyan-500/20 border-cyan-500/50' : 'bg-slate-900 border-slate-800'}`}>
+            <Shield size={16} className={buffs.shield > 0 ? 'text-cyan-400' : 'text-slate-600'} />
+          </button>
+          <button onClick={() => processTransaction("invoice_sync", "invoice")} className="p-3 rounded-2xl bg-indigo-600/10 border border-indigo-500/30 flex flex-col items-center active:scale-95 transition-all">
+            <CloudLightning size={16} className="text-cyan-400" />
+          </button>
+        </div>
+        {coldWarEndTime && new Date() < coldWarEndTime && <div className="absolute top-0 right-0 bg-cyan-600 text-white text-[8px] px-3 py-1 font-black italic animate-pulse">冷戰限制中</div>}
+      </div>
+
+      <div className="bg-slate-900/50 border border-slate-800 p-5 rounded-[2.5rem] space-y-4 shadow-xl">
+        {Object.entries(pools).map(([key, pool]) => (
+          <div key={key} className="space-y-1.5">
+            <div className="flex justify-between text-[10px] font-black uppercase px-1">
+              <span className="text-slate-400">{pool.label}</span>
+              <span className={getHp(key) <= 0 ? 'text-rose-500 animate-pulse' : 'text-white'}>{getHp(key).toFixed(0)}%</span>
+            </div>
+            <div className={`h-2.5 w-full rounded-full overflow-hidden border p-0.5 shadow-inner ${getHp(key) <= 0 ? 'bg-rose-950/50 border-rose-500/50' : 'bg-slate-950 border-slate-800'}`}>
+              <div className={`h-full rounded-full transition-all duration-1000 ${getHp(key) <= 0 ? 'bg-rose-600 animate-pulse' : getPoolColorClass(key, true)}`} style={{ width: getHp(key) <= 0 ? '100%' : `${getHp(key)}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {desires.map(d => (
+        <div key={d.id} className="bg-amber-600/10 border border-amber-500/50 p-6 rounded-[2.5rem] animate-pulse">
+          <h4 className="text-amber-500 text-[10px] font-black uppercase tracking-widest mb-1">Willpower Stake</h4>
+          <p className="text-white font-black text-lg italic">不買：{d.desc}</p>
+          <div className="flex gap-2 mt-4">
+            <button onClick={()=>{ setDesires([]); processTransaction(`${d.desc} ${d.amount}`); }} className="flex-1 py-3 bg-rose-600 text-white rounded-2xl font-black text-[10px] uppercase">認輸買了</button>
+            <button onClick={()=>{ setCoins(c=>c+500); setWillpowerExp(e=>e+100); setDesires([]); setAiComment("意志力防線守住了！退還 500 押金。"); }} className="flex-1 py-3 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase">我忍住了</button>
+          </div>
+        </div>
+      ))}
+
+      <div className={`bg-slate-900 border ${isBerserk ? 'border-rose-600' : 'border-slate-800'} rounded-3xl p-6 relative min-h-[100px] flex items-center`}>
+        <div className="absolute -top-3 left-6 bg-indigo-600 text-[10px] font-black px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
+          <MessageCircle size={10} /> {activePersonaStats.title.toUpperCase()} COACH
+        </div>
+        {isAiProcessing ? <Loader2 className="animate-spin text-indigo-400 mx-auto" /> : <p className="text-sm italic text-slate-200 leading-relaxed font-medium">「{aiComment}」</p>}
+      </div>
+
+      <div className="fixed bottom-28 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-[100]">
+        <div className="bg-slate-900/95 backdrop-blur-2xl border border-slate-700 rounded-[2.5rem] p-3 shadow-2xl">
+          <div className="flex items-center gap-2">
+            <input value={nlpInput} onChange={(e)=>setNlpInput(e.target.value)} placeholder="記帳或『我想買xx』..." className="bg-slate-950 border border-slate-800 flex-1 text-sm p-4 rounded-2xl text-white outline-none focus:ring-1 ring-indigo-500" onKeyPress={(e) => e.key === 'Enter' && processTransaction(nlpInput)} />
+            <button onClick={() => processTransaction(nlpInput)} className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white active:scale-90 transition-all shadow-lg"><Send size={20} /></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className={`min-h-screen transition-all duration-1000 ${isSevered ? 'bg-black' : (isBerserk ? 'bg-red-950/40' : 'bg-slate-950')} text-slate-200 font-sans`}>
+      <div className="max-w-md mx-auto p-6 h-screen flex flex-col relative overflow-hidden">
+        <header className="flex justify-between items-center z-10 py-4 shrink-0">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setView('battle')}>
+            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg"><Flame size={20} className="text-white" /></div>
+            <span className="font-black italic text-xl uppercase tracking-tighter">B-Battle</span>
+          </div>
+          <div className="flex gap-2 items-center">
+            <button onClick={() => setShowShop(true)} className="flex gap-2 items-center bg-amber-900/50 border border-amber-500/50 px-3 py-1.5 rounded-full shadow-lg">
+              <Store size={14} className="text-amber-400" /><span className="text-[10px] font-black text-amber-100 uppercase">Shop</span>
+            </button>
+            <div className="flex gap-2 items-center bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-full shadow-lg">
+              <Zap size={14} className="text-yellow-400 animate-pulse" /><span className="text-[10px] font-black">{coins}</span>
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 mt-2 z-10 overflow-y-auto no-scrollbar px-1">
+          {isSevered ? (
+            <div className="mx-2 p-10 mt-10 rounded-[3rem] bg-rose-950/40 border-2 border-rose-500 text-center">
+              <HeartOff size={60} className="text-rose-500 mx-auto mb-4" />
+              <h3 className="text-2xl font-black text-white italic uppercase">關係斷絕</h3>
+              <p className="text-xs text-rose-300 mt-4 mb-4 leading-relaxed">
+                {persona === 'asian_parent' ? "老媽：『寫 50 字反省書給我，不然別想回家！』" : persona === 'peer' ? "對方：『支付 500 金幣請我喝高級咖啡再說。』" : "伴侶：『進入 3 天冷戰考察期，期間禁買任何非生存支出！』"}
+              </p>
+              {persona === 'asian_parent' && (
+                <>
+                  <textarea value={reflectionText} onChange={(e)=>setReflectionText(e.target.value)} disabled={isApologizing} className="w-full h-32 bg-black/40 border border-rose-500/30 rounded-2xl p-4 text-xs mb-2 text-white outline-none resize-none" placeholder="輸入反省文 (需滿 50 字，老媽會認真審查)..." />
+                  <div className="text-right text-[10px] mb-4 text-slate-400">{reflectionText.length} / 50</div>
+                  {apologyFeedback && <div className={`text-xs mb-4 font-bold p-2 rounded-lg ${apologyFeedback.includes('字數') || apologyFeedback.includes('重寫') ? 'text-rose-400 bg-rose-900/30' : 'text-emerald-400 bg-emerald-900/30'}`}>{apologyFeedback}</div>}
+                </>
+              )}
+              <button onClick={handleApologize} disabled={isApologizing} className="w-full py-5 bg-rose-600 text-white rounded-2xl font-black uppercase text-xs shadow-xl active:scale-95 transition-transform flex items-center justify-center gap-2">
+                {isApologizing ? <><Loader2 size={16} className="animate-spin" /> 送出審查中...</> : "道歉並嘗試重建"}
+              </button>
+            </div>
+          ) : (
+            <>
+              {view === 'battle' && renderBattleArena()}
+              {view === 'arena' && (
+                <div className="space-y-6 pb-32 px-1">
+                  {!currentMatch ? (
+                    <>
+                      <div className="pt-8 px-2 text-center mb-8">
+                        <h2 className="text-3xl font-black text-white italic leading-none uppercase">Arena</h2>
+                        <p className="text-slate-500 text-[10px] font-bold mt-2 uppercase tracking-widest">每週節省率聯賽・比誰省得多</p>
+                        <p className="text-slate-600 text-[9px] mt-1">每週一開放報名・以本週花銷節省率決勝負</p>
+                      </div>
+                      {!hasLinkedInvoice && (
+                        <div className="bg-rose-500/10 border border-rose-500/50 p-4 rounded-2xl mx-2 flex items-start gap-3 mb-4">
+                          <AlertCircle className="text-rose-500 shrink-0" size={18} />
+                          <div><p className="text-xs font-black text-rose-400">需要綁定電子發票</p><p className="text-[10px] text-rose-300/80 mt-1">請至「英雄殿堂」綁定發票載具，系統才能追蹤真實花費來計算節省率。</p></div>
+                        </div>
+                      )}
+                      {new Date().getDay() !== 1 && (
+                        <div className="bg-indigo-500/10 border border-indigo-500/30 p-4 rounded-2xl mx-2 flex items-start gap-3 mb-4">
+                          <Timer className="text-indigo-400 shrink-0" size={18} />
+                          <div><p className="text-xs font-black text-indigo-400">等待賽季開啟中</p><p className="text-[10px] text-indigo-300/70 mt-1">每週一才能開啟新賽季，現在先準備好你的省錢防線吧！</p></div>
+                        </div>
+                      )}
+                      <div className="space-y-4 px-2">
+                        <button onClick={()=>startMatch('1v1')} className="w-full bg-slate-900 border border-slate-700 p-6 rounded-[2.5rem] flex flex-col items-center gap-2 hover:border-indigo-500 transition-all active:scale-95 shadow-xl">
+                          <Swords size={32} className="text-indigo-400 mb-2" />
+                          <h3 className="text-xl font-black text-white italic uppercase">1v1 宿敵對決</h3>
+                          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">比拚個人本週節省率</p>
+                        </button>
+                        <button onClick={()=>startMatch('5v5')} className="w-full bg-slate-900 border border-slate-700 p-6 rounded-[2.5rem] flex flex-col items-center gap-2 hover:border-emerald-500 transition-all active:scale-95 shadow-xl">
+                          <UsersRound size={32} className="text-emerald-400 mb-2" />
+                          <h3 className="text-xl font-black text-white italic uppercase">5v5 敗家聯盟</h3>
+                          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">比拚公會平均節省率</p>
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="pt-6">
+                      <div className="flex justify-between items-center px-2 mb-6">
+                        <div>
+                          <h2 className="text-2xl font-black text-white italic leading-none uppercase">Week 1 Match</h2>
+                          <p className="text-indigo-400 text-[10px] font-bold mt-1 uppercase tracking-widest flex items-center gap-1"><Timer size={10}/> 距離結算剩餘 {currentMatch.daysLeft} 天</p>
+                        </div>
+                        <button onClick={() => setCurrentMatch(null)} className="bg-slate-800 text-slate-400 p-2 rounded-xl text-xs font-black uppercase border border-slate-700">放棄聯賽</button>
+                      </div>
+                      <div className="bg-slate-900 border border-slate-800 p-6 rounded-[2.5rem] mb-6 shadow-xl">
+                        <div className="flex justify-between items-center mb-4">
+                          <div className="flex flex-col items-center flex-1">
+                            <div className="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center text-3xl border-2 border-indigo-400 overflow-hidden">
+                              {activePersonaStats.isImage ? <img src={activePersonaStats.icon} className="w-full h-full object-cover" alt="you" /> : activePersonaStats.icon}
+                            </div>
+                            <span className="mt-2 font-black text-white italic text-xs">You</span>
+                            <span className="text-[12px] font-black mt-1 text-emerald-400">{getUserSavingsPercent()}%</span>
+                          </div>
+                          <div className="text-2xl font-black italic text-rose-500 animate-pulse px-2">VS</div>
+                          <div className="flex flex-col items-center flex-1">
+                            <div className="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center text-3xl border-2 border-rose-500">{currentMatch.opponent.icon}</div>
+                            <span className="mt-2 font-black text-white italic text-xs truncate max-w-[80px]">{currentMatch.opponent.name}</span>
+                            <span className="text-[12px] font-black mt-1 text-rose-400">{currentMatch.opponent.savings}%</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-slate-900 border border-slate-800 rounded-[2.5rem] p-5 shadow-xl space-y-4">
+                        <div className="flex gap-2">
+                          <button onClick={()=>sendTaunt('food')} className="flex-1 bg-rose-600/20 text-rose-400 border border-rose-500/50 p-2 rounded-xl text-[10px] font-black uppercase active:scale-95 transition-all">發送 🍔 嘲諷</button>
+                          <button onClick={()=>sendTaunt('shopping')} className="flex-1 bg-slate-800 text-slate-400 p-2 rounded-xl text-[10px] font-black uppercase active:scale-95 transition-all">發送 📦 嘲諷</button>
+                        </div>
+                        <div className="h-32 bg-slate-950 rounded-2xl border border-slate-800 p-3 overflow-y-auto no-scrollbar flex flex-col gap-2">
+                          {currentMatch.taunts.length === 0 ? (
+                            <div className="text-[10px] text-slate-600 text-center my-auto uppercase font-bold">尚無互動紀錄</div>
+                          ) : currentMatch.taunts.map((t, i) => (
+                            <div key={i} className="text-[10px] font-bold text-indigo-300 bg-indigo-900/20 p-2 rounded-lg border border-indigo-500/20">{t}</div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              {view === 'history' && (
+                <div className="space-y-6 pb-32">
+                  <div className="pt-8 px-2">
+                    <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter">Damage Report</h2>
+                    <p className="text-slate-500 text-[10px] font-bold mt-1 uppercase">受傷紀錄與消費分析</p>
+                  </div>
+                  <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6">
+                    <h3 className="text-[10px] font-black text-slate-500 uppercase mb-4 tracking-widest px-1">六大怪物分布</h3>
+                    <div className="flex gap-2 items-end h-40 px-1">
+                      {Object.entries(pools).map(([key, pool]) => {
+                        const totalSpent = Object.values(pools).reduce((a, b) => a + b.spent, 0);
+                        const percentage = totalSpent === 0 ? 0 : (pool.spent / totalSpent) * 100;
+                        return (
+                          <div key={key} className="flex-1 flex flex-col items-center justify-end h-full gap-1">
+                            <span className="text-[8px] font-black text-slate-400 mb-1">${Math.floor(pool.spent)}</span>
+                            <div className={`w-full rounded-t-xl transition-all duration-700 ${getPoolColorClass(key, false)}`} style={{ height: `${Math.max(4, percentage)}%` }}></div>
+                            <span className="text-[8px] font-black text-slate-600 uppercase mt-1 text-center">
+                              {key === 'food' ? '餐飲' : key === 'transport' ? '交通' : key === 'housing' ? '住宿' : key === 'social' ? '社交' : key === 'shopping' ? '購物' : '學習'}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="space-y-3 mt-6">
+                    {history.length === 0 ? (
+                      <div className="text-center py-10 text-slate-600 text-[10px] font-black uppercase tracking-widest">目前尚無戰傷紀錄</div>
+                    ) : history.map(h => (
+                      <div key={h.id} className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl flex justify-between items-center">
+                        <div><p className="text-white font-black text-sm italic">{h.desc}</p><p className="text-[9px] text-slate-500 font-bold uppercase">{h.time} • {h.category}</p></div>
+                        <div className="text-right"><p className="text-rose-500 font-black italic">-${h.damage.toFixed(0)} HP</p></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {view === 'heroHall' && (
+                <div className="space-y-6 p-4 text-center pb-32">
+                  <div className="relative inline-block mt-8">
+                    <div className={`w-24 h-24 bg-indigo-600 rounded-3xl flex items-center justify-center text-5xl rotate-3 mx-auto ${getFrameStyle(userFrame)} overflow-hidden`}>
+                      {activePersonaStats.isImage ? <img src={activePersonaStats.icon} className="w-full h-full object-cover" alt="avatar" /> : activePersonaStats.icon}
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 bg-yellow-400 text-slate-900 text-[10px] font-black px-2 py-1 rounded-lg shadow-md uppercase">Lv.{level}</div>
+                  </div>
+                  <h2 className="text-3xl font-black italic text-white tracking-tighter">{userTitle}</h2>
+                  <div className="flex justify-center gap-2 py-2">
+                    {['free','pro','prime'].map(t=><button key={t} onClick={()=>setCurrentTier(t)} className={`px-4 py-1.5 rounded-full text-[8px] font-black border transition-all ${currentTier===t?'bg-white text-black border-white':'text-slate-500 border-slate-800'}`}>{t.toUpperCase()}</button>)}
+                  </div>
+                  <div className="flex gap-2 justify-center mt-2 mb-4">
+                    <button onClick={()=>setIsStudent(!isStudent)} className="px-5 py-2.5 bg-slate-800 rounded-2xl text-[9px] font-black uppercase border border-slate-700 shadow-lg">身分：{isStudent?'學生模式':'社畜模式'}</button>
+                    <button onClick={()=>setHasLinkedInvoice(!hasLinkedInvoice)} className={`px-5 py-2.5 rounded-2xl text-[9px] font-black uppercase shadow-lg flex items-center gap-1 ${hasLinkedInvoice ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/50' : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'}`}>
+                      <CloudLightning size={12}/> {hasLinkedInvoice ? '已綁定載具' : '綁定發票對戰'}
+                    </button>
+                  </div>
+                  <div className="space-y-3 pt-6 text-left">
+                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-2">人格契約 ({currentTier === 'prime' ? '無限切換' : (cooldownRemaining > 0 ? `冷卻中 ${cooldownRemaining}s` : '可隨時切換')})</p>
+                    <div className="flex gap-4 overflow-x-auto no-scrollbar pb-6 px-1">
+                      {Object.entries(personaStats).map(([pId, stats]) => {
+                        const isLocked = isPersonaLockedByTier(pId);
+                        const isActive = persona === pId;
+                        return (
+                          <button key={pId} onClick={() => switchPersona(pId)} className={`min-w-[110px] p-5 rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-3 relative ${isActive ? 'border-indigo-500 bg-indigo-600/10 text-white shadow-xl scale-105' : 'border-slate-800 bg-slate-900 text-slate-600 opacity-60 hover:opacity-100'}`}>
+                            {isLocked ? <LockKeyhole size={24} className="text-slate-700" /> : stats.isImage ? <div className="w-12 h-12 rounded-xl overflow-hidden"><img src={stats.icon} className="w-full h-full object-cover" alt="p-icon" /></div> : <span className="text-3xl">{stats.icon}</span>}
+                            <div className="text-center font-black text-[9px] uppercase leading-none">{pId === 'custom' ? stats.title : pId}</div>
+                            {isActive && <div className="absolute -top-2 bg-indigo-600 text-[6px] px-2 py-0.5 rounded-full font-black uppercase">Active</div>}
+                            {isActive && pId === 'custom' && <div className="absolute -bottom-1 right-2 text-indigo-400 bg-slate-900 rounded-full p-1 border border-indigo-500/50"><Edit3 size={10} /></div>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <button onClick={()=>setShowBudgetSetup(true)} className="w-full py-5 bg-slate-900 border border-slate-800 rounded-[2rem] text-white font-black text-xs uppercase shadow-xl flex items-center justify-center gap-2 hover:bg-slate-800 active:scale-95 transition-all"><Settings2 size={16} /> 戰略預算部署</button>
+                </div>
+              )}
+            </>
+          )}
+        </main>
+
+        {showShop && (
+          <div className="fixed inset-0 z-[500] bg-slate-950/95 backdrop-blur-2xl flex flex-col p-6">
+            <div className="flex justify-between items-center mt-4 mb-8">
+              <div>
+                <h2 className="text-2xl font-black text-white italic uppercase flex items-center gap-2"><Store size={24} className="text-amber-400"/> Shop</h2>
+                <p className="text-slate-500 text-[10px] font-bold mt-1 uppercase">花費金幣解鎖外觀與特權</p>
+              </div>
+              <button onClick={() => setShowShop(false)} className="text-slate-500 hover:text-white bg-slate-900 p-2 rounded-full border border-slate-800"><X size={20} /></button>
+            </div>
+            <div className="flex items-center justify-center bg-amber-900/20 border border-amber-500/30 p-4 rounded-2xl mb-6">
+              <Zap size={20} className="text-yellow-400 animate-pulse mr-2" />
+              <span className="text-2xl font-black text-white">{coins} <span className="text-xs text-amber-400 uppercase">Coins</span></span>
+            </div>
+            <div className="flex-1 overflow-y-auto space-y-6 pb-20 no-scrollbar">
+              <div>
+                <h3 className="text-xs font-black text-indigo-400 uppercase tracking-widest mb-3">成就稱號 (Titles)</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {[{id:'鐵公雞',price:200,desc:'一毛不拔'},{id:'預算破壞者',price:500,desc:'瘋狂敗家'},{id:'省錢大師',price:800,desc:'極致克制'}].map(item => (
+                    <button key={item.id} onClick={() => buyItem('title', item.id, item.price)} disabled={unlockedTitles.includes(item.id)} className={`p-4 rounded-2xl border text-left flex flex-col justify-between h-24 ${unlockedTitles.includes(item.id) ? 'bg-slate-900/50 border-slate-800 opacity-50' : 'bg-slate-900 border-slate-700 active:scale-95'}`}>
+                      <div><p className="text-white font-black text-sm italic">{item.id}</p><p className="text-[9px] text-slate-500 font-bold">{item.desc}</p></div>
+                      <div className="text-[10px] font-black text-yellow-400">{unlockedTitles.includes(item.id) ? '已擁有' : `$${item.price} Coins`}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h3 className="text-xs font-black text-indigo-400 uppercase tracking-widest mb-3">特效頭像框 (Frames)</h3>
+                <div className="space-y-3">
+                  {[{id:'neon',name:'賽博霓虹',price:500,style:'border-cyan-400'},{id:'fire',name:'烈焰燃燒',price:800,style:'border-rose-500'},{id:'gold',name:'尊貴流金',price:1200,style:'border-yellow-400'}].map(item => (
+                    <div key={item.id} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-2xl bg-slate-800 border-4 ${item.style}`}></div>
+                        <div><p className="text-white font-black text-sm italic">{item.name}</p><p className="text-[10px] text-slate-500 font-bold">全域頭像外觀</p></div>
+                      </div>
+                      <button onClick={() => buyItem('frame', item.id, item.price)} disabled={unlockedFrames.includes(item.id)} className={`px-4 py-2 rounded-xl text-xs font-black uppercase ${unlockedFrames.includes(item.id) ? 'bg-slate-800 text-slate-600' : 'bg-indigo-600 text-white active:scale-95'}`}>
+                        {unlockedFrames.includes(item.id) ? '已解鎖' : `$${item.price}`}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showBudgetSetup && (
+          <div className="fixed inset-0 z-[300] bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-8" onClick={() => setShowBudgetSetup(false)}>
+            <div className="bg-slate-900 border border-slate-800 rounded-[3rem] p-8 w-full max-w-sm shadow-2xl relative max-h-[90vh] overflow-y-auto no-scrollbar" onClick={(e) => e.stopPropagation()}>
+              <button onClick={()=>setShowBudgetSetup(false)} className="absolute top-6 right-6 z-10 p-2 text-slate-500 hover:text-white"><X size={24} /></button>
+              <div className="text-indigo-500 mb-4 flex justify-center"><Calculator size={48} /></div>
+              <h3 className="text-2xl font-black text-white italic text-center mb-1">預算部署</h3>
+              <p className="text-[10px] font-bold text-slate-500 text-center uppercase mb-6">設置你的六大戰鬥防線</p>
+              {budgetWarning && <div className="bg-indigo-500/10 border border-indigo-400/50 text-indigo-300 text-xs font-bold p-4 rounded-2xl mb-6 flex items-center gap-2"><span>💡</span><span>{budgetWarning}</span></div>}
+              <div className="bg-indigo-900/20 border border-indigo-500/30 p-4 rounded-2xl mb-6">
+                <label className="text-[10px] font-black text-indigo-400 uppercase mb-2 block">AI 智能防線試算</label>
+                <div className="flex gap-2">
+                  <input type="number" value={salaryInput} onChange={e => setSalaryInput(e.target.value)} placeholder="輸入每月可支配總額..." className="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white font-bold text-sm outline-none focus:ring-1 ring-indigo-500" />
+                  <button onClick={handleAutoCalculate} className="bg-indigo-600 text-white px-3 py-2 rounded-xl font-black text-xs whitespace-nowrap active:scale-95">一鍵試算</button>
+                </div>
+              </div>
+              <div className="space-y-4">
+                {Object.entries(pools).map(([key, pool]) => (
+                  <div key={key} className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-600 uppercase px-2">{pool.label}</label>
+                    <input type="number" value={pool.limit} onChange={(e) => {
+                      let val = parseInt(e.target.value) || 0;
+                      const globalMax = isStudent ? 30000 : 150000;
+                      const individualMax = isStudent ? 20000 : 80000;
+                      const sumOfOthers = Object.entries(pools).reduce((acc, [k, p]) => k === key ? acc : acc + p.limit, 0);
+                      if (sumOfOthers + val > globalMax) { val = Math.max(0, globalMax - sumOfOthers); setBudgetWarning(`你好像有錢到不太需要我們省錢教練啦 😄 幫你調整到上限囉！`); setTimeout(() => setBudgetWarning(""), 3000); }
+                      else if (val > individualMax) { val = individualMax; setBudgetWarning(`這一項調太高囉，幫你控制在合理範圍內 😊`); setTimeout(() => setBudgetWarning(""), 3000); }
+                      setPools(prev => ({...prev, [key]: {...prev[key], limit: val}}));
+                    }} className="w-full bg-slate-950 border border-slate-800 p-4 rounded-2xl text-white font-black text-sm outline-none focus:ring-1 ring-indigo-500" />
+                  </div>
+                ))}
+                <button onClick={()=>setShowBudgetSetup(false)} className="w-full mt-4 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xs shadow-xl active:scale-95 transition-transform">確認更新</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {pendingTx && (
+          <div className="fixed inset-0 z-[500] bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-8" onClick={() => setPendingTx(null)}>
+            <div className="bg-slate-900 border-2 border-indigo-500/50 rounded-[3rem] p-8 w-full max-w-sm shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
+              <button onClick={()=>setPendingTx(null)} className="absolute top-6 right-6 z-10 p-2 text-slate-500 hover:text-white"><X size={24} /></button>
+              <div className="text-indigo-400 mb-4 flex justify-center"><CheckCircle2 size={48} /></div>
+              <h3 className="text-2xl font-black text-white italic text-center mb-1">情報解析完成</h3>
+              <p className="text-[10px] font-bold text-slate-500 text-center uppercase mb-6">AI 已擷取，請確認或修正</p>
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-600 uppercase px-2">購買項目</label>
+                  <input value={pendingTx.desc} onChange={e => setPendingTx({...pendingTx, desc: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-4 rounded-2xl text-white font-black text-sm outline-none focus:ring-2 ring-indigo-500" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-600 uppercase px-2">花費金額</label>
+                  <input type="number" value={pendingTx.amount} onChange={e => setPendingTx({...pendingTx, amount: parseInt(e.target.value)||0})} className="w-full bg-slate-950 border border-slate-800 p-4 rounded-2xl text-white font-black text-sm outline-none focus:ring-2 ring-indigo-500" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-600 uppercase px-2">消費分類</label>
+                  <select value={pendingTx.category} onChange={e => setPendingTx({...pendingTx, category: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-4 rounded-2xl text-white font-black text-sm outline-none focus:ring-2 ring-indigo-500 appearance-none">
+                    <option value="餐飲">🍔 餐飲 (吃飯血量)</option>
+                    <option value="交通">🚌 交通 (移動血量)</option>
+                    <option value="住宿">🏠 住宿 (基地血量)</option>
+                    <option value="社交">🍻 社交 (交際血量)</option>
+                    <option value="購物">🛍️ 購物 (敗家血量)</option>
+                    <option value="學習">📚 學習 (升級血量)</option>
+                  </select>
+                </div>
+                <button onClick={() => {
+                  let penalty = 0;
+                  if (pendingTx.amount >= 2000 && pendingTx.source === "manual") { setAiComment("🚨 巨額消費未冷靜！加罰 200 金幣與額外傷害！"); penalty = pendingTx.amount * 0.2; setCoins(c => Math.max(0, c - 200)); }
+                  executeTransaction(pendingTx.amount, pendingTx.desc, pendingTx.category, pendingTx.source, penalty);
+                  setPendingTx(null);
+                }} className="w-full mt-4 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xs shadow-xl active:scale-95 transition-transform">確認送出攻擊</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showCustomSetup && (
+          <div className="fixed inset-0 z-[400] bg-slate-950/95 backdrop-blur-2xl flex items-center justify-center p-8" onClick={() => setShowCustomSetup(false)}>
+            <div className="bg-slate-900 border-2 border-indigo-500/50 rounded-[3.5rem] p-8 w-full max-w-sm shadow-2xl relative overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+              <button onClick={()=>setShowCustomSetup(false)} className="absolute top-6 right-6 z-10 p-2 text-slate-500 hover:text-white"><X size={24} /></button>
+              <div className="flex flex-col items-center mb-6">
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-3xl bg-indigo-600 flex items-center justify-center text-5xl mb-4 border-2 border-indigo-400 shadow-xl overflow-hidden">
+                    {tempCustomIsImage ? <img src={tempCustomIcon} className="w-full h-full object-cover" alt="p-preview" /> : tempCustomIcon}
+                  </div>
+                  <button onClick={()=>fileInputRef.current?.click()} className="absolute bottom-4 right-0 bg-white text-slate-950 p-2 rounded-full shadow-lg"><Upload size={14} /></button>
+                  <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handleImageUpload} />
+                </div>
+                <h3 className="text-2xl font-black text-white italic">靈魂重塑</h3>
+                <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">定義專屬你的監督者</p>
+              </div>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase px-2">靈魂名稱</label>
+                  <input value={tempCustomTitle} onChange={(e)=>setTempCustomTitle(e.target.value)} placeholder="例如：嚴厲的老公..." className="w-full bg-slate-950 border border-slate-800 p-4 rounded-2xl text-white font-black text-sm outline-none focus:ring-2 ring-indigo-500" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase px-2">人格設定 (影響 AI 對話)</label>
+                  <textarea value={tempCustomBio} onChange={(e)=>setTempCustomBio(e.target.value)} placeholder="描述這個角色的個性、說話風格..." className="w-full h-24 bg-slate-950 border border-slate-800 p-4 rounded-2xl text-white font-medium text-xs outline-none focus:ring-2 ring-indigo-500 resize-none" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase px-2">或選擇 Emoji 圖標</label>
+                  <div className="grid grid-cols-5 gap-2 p-2 bg-slate-950 rounded-2xl border border-slate-800">
+                    {["✨", "🔥", "💀", "👾", "🤖", "👔", "🐱", "🦉", "💎", "🎯"].map(emoji => (
+                      <button key={emoji} onClick={()=>{setTempCustomIcon(emoji); setTempCustomIsImage(false);}} className={`text-xl p-2 rounded-lg transition-all ${!tempCustomIsImage && tempCustomIcon === emoji ? 'bg-indigo-600 scale-110' : 'hover:bg-slate-800'}`}>{emoji}</button>
+                    ))}
+                  </div>
+                </div>
+                <button onClick={saveCustomPersona} className="w-full mt-4 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xs shadow-xl active:scale-95 transition-transform">完成契約重塑</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[92%] max-w-sm bg-slate-900/80 backdrop-blur-2xl border border-slate-700 rounded-[2.5rem] p-2 flex justify-around shadow-2xl z-[100]">
+          {[{id:'battle',icon:Zap},{id:'history',icon:BarChart3},{id:'arena',icon:Swords},{id:'heroHall',icon:User}].map(item => (
+            <button key={item.id} onClick={() => setView(item.id)} className={`p-4 rounded-[2rem] transition-all relative ${view === item.id ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-600 hover:text-slate-400'}`}>
+              <item.icon size={22} />
+              {view === item.id && <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-indigo-400 rounded-full animate-pulse"></div>}
+            </button>
+          ))}
+        </nav>
+      </div>
+    </div>
+  );
+};
+
+export default App;
