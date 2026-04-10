@@ -1,20 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { db, auth, signInAnonymously } from './firebase';
 import { onAuthStateChanged } from "firebase/auth";
 import { getDoc, doc } from "firebase/firestore";
-import { Receipt, Send } from 'lucide-react';
-import { CURRENCIES, getBondLevel, getFrameStyle, CATEGORY_MAP, getHomeStatus } from './utils/constants';
+import { CATEGORY_MAP } from './utils/constants';
 import { useBattleCore } from './hooks/useBattleCore';
-
-import BudgetSetupModal from './modals/BudgetSetupModal';
-import ShopModal from './modals/ShopModal';
-import PendingTxModal from './modals/PendingTxModal';
-import CustomPersonaModal from './modals/CustomPersonaModal';
-import Header from './components/Layout/Header';
-import BottomNav from './components/Layout/BottomNav';
-import BattleArenaView from './components/BattleArena/BattleArenaView';
-import HistoryView from './components/History/HistoryView';
-import HeroHallView from './components/HeroHall/HeroHallView';
+import AppContent from './components/Layout/AppContent';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
 const load = (k, f) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : f; } catch { return f; } };
@@ -30,6 +20,9 @@ const App = () => {
   const [teamSpentDaily, setTeamSpentDaily] = useState(() => load('bb_t_daily', 0));
   const [teamSpentWeekly, setTeamSpentWeekly] = useState(() => load('bb_t_weekly', 0));
   const [teamSpentMonthly, setTeamSpentMonthly] = useState(() => load('bb_t_monthly', 0));
+  const [enemySpentDaily, setEnemySpentDaily] = useState(0);
+  const [enemySpentWeekly, setEnemySpentWeekly] = useState(0);
+  const [enemySpentMonthly, setEnemySpentMonthly] = useState(0);
   const [activeChallenges, setActiveChallenges] = useState(() => load('bb_challenges', []));
   const [claimedAvoidedItems, setClaimedAvoidedItems] = useState(() => load('bb_claimed', []));
   const [isSevered, setIsSevered] = useState(() => load('bb_severed', false));
@@ -45,17 +38,15 @@ const App = () => {
   const [coldWarEndTime, setColdWarEndTime] = useState(() => load('bb_coldwar', null));
   const [showBudgetSetup, setShowBudgetSetup] = useState(false);
   const [showShop, setShowShop] = useState(false);
+  const [showCustomModal, setShowCustomModal] = useState(false);
   const [nlpInput, setNlpInput] = useState("");
   const [now, setNow] = useState(new Date().getTime());
-  
-  // States previously missing or emptied
   const [currentTier, setCurrentTier] = useState(() => load('bb_tier', 'free'));
   const [isStudent, setIsStudent] = useState(() => load('bb_isStudent', true));
   const [salaryInput, setSalaryInput] = useState("");
   const [currency, setCurrency] = useState(() => load('bb_currency', 'TWD'));
   const [userFrame, setUserFrame] = useState(() => load('bb_frame', "none"));
   const [lastPersonaSwitch, setLastPersonaSwitch] = useState(() => load('bb_last_switch', null));
-  const [showCustomModal, setShowCustomModal] = useState(false);
   const [homeMaterials, setHomeMaterials] = useState(() => load('bb_materials', 0));
 
   const [weeklyPools, setWeeklyPools] = useState(() => load('bb_weekly_pools', { food: { limit: 3000, label: "餐飲" }, transport: { limit: 1000, label: "交通" }, social: { limit: 1500, label: "社交" }, shopping: { limit: 1500, label: "購物" } }));
@@ -73,27 +64,68 @@ const App = () => {
   const { executeTransaction, processTransaction, spendCoins, executeRitual, handleClaimChallenge, handleGiveUpChallenge, simulateInvoice } = useBattleCore(
     user, isCloudLoading, coins, setCoins, debt, setDebt, history, setHistory, 
     persona, personaStats, setPersonaStats, willpowerExp, setWillpowerExp,
-    activeMode, { setTeamSpentDaily, setTeamSpentWeekly, setTeamSpentMonthly }, 
-    { teamSpentDaily, teamSpentWeekly, teamSpentMonthly },
+    activeMode, { setTeamSpentDaily, setTeamSpentWeekly, setTeamSpentMonthly, setEnemySpentDaily, setEnemySpentWeekly, setEnemySpentMonthly }, 
+    { teamSpentDaily, teamSpentWeekly, teamSpentMonthly, enemySpentDaily, enemySpentWeekly, enemySpentMonthly },
     activeChallenges, setActiveChallenges, claimedAvoidedItems, setClaimedAvoidedItems,
     addLog, setAiComment, wishlist, apiKey, setIsSevered, isSevered,
-    setColdWarEndTime, coldWarEndTime, lastTrackDate, setLastTrackDate, setPendingTx, setIsAiProcessing,
-    setNlpInput, now, homeMaterials, setHomeMaterials
+    setColdWarEndTime, coldWarEndTime, lastTrackDate, setLastTrackDate, setPendingTx, setIsAiProcessing, isAiProcessing,
+    setNlpInput, now, homeMaterials, setHomeMaterials, weeklyPools, monthlyPools, currentTier
   );
 
   useEffect(() => {
     signInAnonymously(auth);
-    onAuthStateChanged(auth, async (u) => { if (u) { setUser(u); const s = await getDoc(doc(db, "users", u.uid)); if (s.exists()) { const d = s.data(); if(d.coins!==undefined)setCoins(d.coins); if(d.debt!==undefined)setDebt(d.debt); if(d.homeMaterials!==undefined)setHomeMaterials(d.homeMaterials); if(d.currentTier!==undefined)setCurrentTier(d.currentTier); } setIsCloudLoading(false); } });
+    onAuthStateChanged(auth, async (u) => {
+      if (u) {
+        setUser(u);
+        const s = await getDoc(doc(db, "users", u.uid));
+        if (s.exists()) {
+          const d = s.data();
+          if (d.coins !== undefined) setCoins(d.coins);
+          if (d.debt !== undefined) setDebt(d.debt);
+          if (d.history !== undefined) setHistory(d.history);
+          if (d.exp !== undefined) setWillpowerExp(d.exp);
+          if (d.homeMaterials !== undefined) setHomeMaterials(d.homeMaterials);
+          if (d.currentTier !== undefined) setCurrentTier(d.currentTier);
+          if (d.isStudent !== undefined) setIsStudent(d.isStudent);
+          if (d.userFrame !== undefined) setUserFrame(d.userFrame);
+          if (d.persona !== undefined) setPersona(d.persona);
+          if (d.personaStats !== undefined) setPersonaStats(prev => ({...prev, ...d.personaStats}));
+          if (d.wishlist !== undefined) setWishlist(d.wishlist);
+          if (d.lastPersonaSwitch !== undefined) setLastPersonaSwitch(d.lastPersonaSwitch);
+          if (d.lastTrackDate !== undefined) setLastTrackDate(d.lastTrackDate);
+          if (d.weeklyPools !== undefined) setWeeklyPools(d.weeklyPools);
+          if (d.monthlyPools !== undefined) setMonthlyPools(d.monthlyPools);
+        }
+        setIsCloudLoading(false);
+      }
+    });
   }, []);
 
   useEffect(() => { const t = setInterval(() => setNow(new Date().getTime()), 1000); return () => clearInterval(t); }, []);
 
-  const hpData = {
-    survival: Math.max(0, 100 - (history.filter(h=>CATEGORY_MAP[h.category]==='survival').reduce((s,h)=>s+h.damage,0) / 10000 * 100)),
-    progress: Math.max(0, 100 - (history.filter(h=>CATEGORY_MAP[h.category]==='progress').reduce((s,h)=>s+h.damage,0) / 5000 * 100)),
-    desire: Math.max(0, 100 - (history.filter(h=>CATEGORY_MAP[h.category]==='desire').reduce((s,h)=>s+h.damage,0) / 3000 * 100)),
-    expedition: Math.max(0, 100 - (history.filter(h=>CATEGORY_MAP[h.category]==='expedition').reduce((s,h)=>s+h.damage,0) / 15000 * 100))
-  };
+  const limits = useMemo(() => ({
+    survival: (weeklyPools.food?.limit || 1000) + (weeklyPools.transport?.limit || 0) + (monthlyPools.housing?.limit || 0),
+    progress: (monthlyPools.education?.limit || 0),
+    desire: (weeklyPools.social?.limit || 0),
+    expedition: (weeklyPools.shopping?.limit || 0)
+  }), [weeklyPools, monthlyPools]);
+
+  const hpData = useMemo(() => {
+    const getHp = (p, l) => {
+      const isTeam = activeMode === 'team5v5';
+      const spent = history.filter(h => CATEGORY_MAP[h.category] === p && (new Date(h.date).toLocaleDateString() === new Date().toLocaleDateString() || p !== 'survival')).reduce((s, h) => s + h.damage, 0);
+      const teamSpent = p === 'survival' ? teamSpentDaily : (p === 'progress' ? teamSpentWeekly : teamSpentMonthly);
+      return Math.max(0, 100 - ((isTeam ? teamSpent : spent) / (isTeam ? l * 5 : l || 1) * 100));
+    };
+    return { survival: getHp('survival', limits.survival), progress: getHp('progress', limits.progress), desire: getHp('desire', limits.desire), expedition: getHp('expedition', limits.expedition) };
+  }, [history, activeMode, teamSpentDaily, teamSpentWeekly, teamSpentMonthly, limits]);
+
+  const enemyHpData = useMemo(() => ({
+    survival: Math.max(0, 100 - (enemySpentDaily / (limits.survival * 5 || 1) * 100)),
+    progress: Math.max(0, 100 - (enemySpentWeekly / (limits.progress * 5 || 1) * 100)),
+    desire: Math.max(0, 100 - (enemySpentMonthly / (limits.desire * 5 || 1) * 100)),
+    expedition: Math.max(0, 100 - (enemySpentMonthly / (limits.expedition * 5 || 1) * 100))
+  }), [enemySpentDaily, enemySpentWeekly, enemySpentMonthly, limits]);
 
   const handleAutoCalculate = () => {
     const total = parseInt(salaryInput) || 0;
@@ -113,60 +145,30 @@ const App = () => {
         const rem = coldWarEndTime - now;
         return `另一半：『進入冷戰期。還有 ${Math.floor(rem/3600000)} 小時 ${Math.floor((rem%3600000)/60000)} 分鐘。』`;
       }
-      return "冷戰結束，執行儀式來求我原諒吧。";
+      return "冷戰結束，執行重生儀式。";
     }
     return "預算防線崩潰！";
   };
 
   const getHellPlaceholder = () => {
-    if (!isSevered) return "記帳或『我想買...』發起豪賭";
-    const map = { asian_parent: "又是買這些垃圾？", partner: "哼，誰管你有沒有錢...", bestie: "反正我們已經完了...", instructor: "報上你的遺言，戰犯。", peer: "破產了還買？笑死。" };
-    return map[persona] || "在恥辱中記錄你的罪行...";
+    if (isSevered) {
+      const map = { asian_parent: "又是買這些垃圾？", partner: "哼，誰管你有沒有錢...", bestie: "反正我們已經完了...", instructor: "報上你的遺言，戰犯。", peer: "破產了還買？笑死。" };
+      return map[persona] || "在恥辱中記錄你的罪行...";
+    }
+    return "記帳或『我想買...』發起豪賭";
   };
 
   return (
-    <div className={`min-h-screen transition-all duration-1000 ${isSevered ? 'bg-[#450a0a]' : 'bg-[#F7F4EF]'} text-stone-800 font-sans text-left`}>
-      <div className="max-w-md mx-auto p-6 h-screen flex flex-col relative overflow-hidden">
-        {!isSevered && <Header currentTier={currentTier} coins={coins} debt={debt} willpowerExp={willpowerExp} setView={setView} onShopClick={() => setShowShop(true)} />}
-        <main className="flex-1 mt-2 z-10 overflow-y-auto no-scrollbar px-1">
-          {isSevered ? (
-            <div className="flex flex-col h-full justify-center text-center text-white animate-in zoom-in-95">
-              <h2 className="text-4xl font-black text-red-500 mb-4 uppercase italic">關係斷絕中</h2>
-              <p className="text-sm text-red-200 mb-8 px-8 opacity-80 leading-relaxed text-center font-medium">{getSeveredReason()}</p>
-              {persona === 'asian_parent' && (
-                <div className="relative w-full max-w-[280px] mx-auto mb-6 text-left">
-                  <textarea value={reflectionText} onChange={e=>setReflectionText(e.target.value)} placeholder="輸入 50 字反省..." className="bg-white/10 border border-white/20 p-4 rounded-xl text-white w-full h-32 outline-none focus:border-red-500 text-sm" />
-                  <span className={`absolute bottom-2 right-2 text-[10px] ${reflectionText.length >= 50 ? 'text-green-400' : 'text-white/40'}`}>{reflectionText.length}/50</span>
-                </div>
-              )}
-              <button onClick={() => executeRitual(reflectionText)} disabled={(persona === 'asian_parent' && reflectionText.length < 50) || ((persona === 'partner' || persona === 'bestie') && coldWarEndTime && now < coldWarEndTime)} className="w-full max-w-[280px] mx-auto py-5 bg-red-600 text-white rounded-[2rem] font-black tracking-widest active:scale-95 disabled:opacity-30 transition-all shadow-2xl">執行重建儀式</button>
-            </div>
-          ) : (
-            <>
-              {view === 'battle' && <BattleArenaView stats={personaStats[persona]} hpData={{ daily: hpData.survival, weekly: hpData.desire, monthly: hpData.expedition }} isAiProcessing={isAiProcessing} aiComment={aiComment} activeMode={activeMode} setActiveMode={setActiveMode} battleLog={battleLog} scapegoatAlert="" activeChallenges={activeChallenges} handleClaimChallenge={handleClaimChallenge} handleGiveUpChallenge={handleGiveUpChallenge} />}
-              {view === 'history' && <HistoryView history={history} aiComment={aiComment} />}
-              {view === 'heroHall' && <HeroHallView userTitle={debt > 0 ? "負債超人" : "省錢戰士"} persona={persona} personaStats={personaStats} setPersona={setPersona} getBondLevel={getBondLevel} getFrameStyle={getFrameStyle} setShowBudgetSetup={()=>setShowBudgetSetup(true)} currentTier={currentTier} lastPersonaSwitch={lastPersonaSwitch} setLastPersonaSwitch={setLastPersonaSwitch} setShowCustomModal={()=>setShowCustomModal(true)} wishlist={wishlist} setWishlist={setWishlist} debt={debt} userFrame={userFrame} homeMaterials={homeMaterials} />}
-            </>
-          )}
-        </main>
-
-        {!isSevered && (
-          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-[150]">
-            <div className={`bg-white/80 backdrop-blur-md border border-stone-200 rounded-2xl p-2 shadow-xl flex items-center gap-2 ${isSevered ? 'opacity-100 scale-105 border-red-500 shadow-red-900/20' : ''}`}>
-              <button onClick={simulateInvoice} className="w-10 h-10 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center active:scale-90 transition-all shrink-0"><Receipt size={16} /></button>
-              <input value={nlpInput} onChange={(e)=>setNlpInput(e.target.value)} placeholder={getHellPlaceholder()} className={`bg-stone-50/50 flex-1 text-xs px-4 py-3.5 rounded-xl outline-none focus:bg-white transition-all shadow-inner ${isSevered ? 'text-red-600 placeholder:text-red-300 font-bold' : 'text-stone-800'}`} onKeyPress={(e) => e.key === 'Enter' && processTransaction(nlpInput)} />
-              <button onClick={() => processTransaction(nlpInput)} className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg active:scale-90 transition-all shrink-0 ${isSevered ? 'bg-red-600' : 'bg-stone-800'}`}><Send size={16} /></button>
-            </div>
-          </div>
-        )}
-        {!isSevered && <BottomNav view={view} setView={setView} />}
-
-        <PendingTxModal pendingTx={pendingTx} setPendingTx={setPendingTx} executeTransaction={executeTransaction} />
-        <BudgetSetupModal show={showBudgetSetup} onClose={() => setShowBudgetSetup(false)} salaryInput={salaryInput} setSalaryInput={setSalaryInput} handleAutoCalculate={handleAutoCalculate} weeklyPools={weeklyPools} setWeeklyPools={setWeeklyPools} monthlyPools={monthlyPools} setMonthlyPools={setMonthlyPools} isStudent={isStudent} setIsStudent={setIsStudent} currency={currency} setCurrency={setCurrency} CURRENCIES={CURRENCIES} currentTier={currentTier} setCurrentTier={setCurrentTier} />
-        <ShopModal show={showShop} onClose={() => setShowShop(false)} coins={coins} setCoins={setCoins} setUserFrame={setUserFrame} />
-        <CustomPersonaModal show={showCustomModal} onClose={() => setShowCustomModal(false)} onSave={handleSavePersona} />
-      </div>
-    </div>
+    <AppContent 
+      {...{ isSevered, view, setView, coins, setCoins, debt, willpowerExp, persona, personaStats, setPersona,
+        history, wishlist, setWishlist, homeMaterials, activeMode, setActiveMode, battleLog, activeChallenges,
+        pendingTx, setPendingTx, isAiProcessing, aiComment, reflectionText, setReflectionText, 
+        coldWarEndTime, now, nlpInput, setNlpInput, showBudgetSetup, setShowBudgetSetup, showShop, setShowShop, 
+        showCustomModal, setShowCustomModal, hpData, enemyHpData, executeTransaction, processTransaction, 
+        executeRitual, handleClaimChallenge, handleGiveUpChallenge, simulateInvoice, handleAutoCalculate, 
+        handleSavePersona, getSeveredReason, getHellPlaceholder, currentTier, lastPersonaSwitch, setLastPersonaSwitch,
+        userFrame, setUserFrame, salaryInput, setSalaryInput, isStudent, setIsStudent, currency, setCurrency, setCurrentTier }} 
+    />
   );
 };
 export default App;

@@ -1,0 +1,71 @@
+import React from 'react';
+import { Receipt, Send } from 'lucide-react';
+import Header from './Header';
+import BottomNav from './BottomNav';
+import BattleArenaView from '../BattleArena/BattleArenaView';
+import HistoryView from '../History/HistoryView';
+import HeroHallView from '../HeroHall/HeroHallView';
+import PendingTxModal from '../../modals/PendingTxModal';
+import BudgetSetupModal from '../../modals/BudgetSetupModal';
+import ShopModal from '../../modals/ShopModal';
+import CustomPersonaModal from '../../modals/CustomPersonaModal';
+import { CURRENCIES, getBondLevel, getFrameStyle } from '../../utils/constants';
+
+const AppContent = ({
+  isSevered, view, setView, coins, setCoins, debt, willpowerExp, persona, personaStats, setPersona,
+  history, wishlist, setWishlist, homeMaterials, activeMode, setActiveMode, battleLog, activeChallenges,
+  pendingTx, setPendingTx, isAiProcessing, aiComment, reflectionText, setReflectionText, 
+  coldWarEndTime, now, nlpInput, setNlpInput, showBudgetSetup, setShowBudgetSetup, showShop, setShowShop, 
+  showCustomModal, setShowCustomModal, hpData, enemyHpData, executeTransaction, processTransaction, 
+  executeRitual, handleClaimChallenge, handleGiveUpChallenge, simulateInvoice, handleAutoCalculate, 
+  handleSavePersona, getSeveredReason, getHellPlaceholder, currentTier, lastPersonaSwitch, setLastPersonaSwitch,
+  userFrame, setUserFrame, salaryInput, setSalaryInput, isStudent, setIsStudent, currency, setCurrency, setCurrentTier
+}) => {
+  return (
+    <div className={`min-h-screen transition-all duration-1000 ${isSevered ? 'bg-[#450a0a]' : 'bg-[#F7F4EF]'} text-stone-800 font-sans text-left`}>
+      <div className="max-w-md mx-auto p-6 h-screen flex flex-col relative overflow-hidden">
+        {!isSevered && <Header currentTier={currentTier} coins={coins} debt={debt} willpowerExp={willpowerExp} setView={setView} onShopClick={() => setShowShop(true)} />}
+        
+        <main className="flex-1 mt-2 z-10 overflow-y-auto no-scrollbar px-1">
+          {isSevered ? (
+            <div className="flex flex-col h-full justify-center text-center text-white animate-in zoom-in-95 duration-700">
+              <h2 className="text-4xl font-black text-red-500 mb-4 uppercase italic">關係斷絕中</h2>
+              <p className="text-sm text-red-200 mb-8 px-8 opacity-80 leading-relaxed text-center font-medium">{getSeveredReason()}</p>
+              {persona === 'asian_parent' && (
+                <div className="relative w-full max-w-[280px] mx-auto mb-6 text-left">
+                  <textarea value={reflectionText} onChange={e=>setReflectionText(e.target.value)} placeholder="輸入 50 字反省..." className="bg-white/10 border border-white/20 p-4 rounded-xl text-white w-full h-32 outline-none focus:border-red-500 text-sm" />
+                  <span className={`absolute bottom-2 right-2 text-[10px] ${reflectionText.length >= 50 ? 'text-green-400' : 'text-white/40'}`}>{reflectionText.length}/50</span>
+                </div>
+              )}
+              <button onClick={() => executeRitual(reflectionText)} disabled={(persona === 'asian_parent' && reflectionText.length < 50) || ((persona === 'partner' || persona === 'bestie') && coldWarEndTime && now < coldWarEndTime)} className="w-full max-w-[280px] mx-auto py-5 bg-red-600 text-white rounded-[2rem] font-black tracking-widest active:scale-95 disabled:opacity-30 transition-all shadow-2xl">執行重建儀式</button>
+            </div>
+          ) : (
+            <>
+              {view === 'battle' && <BattleArenaView stats={personaStats[persona]} hpData={hpData} enemyHpData={enemyHpData} isAiProcessing={isAiProcessing} aiComment={aiComment} activeMode={activeMode} setActiveMode={setActiveMode} battleLog={battleLog} activeChallenges={activeChallenges} handleClaimChallenge={handleClaimChallenge} handleGiveUpChallenge={handleGiveUpChallenge} />}
+              {view === 'history' && <HistoryView history={history} aiComment={aiComment} />}
+              {view === 'heroHall' && <HeroHallView userTitle={debt > 0 ? "負債超人" : "省錢戰士"} persona={persona} personaStats={personaStats} setPersona={setPersona} getBondLevel={getBondLevel} getFrameStyle={getFrameStyle} setShowBudgetSetup={()=>setShowBudgetSetup(true)} currentTier={currentTier} lastPersonaSwitch={lastPersonaSwitch} setLastPersonaSwitch={setLastPersonaSwitch} setShowCustomModal={()=>setShowCustomModal(true)} wishlist={wishlist} setWishlist={setWishlist} debt={debt} userFrame={userFrame} homeMaterials={homeMaterials} />}
+            </>
+          )}
+        </main>
+
+        {!isSevered && (
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-[150]">
+            <div className={`bg-white/80 backdrop-blur-md border border-stone-200 rounded-2xl p-2 shadow-xl flex items-center gap-2 ${isSevered ? 'opacity-100 scale-105 border-red-500 shadow-red-900/20' : ''}`}>
+              <button onClick={simulateInvoice} className="w-10 h-10 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center active:scale-90 transition-all shrink-0"><Receipt size={16} /></button>
+              <input value={nlpInput} onChange={(e)=>setNlpInput(e.target.value)} placeholder={getHellPlaceholder()} className={`bg-stone-50/50 flex-1 text-xs px-4 py-3.5 rounded-xl outline-none focus:bg-white transition-all shadow-inner ${isSevered ? 'text-red-600 placeholder:text-red-300 font-bold' : 'text-stone-800'}`} onKeyDown={(e) => e.key === 'Enter' && processTransaction(nlpInput)} />
+              <button onClick={() => processTransaction(nlpInput)} className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg active:scale-90 transition-all shrink-0 ${isSevered ? 'bg-red-600' : 'bg-stone-800'}`}><Send size={16} /></button>
+            </div>
+          </div>
+        )}
+        {!isSevered && <BottomNav view={view} setView={setView} />}
+
+        <PendingTxModal pendingTx={pendingTx} setPendingTx={setPendingTx} executeTransaction={executeTransaction} />
+        <BudgetSetupModal show={showBudgetSetup} onClose={() => setShowBudgetSetup(false)} salaryInput={salaryInput} setSalaryInput={setSalaryInput} handleAutoCalculate={handleAutoCalculate} weeklyPools={{}} setWeeklyPools={()=>{}} monthlyPools={{}} setMonthlyPools={()=>{}} isStudent={isStudent} setIsStudent={setIsStudent} currency={currency} setCurrency={setCurrency} CURRENCIES={CURRENCIES} currentTier={currentTier} setCurrentTier={setCurrentTier} />
+        <ShopModal show={showShop} onClose={() => setShowShop(false)} coins={coins} setCoins={setCoins} setUserFrame={setUserFrame} />
+        <CustomPersonaModal show={showCustomModal} onClose={() => setShowCustomModal(false)} onSave={handleSavePersona} />
+      </div>
+    </div>
+  );
+};
+
+export default AppContent;
