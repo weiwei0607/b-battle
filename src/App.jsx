@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { db, auth, signInAnonymously } from './firebase';
 import { onAuthStateChanged } from "firebase/auth";
 import { getDoc, doc } from "firebase/firestore";
-import { CATEGORY_MAP } from './utils/constants';
+import { CATEGORY_MAP, getBondLevel, getFrameStyle } from './utils/constants';
 import { useBattleCore } from './hooks/useBattleCore';
 import AppContent from './components/Layout/AppContent';
 
@@ -17,12 +17,14 @@ const App = () => {
   const [persona, setPersona] = useState(() => load('bb_persona', 'peer'));
   const [willpowerExp, setWillpowerExp] = useState(() => load('bb_exp', 450));
   const [activeMode, setActiveMode] = useState('selection');
+  
   const [teamSpentDaily, setTeamSpentDaily] = useState(() => load('bb_t_daily', 0));
   const [teamSpentWeekly, setTeamSpentWeekly] = useState(() => load('bb_t_weekly', 0));
   const [teamSpentMonthly, setTeamSpentMonthly] = useState(() => load('bb_t_monthly', 0));
   const [enemySpentDaily, setEnemySpentDaily] = useState(0);
   const [enemySpentWeekly, setEnemySpentWeekly] = useState(0);
   const [enemySpentMonthly, setEnemySpentMonthly] = useState(0);
+
   const [activeChallenges, setActiveChallenges] = useState(() => load('bb_challenges', []));
   const [claimedAvoidedItems, setClaimedAvoidedItems] = useState(() => load('bb_claimed', []));
   const [isSevered, setIsSevered] = useState(() => load('bb_severed', false));
@@ -41,6 +43,7 @@ const App = () => {
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [nlpInput, setNlpInput] = useState("");
   const [now, setNow] = useState(new Date().getTime());
+  
   const [currentTier, setCurrentTier] = useState(() => load('bb_tier', 'free'));
   const [isStudent, setIsStudent] = useState(() => load('bb_isStudent', true));
   const [salaryInput, setSalaryInput] = useState("");
@@ -48,6 +51,7 @@ const App = () => {
   const [userFrame, setUserFrame] = useState(() => load('bb_frame', "none"));
   const [lastPersonaSwitch, setLastPersonaSwitch] = useState(() => load('bb_last_switch', null));
   const [homeMaterials, setHomeMaterials] = useState(() => load('bb_materials', 0));
+  const [potions, setPotions] = useState(() => load('bb_potions', 0)); // 🛡️ 實裝道具數量
 
   const [weeklyPools, setWeeklyPools] = useState(() => load('bb_weekly_pools', { food: { limit: 3000, label: "餐飲" }, transport: { limit: 1000, label: "交通" }, social: { limit: 1500, label: "社交" }, shopping: { limit: 1500, label: "購物" } }));
   const [monthlyPools, setMonthlyPools] = useState(() => load('bb_monthly_pools', { housing: { limit: 8000, label: "房租" }, education: { limit: 3000, label: "學習" } }));
@@ -61,7 +65,7 @@ const App = () => {
 
   const addLog = (m) => setBattleLog(prev => [m, ...prev].slice(0, 30));
 
-  const { executeTransaction, processTransaction, spendCoins, executeRitual, handleClaimChallenge, handleGiveUpChallenge, simulateInvoice } = useBattleCore(
+  const { executeTransaction, processTransaction, spendCoins, executeRitual, handleClaimChallenge, handleGiveUpChallenge, simulateInvoice, deleteTransaction, updateTransaction } = useBattleCore(
     user, isCloudLoading, coins, setCoins, debt, setDebt, history, setHistory, 
     persona, personaStats, setPersonaStats, willpowerExp, setWillpowerExp,
     activeMode, { setTeamSpentDaily, setTeamSpentWeekly, setTeamSpentMonthly, setEnemySpentDaily, setEnemySpentWeekly, setEnemySpentMonthly }, 
@@ -95,6 +99,7 @@ const App = () => {
           if (d.lastTrackDate !== undefined) setLastTrackDate(d.lastTrackDate);
           if (d.weeklyPools !== undefined) setWeeklyPools(d.weeklyPools);
           if (d.monthlyPools !== undefined) setMonthlyPools(d.monthlyPools);
+          if (d.potions !== undefined) setPotions(d.potions);
         }
         setIsCloudLoading(false);
       }
@@ -113,7 +118,8 @@ const App = () => {
   const hpData = useMemo(() => {
     const getHp = (p, l) => {
       const isTeam = activeMode === 'team5v5';
-      const spent = history.filter(h => CATEGORY_MAP[h.category] === p && (new Date(h.date).toLocaleDateString() === new Date().toLocaleDateString() || p !== 'survival')).reduce((s, h) => s + h.damage, 0);
+      const todayStr = new Date().toLocaleDateString();
+      const spent = history.filter(h => CATEGORY_MAP[h.category] === p && (h.date === todayStr || p !== 'survival')).reduce((s, h) => s + h.damage, 0);
       const teamSpent = p === 'survival' ? teamSpentDaily : (p === 'progress' ? teamSpentWeekly : teamSpentMonthly);
       return Math.max(0, 100 - ((isTeam ? teamSpent : spent) / (isTeam ? l * 5 : l || 1) * 100));
     };
@@ -158,6 +164,14 @@ const App = () => {
     return "記帳或『我想買...』發起豪賭";
   };
 
+  // 🛡️ [戰損修復邏輯]
+  const healTransaction = (id) => {
+    if (potions <= 0) return;
+    setHistory(prev => prev.map(h => h.id === id ? { ...h, damage: 0, desc: `✨ [已修復] ${h.desc}` } : h));
+    setPotions(p => p - 1);
+    addLog("💊 [修復] 使用了忘憂聖水，抹除了一筆戰損血量！");
+  };
+
   return (
     <AppContent 
       {...{ isSevered, view, setView, coins, setCoins, debt, willpowerExp, persona, personaStats, setPersona,
@@ -167,7 +181,9 @@ const App = () => {
         showCustomModal, setShowCustomModal, hpData, enemyHpData, executeTransaction, processTransaction, 
         executeRitual, handleClaimChallenge, handleGiveUpChallenge, simulateInvoice, handleAutoCalculate, 
         handleSavePersona, getSeveredReason, getHellPlaceholder, currentTier, lastPersonaSwitch, setLastPersonaSwitch,
-        userFrame, setUserFrame, salaryInput, setSalaryInput, isStudent, setIsStudent, currency, setCurrency, setCurrentTier }} 
+        userFrame, setUserFrame, salaryInput, setSalaryInput, isStudent, setIsStudent, currency, setCurrency, setCurrentTier,
+        deleteTransaction, updateTransaction, weeklyPools, setWeeklyPools, monthlyPools, setMonthlyPools,
+        getBondLevel, getFrameStyle, potions, setPotions, healTransaction }} 
     />
   );
 };

@@ -21,7 +21,8 @@ const PendingTxModal = ({ pendingTx, setPendingTx, executeTransaction }) => {
           />
           <button 
             onClick={() => { 
-              executeTransaction(pendingTx.amount, pendingTx.desc, pendingTx.category); 
+              // 🛡️ [Bug Fix] 必須傳遞 source 參數，否則發票會被誤判為手動輸入導致可刪除
+              executeTransaction(pendingTx.amount, pendingTx.desc, pendingTx.category, pendingTx.source); 
               setPendingTx(null); 
             }} 
             className="w-full py-4 bg-stone-800 text-white rounded-2xl font-bold uppercase text-xs shadow-xl active:scale-95"
