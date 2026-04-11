@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { db, auth } from './firebase';
 import LoginScreen from './components/LoginScreen';
 import { onAuthStateChanged } from "firebase/auth";
@@ -16,10 +16,7 @@ const LoadingScreen = ({ onComplete, persona, lang }) => {
   const [progress, setProgress] = useState(0);
   const t = LOCALES[lang] || LOCALES.zh;
   const messages = [t.loading_report, t.loading_sync, t.loading_ai, t.loading_ready];
-  
-  const greetings = {
-    peer: "🙄", asian_parent: "🧧", bestie: "💅", instructor: "👺", partner: "🌹"
-  };
+  const greetings = { peer: "🙄", asian_parent: "🧧", bestie: "💅", instructor: "👺", partner: "🌹" };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -261,8 +258,13 @@ const App = () => {
     addLog("💊 [修復] 使用了忘憂聖水，抹除了一筆戰損血量！");
   };
 
+  // 🚀 使用 useCallback 固定跳轉函式，防止進度條每秒重設
+  const completeLoading = useCallback(() => {
+    setShouldShowApp(true);
+  }, []);
+
   if (isCloudLoading || !shouldShowApp) {
-    return <LoadingScreen onComplete={() => setShouldShowApp(true)} persona={persona} lang={lang} />;
+    return <LoadingScreen onComplete={completeLoading} persona={persona} lang={lang} />;
   }
 
   return (
