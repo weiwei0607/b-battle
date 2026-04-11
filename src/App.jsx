@@ -6,7 +6,7 @@ import { getDoc, doc, setDoc } from "firebase/firestore";
 import { CATEGORY_MAP, getBondLevel, getFrameStyle } from './utils/constants';
 import { useBattleCore } from './hooks/useBattleCore';
 import AppContent from './components/Layout/AppContent';
-import { X, Swords } from 'lucide-react';
+import { X, Swords, WifiOff } from 'lucide-react';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || window.VITE_GEMINI_API_KEY || "";
 const load = (k, f) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : f; } catch { return f; } };
@@ -19,6 +19,7 @@ const App = () => {
   const [persona, setPersona] = useState(() => load('bb_persona', 'peer'));
   const [willpowerExp, setWillpowerExp] = useState(() => load('bb_exp', 1000));
   const [activeMode, setActiveMode] = useState('selection'); 
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   
   const [teamSpentDaily, setTeamSpentDaily] = useState(() => load('bb_t_daily', 0));
   const [teamSpentWeekly, setTeamSpentWeekly] = useState(() => load('bb_t_weekly', 0));
@@ -87,8 +88,16 @@ const App = () => {
     potions, setPotions, achievements, setAchievements, setAchievementNotification
   );
 
+  // 📡 全局網路狀態偵測
   useEffect(() => {
-    // 🌿 無印風體驗優化：強制保留 2.5 秒的呼吸感，讓用戶平靜心情
+    const handleOnline = () => { setIsOnline(true); addLog("🌐 連線恢復，雲端同步啟動。"); };
+    const handleOffline = () => { setIsOnline(false); addLog("📡 目前處於離線模式。"); };
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => { window.removeEventListener('online', handleOnline); window.removeEventListener('offline', handleOffline); };
+  }, []);
+
+  useEffect(() => {
     const minLoadingTime = 2500;
     const startTime = Date.now();
 
@@ -121,13 +130,9 @@ const App = () => {
         } catch (err) { console.error("Sync Error:", err); }
       } else { setUser(null); }
 
-      // 計算還剩多少時間需要等待
       const elapsedTime = Date.now() - startTime;
       const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
-
-      setTimeout(() => {
-        setIsCloudLoading(false);
-      }, remainingTime);
+      setTimeout(() => { setIsCloudLoading(false); }, remainingTime);
     });
     return () => unsubscribe();
   }, []);
@@ -213,8 +218,8 @@ const App = () => {
   };
 
   const LoadingScreen = () => {
-    const messages = ["正在為您整理戰報...", "AI 夥伴正在就位...", "深呼吸，檢查意志力防線...", "平靜心情，準備記帳..."];
-    const [msgIdx, setMsgIdx] = useState(0);
+    const [progress, setProgress] = useState(0);
+    const messages = ["正在為您整理戰報...", "同步雲端數據...", "AI 夥伴就位中...", "即將進入戰線..."];
     const greetings = {
       asian_parent: "老媽：『水喝了沒？錢別亂花喔。』",
       partner: "另一半：『今天辛苦了，我幫你記著呢。』",
@@ -224,42 +229,36 @@ const App = () => {
     };
 
     useEffect(() => {
-      const t = setInterval(() => setMsgIdx(p => (p + 1) % messages.length), 800);
-      return () => clearInterval(t);
+      const interval = setInterval(() => {
+        setProgress(p => {
+          if (p >= 100) { clearInterval(interval); return 100; }
+          return p + 1;
+        });
+      }, 20); 
+      return () => clearInterval(interval);
     }, []);
+
+    const msgIdx = Math.min(Math.floor(progress / 25), 3);
 
     return (
       <div className="min-h-screen bg-[#F7F4EF] flex flex-col items-center justify-center animate-in fade-in duration-1000">
         <style>{`
-          @keyframes floating {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
-            100% { transform: translateY(0px); }
-          }
+          @keyframes floating { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
           .animate-float { animation: floating 3s ease-in-out infinite; }
+          @keyframes loadingSlide { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
         `}</style>
-        
         <div className="animate-float mb-12">
-          <div className="w-20 h-20 bg-stone-800 rounded-[2.5rem] flex items-center justify-center shadow-2xl shadow-stone-200">
+          <div className={`w-20 h-20 bg-stone-800 rounded-[2.5rem] flex items-center justify-center shadow-2xl transition-all duration-500 ${progress === 100 ? 'scale-110 shadow-stone-400' : 'shadow-stone-200'}`}>
             <Swords size={40} className="text-white" />
           </div>
         </div>
-
-        <div className="w-32 h-px bg-stone-200 relative overflow-hidden mb-6">
-          <div className="absolute inset-0 bg-stone-400 w-1/3 animate-[translateX_2s_infinite_linear]" style={{animation: 'loadingSlide 1.5s infinite ease-in-out'}}></div>
+        <div className="w-48 h-1 bg-stone-200 rounded-full relative overflow-hidden mb-6">
+          <div className="absolute inset-y-0 left-0 bg-stone-800 transition-all duration-300 ease-out" style={{ width: `${progress}%` }} />
         </div>
-        <style>{`
-          @keyframes loadingSlide {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(300%); }
-          }
-        `}</style>
-
-        <div className="text-[11px] font-black text-stone-400 tracking-[0.2em] transition-all duration-500 uppercase">
+        <div className="text-[11px] font-black text-stone-400 tracking-[0.2em] transition-all duration-300 uppercase h-4">
           {messages[msgIdx]}
         </div>
-
-        <div className="fixed bottom-16 text-[10px] font-medium text-stone-400 italic px-8 text-center animate-pulse">
+        <div className="fixed bottom-16 text-[10px] font-medium text-stone-400 italic px-8 text-center">
           {greetings[persona] || "正在開啟您的意志力之旅..."}
         </div>
       </div>
@@ -270,6 +269,14 @@ const App = () => {
 
   return (
     <>
+      {/* 📡 離線模式提示條 */}
+      {!isOnline && (
+        <div className="fixed top-0 left-0 w-full z-[2000] bg-stone-100/90 backdrop-blur-md py-2 border-b border-stone-200 flex items-center justify-center gap-2 animate-in slide-in-from-top duration-500">
+          <WifiOff size={12} className="text-stone-400" />
+          <span className="text-[10px] font-black text-stone-500 uppercase tracking-widest">目前處於離線模式，部分功能受限</span>
+        </div>
+      )}
+
       <AppContent 
         {...{ isSevered, view, setView, coins, setCoins, debt, setDebt, willpowerExp, persona, personaStats, setPersona,
           history, wishlist, setWishlist, homeMaterials, activeMode, setActiveMode, battleLog, activeChallenges,
@@ -283,7 +290,7 @@ const App = () => {
           deleteTransaction, updateTransaction, weeklyPools, setWeeklyPools, monthlyPools, setMonthlyPools,
           getBondLevel, getFrameStyle, potions, setPotions, healTransaction,
           shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles, handleClaimAchievement,
-          user, setShowLogin, unlockAchievement, generateMonthlyReview }} 
+          user, setShowLogin, unlockAchievement, generateMonthlyReview, isOnline }} 
       />
       {showLogin && (
         <div className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
