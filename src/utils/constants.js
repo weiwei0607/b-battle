@@ -22,9 +22,9 @@ export const getFrameStyle = (frameName) => {
   return 'border border-stone-100';
 };
 
-// 🏆 100+ 史詩級完整成就清單
+// 🏆 100+ 史詩級完整成就清單 (靈魂全數回歸)
 export const ACHIEVEMENTS = {
-  // --- 基礎系列 ---
+  // --- 基礎與成長 ---
   FIRST_BLOOD: { id: 'FIRST_BLOOD', name: '首戰告捷', desc: '完成第一次記帳', icon: '🎯', reward: 100 },
   SET_WISHLIST: { id: 'SET_WISHLIST', name: '夢想的起點', desc: '設置一個購物願望', icon: '📝', reward: 50 },
   OPEN_SHOP: { id: 'OPEN_SHOP', name: '只是逛逛', desc: '第一次打開道具屋', icon: '🛒', reward: 20 },

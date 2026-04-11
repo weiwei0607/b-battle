@@ -10,7 +10,18 @@ import AppContent from './components/Layout/AppContent';
 import { X, Swords, WifiOff } from 'lucide-react';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || window.VITE_GEMINI_API_KEY || "";
-const load = (k, f) => { try { const v = localStorage.getItem(k); if (!v || v === 'null') return f; const p = JSON.parse(v); return p !== null ? p : f; } catch { return f; } };
+
+// 🚀 [重置機制] 使用 v3 標籤強制所有用戶重新開始
+const load = (k, f) => { 
+  try { 
+    const v = localStorage.getItem('bb_v3_' + k); 
+    if (!v || v === 'null') return f; 
+    const p = JSON.parse(v); 
+    return p !== null ? p : f; 
+  } catch { return f; } 
+};
+
+const save = (k, v) => localStorage.setItem('bb_v3_' + k, JSON.stringify(v));
 
 // 🌿 獨立穩定的啟動畫面組件
 const GlobalSplash = ({ onComplete, persona, lang }) => {
@@ -50,7 +61,7 @@ const GlobalSplash = ({ onComplete, persona, lang }) => {
         <div className="text-xl font-black tracking-tighter">B-BATTLE</div>
       </div>
       <div className="w-48 h-1 bg-stone-200 rounded-full relative overflow-hidden mb-6 shadow-inner">
-        <div className="absolute inset-y-0 left-0 bg-stone-800 transition-all duration-300" style={{ width: `${progress}%` }} />
+        <div className="absolute inset-y-0 left-0 bg-stone-800 transition-all duration-300 ease-out" style={{ width: `${progress}%` }} />
       </div>
       <div className="text-[11px] font-black text-stone-400 tracking-[0.2em] uppercase h-4 text-center">
         {messages[msgIdx]}
@@ -63,37 +74,37 @@ const GlobalSplash = ({ onComplete, persona, lang }) => {
 };
 
 const App = () => {
-  const [lang, setLang] = useState(() => load('bb_lang', 'zh'));
+  const [lang, setLang] = useState(() => load('lang', 'zh'));
   const [view, setView] = useState('battle');
-  const [coins, setCoins] = useState(() => load('bb_coins', 2000));
-  const [debt, setDebt] = useState(() => load('bb_debt', 0));
-  const [history, setHistory] = useState(() => load('bb_history', []) || []);
-  const [persona, setPersona] = useState(() => load('bb_persona', 'peer') || 'peer');
-  const [willpowerExp, setWillpowerExp] = useState(() => load('bb_exp', 1000) || 1000);
+  const [coins, setCoins] = useState(() => load('coins', 2000));
+  const [debt, setDebt] = useState(() => load('debt', 0));
+  const [history, setHistory] = useState(() => load('history', []));
+  const [persona, setPersona] = useState(() => load('persona', 'peer'));
+  const [willpowerExp, setWillpowerExp] = useState(() => load('exp', 0)); // 重置從 0 開始
   const [activeMode, setActiveMode] = useState('selection'); 
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isCloudLoading, setIsCloudLoading] = useState(true);
   const [isSplashDone, setIsSplashDone] = useState(false);
 
-  const [teamSpentDaily, setTeamSpentDaily] = useState(() => load('bb_t_daily', 0) || 0);
-  const [teamSpentWeekly, setTeamSpentWeekly] = useState(() => load('bb_t_weekly', 0) || 0);
-  const [teamSpentMonthly, setTeamSpentMonthly] = useState(() => load('bb_t_monthly', 0) || 0);
+  const [teamSpentDaily, setTeamSpentDaily] = useState(() => load('t_daily', 0));
+  const [teamSpentWeekly, setTeamSpentWeekly] = useState(() => load('t_weekly', 0));
+  const [teamSpentMonthly, setTeamSpentMonthly] = useState(() => load('t_monthly', 0));
   const [enemySpentDaily, setEnemySpentDaily] = useState(0);
   const [enemySpentWeekly, setEnemySpentWeekly] = useState(0);
   const [enemySpentMonthly, setEnemySpentMonthly] = useState(0);
-  const [activeChallenges, setActiveChallenges] = useState(() => load('bb_challenges', []) || []);
-  const [claimedAvoidedItems, setClaimedAvoidedItems] = useState(() => load('bb_claimed', []) || []);
-  const [isSevered, setIsSevered] = useState(() => load('bb_severed', false) || false);
+  const [activeChallenges, setActiveChallenges] = useState(() => load('challenges', []));
+  const [claimedAvoidedItems, setClaimedAvoidedItems] = useState(() => load('claimed', []));
+  const [isSevered, setIsSevered] = useState(() => load('severed', false));
   const [battleLog, setBattleLog] = useState(["意志力系統啟動..."]);
   const [aiComment, setAiComment] = useState("意志力防線準備就緒。");
-  const [wishlist, setWishlist] = useState(() => load('bb_wishlist', "日本來回機票") || "日本來回機票");
-  const [lastTrackDate, setLastTrackDate] = useState(() => load('bb_lastTrack', null));
+  const [wishlist, setWishlist] = useState(() => load('wishlist', "日本來回機票"));
+  const [lastTrackDate, setLastTrackDate] = useState(() => load('lastTrack', null));
   const [user, setUser] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
   const [pendingTx, setPendingTx] = useState(null);
   const [isAiProcessing, setIsAiProcessing] = useState(false);
   const [reflectionText, setReflectionText] = useState("");
-  const [coldWarEndTime, setColdWarEndTime] = useState(() => load('bb_coldwar', null));
+  const [coldWarEndTime, setColdWarEndTime] = useState(() => load('coldwar', null));
   const [showBudgetSetup, setShowBudgetSetup] = useState(false);
   const [showShop, setShowShop] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
@@ -102,63 +113,29 @@ const App = () => {
   const [nlpInput, setNlpInput] = useState("");
   const [now, setNow] = useState(() => Date.now());
   
-  const [currentTier, setCurrentTier] = useState(() => load('bb_tier', 'free') || 'free');
-  const [isStudent, setIsStudent] = useState(() => load('bb_isStudent', true) !== false);
+  const [currentTier, setCurrentTier] = useState(() => load('tier', 'free'));
+  const [isStudent, setIsStudent] = useState(() => load('isStudent', true));
   const [salaryInput, setSalaryInput] = useState("");
-  const [currency, setCurrency] = useState(() => load('bb_currency', 'TWD') || 'TWD');
-  const [userFrame, setUserFrame] = useState(() => load('bb_frame', "none") || "none");
-  const [userTitle, setUserTitle] = useState(() => load('bb_title', "省錢戰士") || "省錢戰士");
-  const [unlockedTitles, setUnlockedTitles] = useState(() => load('bb_unlocked_titles', ["省錢戰士"]) || ["省錢戰士"]);
-  const [achievements, setAchievements] = useState(() => load('bb_achievements', {}) || {}); 
-  const [shield, setShield] = useState(() => load('bb_shield', 0) || 0); 
-  const [lastPersonaSwitch, setLastPersonaSwitch] = useState(() => load('bb_last_switch', null));
-  const [homeMaterials, setHomeMaterials] = useState(() => load('bb_materials', 0) || 0);
-  const [potions, setPotions] = useState(() => load('bb_potions', 0) || 0); 
+  const [currency, setCurrency] = useState(() => load('currency', 'TWD'));
+  const [userFrame, setUserFrame] = useState(() => load('frame', "none"));
+  const [userTitle, setUserTitle] = useState(() => load('title', "省錢戰士"));
+  const [unlockedTitles, setUnlockedTitles] = useState(() => load('unlocked_titles', ["省錢戰士"]));
+  const [achievements, setAchievements] = useState(() => load('achievements', {})); 
+  const [shield, setShield] = useState(() => load('shield', 0)); 
+  const [lastPersonaSwitch, setLastPersonaSwitch] = useState(() => load('last_switch', null));
+  const [homeMaterials, setHomeMaterials] = useState(() => load('materials', 0));
+  const [potions, setPotions] = useState(() => load('potions', 0)); 
 
-  const [weeklyPools, setWeeklyPools] = useState(() => load('bb_weekly_pools', { food: { limit: 3000, label: "餐飲" }, transport: { limit: 1000, label: "交通" }, social: { limit: 1500, label: "社交" }, shopping: { limit: 1500, label: "購物" } }));
-  const [monthlyPools, setMonthlyPools] = useState(() => load('bb_monthly_pools', { housing: { limit: 8000, label: "房租" }, education: { limit: 3000, label: "學習" } }));
-  const [personaStats, setPersonaStats] = useState(() => load('bb_persona_stats', { 
-    peer: { intimacy: 50, title: "愛酸同學", icon: "🙄", prompt: `你是一個酸言酸語的同學/同事，個性嫉妒又愛嘴砲。看到對方花錢你就忍不住要酸。
-規則：
-- 買衣服 → 酸「又買啊？衣櫃要撐爆了吧」「你是要去走秀嗎」
-- 買咖啡/飲料 → 「又在燒錢喝咖啡喔，自己泡不會嗎」
-- 吃大餐 → 「請客啊？哦原來只有你自己」「吃這麼好有錢啊」
-- 買3C/遊戲 → 「又敗家了？你上個月不是剛買了什麼」
-- 交通費 → 「搭這麼貴？腳不能用嗎」
-口吻：酸、嫉妒、嘴賤，但幽默，像在鬥嘴，限20字。只回傳文字。` }, 
-    asian_parent: { intimacy: 30, title: "亞洲家長", icon: "🧧", prompt: `你是典型的台灣亞洲家長（媽媽），永遠在擔心跟碎念。
-規則：
-- 買衣服 → 「衣櫃都放不下了！又買！隔壁阿珠都不亂買衣服」
-- 買咖啡 → 「是不是都沒睡好才要喝這個？身體要顧！又不是便宜」
-- 吃外食/大餐 → 「在外面吃那麼貴，在家吃不好嗎？媽媽煮給你吃」
-- 買3C → 「手機沒壞為什麼要換！你同學也都換嗎？」
-- 夜市/飲料 → 「那種東西不健康，錢省起來買房比較實際」
-- 交通 → 「那麼貴！走路不好嗎，省錢又健康」
-口吻：擔心、碎念、語氣像在告誡孩子，帶一點「你看隔壁誰誰誰」，限20字。只回傳文字。` },
-    bestie: { intimacy: 60, title: "好閨蜜", icon: "💅", prompt: `你是超級好閨蜜，懂穿搭懂生活，支持朋友但同時幫忙把關荷包。
-規則：
-- 買衣服 → 「好看嗎！！拍給我看！不過這個月好像買很多了耶」「等折扣季再買更換算！」
-- 買咖啡/手搖 → 「哇每天都喝耶，我們一起辦月卡比較省啦」
-- 吃大餐 → 「好好吃喔！下次帶我去！不過這樣存旅遊基金會慢一點🥺」
-- 買保養/化妝品 → 「哇哪牌子？好用嗎！但我們去年說好要存錢去日本...」
-- 買3C/遊戲 → 「你需要嗎？還是只是想要啦 😂 我也想買東西啊」
-口吻：開心、支持、但會帶到「我們的旅遊基金」或「等特價」，像閨蜜聊天，限20字。只回傳文字。` },
-    instructor: { intimacy: 10, title: "毒舌教官", icon: "👺", prompt: `你是軍事化的教官，把理財當作紀律與戰鬥力的表現。
-規則：
-- 買衣服 → 「制服就夠了！多餘的裝備是戰力分散！」
-- 買咖啡 → 「靠外力撐著算什麼！強化自身意志力才是正道！」
-- 吃大餐 → 「士兵吃糧食，你在搞什麼！超出口糧預算！」
-- 買3C/遊戲 → 「這是訓練還是玩樂！非必要裝備一律上報！」
-- 任何超支 → 「違反預算紀律！記過一次！下不為例！」
-口吻：像訓練新兵，嚴厲命令式，有軍事感，限20字。只回傳文字。` },
-    partner: { intimacy: 80, title: "溫柔另一半", icon: "🌹", prompt: `你是溫柔但有原則的另一半，在乎對方但也在乎兩人的未來。
-規則：
-- 買衣服 → 「好看嗎寶貝？不過我們這個月存款目標還差一點點耶...」
-- 買咖啡 → 「是不是很累？要好好休息喔，不過天天買有點貴，要不要我幫你泡？」
-- 吃大餐 → 「好吃嗎？下次我們一起去！不過記得我們在存旅遊基金喔」
-- 買3C/遊戲 → 「你真的需要嗎？有跟我商量過嗎？我不是不讓你買，只是...」
-- 超支 → 「我知道你辛苦了，但我們說好一起努力的，對嗎？」
-口吻：溫柔、撒嬌中帶著在意，像在耍小脾氣但愛你，限20字。只回傳文字。` }
+  const [weeklyPools, setWeeklyPools] = useState(() => load('weekly_pools', { food: { limit: 3000, label: "餐飲" }, transport: { limit: 1000, label: "交通" }, social: { limit: 1500, label: "社交" }, shopping: { limit: 1500, label: "購物" } }));
+  const [monthlyPools, setMonthlyPools] = useState(() => load('monthly_pools', { housing: { limit: 8000, label: "房租" }, education: { limit: 3000, label: "學習" } }));
+  
+  // 🛡️ [靈魂還原] 完整的詳細人格設定
+  const [personaStats, setPersonaStats] = useState(() => load('persona_stats', { 
+    peer: { intimacy: 50, title: "愛酸同學", icon: "🙄", prompt: `你是一個酸言酸語的同學/同事，個性嫉妒又愛嘴砲。看到對方花錢你就忍不住要酸。規則：買衣服酸走秀；咖啡酸燒錢；吃大餐酸請客；3C酸敗家；交通酸腳不能用。口吻：酸、嫉妒、嘴賤，但幽默，限20字。` }, 
+    asian_parent: { intimacy: 30, title: "亞洲家長", icon: "🧧", prompt: `你是典型的台灣亞洲家長，永遠在擔心跟碎念。規則：買衣服酸阿珠不亂買；咖啡酸顧身體；外食酸媽媽煮更好；3C酸沒壞幹嘛換；交通酸走路健康。口吻：擔心、碎念、告誡孩子，限20字。` },
+    bestie: { intimacy: 60, title: "好閨蜜", icon: "💅", prompt: `你是超級好閨蜜，支持朋友但幫忙把關荷包。規則：買衣服求拍照但提醒這個月買多了；咖啡提議辦月卡；大餐提議下次一起但要存旅遊基金。口吻：開心、支持、帶到旅遊基金，限20字。` },
+    instructor: { intimacy: 10, title: "毒舌教官", icon: "👺", prompt: `你是軍事化教官，理財是紀律。規則：買衣服酸制服就夠；咖啡酸意志力不足；大餐酸超出口糧預算；超支就酸違反紀律。口吻：嚴厲命令式，軍事感，限20字。` },
+    partner: { intimacy: 80, title: "溫柔另一半", icon: "🌹", prompt: `你是溫柔但有原則的另一半，在乎未來。規則：買衣服問好看嗎但提存款目標；咖啡問累嗎但提自泡；大餐問好吃嗎但提旅遊基金。口吻：溫柔、撒嬌中帶著在意，限20字。` }
   }));
 
   const addLog = (m) => setBattleLog(prev => [m, ...prev].slice(0, 30));
@@ -203,12 +180,13 @@ const App = () => {
   }, []);
 
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
+  
   useEffect(() => {
-    if (!user) {
-      const data = { bb_coins: coins, bb_debt: debt, bb_history: history, bb_exp: willpowerExp, bb_persona: persona, bb_achievements: achievements, bb_lang: lang };
-      Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, JSON.stringify(v)));
+    if (!user && !isCloudLoading) {
+      const data = { lang, coins, debt, history, persona, exp: willpowerExp, achievements, userTitle, userFrame, potions, shield, personaStats };
+      Object.entries(data).forEach(([k, v]) => save(k, v));
     }
-  }, [user, coins, debt, history, willpowerExp, persona, achievements, lang]);
+  }, [user, isCloudLoading, lang, coins, debt, history, persona, willpowerExp, achievements, userTitle, userFrame, potions, shield, personaStats]);
 
   const hpData = useMemo(() => {
     const getHp = (p) => {
