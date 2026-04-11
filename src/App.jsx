@@ -92,7 +92,7 @@ const App = () => {
   const [showAchievements, setShowAchievements] = useState(false);
   const [achievementNotification, setAchievementNotification] = useState(null);
   const [nlpInput, setNlpInput] = useState("");
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(() => Date.now());
   
   const [currentTier, setCurrentTier] = useState(() => load('bb_tier', 'free'));
   const [isStudent, setIsStudent] = useState(() => load('bb_isStudent', true));
@@ -168,14 +168,74 @@ const App = () => {
 
   const hpData = useMemo(() => {
     const getHp = (p) => {
-      const limits = { survival: 10000, progress: 5000, desire: 3000, expedition: 15000 };
-      const spent = history.filter(h => CATEGORY_MAP[h.category] === p).reduce((s, h) => s + h.damage, 0);
-      return Math.max(0, 100 - (spent / (limits[p] || 10000) * 100));
+      const isTeam = activeMode === 'team5v5';
+      const todayStr = new Date().toLocaleDateString();
+      const limits = {
+        survival: (weeklyPools.food?.limit || 1000) + (weeklyPools.transport?.limit || 0) + (monthlyPools.housing?.limit || 0),
+        progress: (monthlyPools.education?.limit || 0),
+        desire: (weeklyPools.social?.limit || 0),
+        expedition: (weeklyPools.shopping?.limit || 0)
+      };
+      const limit = limits[p] || 10000;
+      const spent = history.filter(h => CATEGORY_MAP[h.category] === p && (h.date === todayStr || p !== 'survival')).reduce((s, h) => s + h.damage, 0);
+      const teamSpent = p === 'survival' ? teamSpentDaily : (p === 'progress' ? teamSpentWeekly : teamSpentMonthly);
+      return Math.max(0, 100 - ((isTeam ? teamSpent : spent) / (isTeam ? limit * 5 : limit || 1) * 100));
     };
     return { survival: getHp('survival'), progress: getHp('progress'), desire: getHp('desire'), expedition: getHp('expedition') };
-  }, [history]);
+  }, [history, activeMode, teamSpentDaily, teamSpentWeekly, teamSpentMonthly, weeklyPools, monthlyPools]);
 
-  const enemyHpData = { survival: 100, progress: 100, desire: 100, expedition: 100 };
+  const enemyHpData = useMemo(() => {
+    const limits = {
+      survival: (weeklyPools.food?.limit || 1000) + (weeklyPools.transport?.limit || 0) + (monthlyPools.housing?.limit || 0),
+      progress: (monthlyPools.education?.limit || 0),
+      desire: (weeklyPools.social?.limit || 0),
+      expedition: (weeklyPools.shopping?.limit || 0)
+    };
+    return {
+      survival: Math.max(0, 100 - (enemySpentDaily / (limits.survival * 5 || 1) * 100)),
+      progress: Math.max(0, 100 - (enemySpentWeekly / (limits.progress * 5 || 1) * 100)),
+      desire: Math.max(0, 100 - (enemySpentMonthly / (limits.desire * 5 || 1) * 100)),
+      expedition: Math.max(0, 100 - (enemySpentMonthly / (limits.expedition * 5 || 1) * 100))
+    };
+  }, [enemySpentDaily, enemySpentWeekly, enemySpentMonthly, weeklyPools, monthlyPools]);
+
+  const handleAutoCalculate = () => {
+    const total = parseInt(salaryInput) || 0;
+    const monthly = Math.floor(total * 0.6);
+    const weeklyTotal = Math.floor(total * 0.4 / 4);
+    setMonthlyPools({ housing: { limit: Math.floor(monthly * 0.7), label: "住居帳單" }, education: { limit: Math.floor(monthly * 0.3), label: "學習健康" } });
+    setWeeklyPools({ food: { limit: Math.floor(weeklyTotal * 0.4), label: "餐飲" }, transport: { limit: Math.floor(weeklyTotal * 0.15), label: "交通" }, social: { limit: Math.floor(weeklyTotal * 0.2), label: "社交娛樂" }, shopping: { limit: Math.floor(weeklyTotal * 0.25), label: "購物娛樂" } });
+  };
+
+  const handleSavePersona = (id, stats) => { setPersonaStats(prev => ({ ...prev, [id]: stats })); setPersona(id); setShowCustomModal(false); };
+
+  const getSeveredReason = () => {
+    if (persona === 'asian_parent') return "老媽：『寫 50 字以上的反省書，保證以後多喝熱水少亂花，不然別想回家！』";
+    if (persona === 'peer' || persona === 'instructor') return "對方：『支付 500 金幣請我喝精品咖啡，我才考慮原諒你。』";
+    if (persona === 'partner' || persona === 'bestie') {
+      if (coldWarEndTime && now < coldWarEndTime) {
+        const rem = coldWarEndTime - now;
+        return `另一半：『進入冷戰期。還有 ${Math.floor(rem/3600000)} 小時 ${Math.floor((rem%3600000)/60000)} 分鐘。』`;
+      }
+      return "冷戰結束，執行重生儀式。";
+    }
+    return "預算防線崩潰！";
+  };
+
+  const getHellPlaceholder = () => {
+    if (isSevered) {
+      const map = { asian_parent: "又是買這些垃圾？", partner: "哼，誰管你有沒有錢...", bestie: "反正我們已經完了...", instructor: "報上你的遺言，戰犯。", peer: "破產了還買？笑死。" };
+      return map[persona] || "在恥辱中記錄你的罪行...";
+    }
+    return "記帳或『我想買...』發起豪賭";
+  };
+
+  const healTransaction = (id) => {
+    if (potions <= 0) return;
+    setHistory(prev => prev.map(h => h.id === id ? { ...h, damage: 0, desc: `✨ [已修復] ${h.desc}` } : h));
+    setPotions(p => p - 1);
+    addLog("💊 [修復] 使用了忘憂聖水，抹除了一筆戰損血量！");
+  };
 
   const handleSplashComplete = useCallback(() => setIsSplashDone(true), []);
 
