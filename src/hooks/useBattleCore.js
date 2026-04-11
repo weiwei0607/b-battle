@@ -101,7 +101,6 @@ export const useBattleCore = (
   const executeTransaction = async (amount, desc, category, source = "manual") => {
     if (isAiProcessing) return;
     
-    // --- 史詩與常規成就觸發邏輯 ---
     unlockAchievement('FIRST_BLOOD');
     if (amount >= 3000) unlockAchievement('BIG_SPENDER');
     
@@ -132,7 +131,6 @@ export const useBattleCore = (
       if (bCount >= 3) unlockAchievement('BOOK_WORM');
     }
 
-    // --- 戰鬥邏輯核心 (還原靈魂) ---
     let penaltyHp = 0; let isPreReported = false; let isLying = false;
     const pillar = CATEGORY_MAP[category] || 'expedition';
     const isUnnecessary = ['desire', 'expedition'].includes(pillar);
@@ -268,7 +266,7 @@ export const useBattleCore = (
   const updateTransaction = useCallback((id, newCategory) => {
     const newPillar = CATEGORY_MAP[newCategory] || 'expedition';
     setHistory(prev => prev.map(h => h.id === id ? { ...h, category: newCategory, pillar: newPillar } : h));
-    addLog(`🔧 [修正] 調整分類為「${newCategory}」。`);
+    addLog(`🔧 [修正] 調整分類。`);
   }, [setHistory, addLog]);
 
   const processTransaction = async (input, source = "manual") => {
@@ -332,7 +330,7 @@ export const useBattleCore = (
     addLog(`🧾 偵測到消費：${item.desc}`);
   }, [setPendingTx, addLog]);
 
-  // 🤖 鏡像機器人系統：學習並模擬用戶行為
+  // 🤖 鏡像機器人系統
   useEffect(() => {
     if (activeMode === 'team5v5') {
       const timer = setInterval(() => {
@@ -357,17 +355,38 @@ export const useBattleCore = (
 
   useEffect(() => {
     if (coins >= 10000) unlockAchievement('WEALTHY_WARRIOR');
+    if (willpowerExp >= 3000) unlockAchievement('WILLPOWER_GOD');
     if (personaStats[persona]?.intimacy >= 100) unlockAchievement('LOYAL_PARTNER');
     if (personaStats['asian_parent']?.intimacy >= 80) unlockAchievement('MOM_LOVES_ME');
     if (achievements && Object.values(achievements).filter(a => a.unlocked).length >= 5) unlockAchievement('COLLECTOR');
     if (history.length > 0 && coins === 0 && debt === 0) unlockAchievement('ZERO_HERO');
-  }, [coins, debt, personaStats, persona, achievements, unlockAchievement, history]);
+  }, [coins, willpowerExp, debt, personaStats, persona, achievements, unlockAchievement, history]);
 
   useEffect(() => {
     const todayStr = new Date().toLocaleDateString();
     if (lastTrackDate && lastTrackDate !== todayStr) {
       const nowTime = new Date();
       const last = new Date(lastTrackDate);
+      
+      // 🚀 [階梯式季度重置] 每一季 (1, 4, 7, 10 月) 執行一次
+      const currentMonth = nowTime.getMonth() + 1;
+      const isNewSeason = [1, 4, 7, 10].includes(currentMonth) && nowTime.getDate() === 1;
+      const lastResetSeason = localStorage.getItem('bb_v3_last_reset_season');
+      const seasonKey = `${nowTime.getFullYear()}-${Math.ceil(currentMonth / 3)}`;
+
+      if (isNewSeason && lastResetSeason !== seasonKey) {
+        addLog("🌪️ [季度重置] 意志力賽季結算！");
+        let bonus = 0;
+        if (debt >= 500) { addLog("🕊️ [債務特赦] 重置為 2000 金幣，努力重新開始！"); setDebt(0); }
+        else if (coins > 5000) { 
+          bonus = Math.floor((coins - 2000) * 0.1); 
+          setHomeMaterials(prev => prev + bonus * 10);
+          addLog(`🏰 [財富轉換] 結餘轉換為 ${bonus * 10} 建材，新賽季起始金幣 2000+${bonus}！`);
+        }
+        setCoins(2000 + bonus);
+        localStorage.setItem('bb_v3_last_reset_season', seasonKey);
+      }
+
       if (nowTime.getDate() !== last.getDate()) { 
         addLog("📅 每日重置。"); 
         setTeamSpentStates.setTeamSpentDaily(0); 
@@ -387,7 +406,7 @@ export const useBattleCore = (
       }
     }
     setLastTrackDate(todayStr);
-  }, [lastTrackDate, setLastTrackDate, addLog, setTeamSpentStates, history, setHomeMaterials, unlockAchievement]);
+  }, [lastTrackDate, setLastTrackDate, addLog, setTeamSpentStates, history, setHomeMaterials, unlockAchievement, coins, debt, setCoins, setDebt]);
 
   useEffect(() => {
     if (!user || isCloudLoading) return;

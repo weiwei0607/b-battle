@@ -33,20 +33,8 @@ const AppContent = ({
   return (
     <div className={`min-h-screen transition-all duration-1000 ${isSevered ? 'bg-[#450a0a]' : 'bg-[#F7F4EF]'} text-stone-800 font-sans text-left`}>
       <div className="max-w-md mx-auto p-6 h-screen flex flex-col relative overflow-hidden">
-        
-        {/* 🏆 [還原] 將成就獎盃移回右上角 Header 旁邊 */}
         {!isSevered && (
-          <div className="flex justify-between items-center z-20 mb-2 gap-2">
-            <div className="flex-1">
-              <Header currentTier={currentTier} coins={coins} debt={debt} willpowerExp={willpowerExp} setView={setView} onShopClick={() => setShowShop(true)} lang={lang} setLang={setLang} />
-            </div>
-            <button 
-              onClick={() => setShowAchievements(true)} 
-              className="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center shadow-sm active:scale-90 transition-all border border-amber-100 shrink-0"
-            >
-              <Trophy size={20} />
-            </button>
-          </div>
+          <Header currentTier={currentTier} coins={coins} debt={debt} willpowerExp={willpowerExp} setView={setView} onShopClick={() => setShowShop(true)} lang={lang} setLang={setLang} />
         )}
         
         <main className="flex-1 mt-2 z-10 overflow-y-auto no-scrollbar px-1">
@@ -60,7 +48,17 @@ const AppContent = ({
             <>
               {view === 'battle' && <BattleArenaView stats={personaStats[persona]} hpData={hpData} enemyHpData={enemyHpData} isAiProcessing={isAiProcessing} aiComment={aiComment} activeMode={activeMode} setActiveMode={setActiveMode} battleLog={battleLog} activeChallenges={activeChallenges} handleClaimChallenge={handleClaimChallenge} handleGiveUpChallenge={handleGiveUpChallenge} />}
               {view === 'history' && <HistoryView history={history} aiComment={aiComment} deleteTransaction={deleteTransaction} updateTransaction={updateTransaction} potions={potions} healTransaction={healTransaction} unlockAchievement={unlockAchievement} generateMonthlyReview={generateMonthlyReview} personaStats={personaStats} persona={persona} isAiProcessing={isAiProcessing} achievements={achievements} />}
-              {view === 'heroHall' && <HeroHallView userTitle={userTitle} persona={persona} personaStats={personaStats} setPersona={setPersona} setShowBudgetSetup={()=>setShowBudgetSetup(true)} currentTier={currentTier} lastPersonaSwitch={lastPersonaSwitch} setLastPersonaSwitch={setLastPersonaSwitch} wishlist={wishlist} setWishlist={setWishlist} debt={debt} userFrame={userFrame} homeMaterials={homeMaterials} user={user} setShowLogin={setShowLogin} setView={setView} lang={lang} />}
+              {view === 'heroHall' && (
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowAchievements(true)} 
+                    className="absolute top-2 right-2 w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center shadow-sm active:scale-90 transition-all border border-amber-100 z-20"
+                  >
+                    <Trophy size={20} />
+                  </button>
+                  <HeroHallView userTitle={userTitle} persona={persona} personaStats={personaStats} setPersona={setPersona} setShowBudgetSetup={()=>setShowBudgetSetup(true)} currentTier={currentTier} lastPersonaSwitch={lastPersonaSwitch} setLastPersonaSwitch={setLastPersonaSwitch} wishlist={wishlist} setWishlist={setWishlist} debt={debt} userFrame={userFrame} homeMaterials={homeMaterials} user={user} setShowLogin={setShowLogin} setView={setView} lang={lang} />
+                </div>
+              )}
             </>
           )}
         </main>
@@ -78,9 +76,9 @@ const AppContent = ({
 
         <PendingTxModal pendingTx={pendingTx} setPendingTx={setPendingTx} executeTransaction={executeTransaction} />
         <BudgetSetupModal show={showBudgetSetup} onClose={() => setShowBudgetSetup(false)} salaryInput={salaryInput} setSalaryInput={setSalaryInput} handleAutoCalculate={handleAutoCalculate} weeklyPools={weeklyPools} setWeeklyPools={setWeeklyPools} monthlyPools={monthlyPools} setMonthlyPools={setMonthlyPools} isStudent={isStudent} setIsStudent={setIsStudent} currency={currency} setCurrency={setCurrency} CURRENCIES={CURRENCIES} currentTier={currentTier} setCurrentTier={setCurrentTier} />
-        <ShopModal show={showShop} onClose={() => setShowShop(false)} coins={coins} setCoins={setCoins} setUserFrame={setUserFrame} potions={potions} setPotions={setPotions} shield={shield} setShield={setShield} userTitle={userTitle} setUserTitle={setUserTitle} unlockedTitles={unlockedTitles} setUnlockedTitles={setUnlockedTitles} />
+        <ShopModal show={showShop} onClose={() => setShowShop(false)} coins={coins} setCoins={setCoins} setUserFrame={setUserFrame} potions={potions} setPotions={setPotions} shield={shield} setShield={setShield} />
         <CustomPersonaModal show={showCustomModal} onClose={() => setShowCustomModal(false)} onSave={handleSavePersona} />
-        <AchievementModal show={showAchievements} onClose={() => setShowAchievements(false)} achievements={achievements} onClaim={handleClaimAchievement} />
+        <AchievementModal show={showAchievements} onClose={() => setShowAchievements(false)} achievements={achievements} onClaim={handleClaimAchievement} userTitle={userTitle} setUserTitle={setUserTitle} />
       </div>
     </div>
   );

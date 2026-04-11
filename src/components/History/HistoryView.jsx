@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Skull, TrendingDown, Calendar, Trash2, Edit3, Check, X, LifeBuoy, AlertCircle, Heart, Zap, Flame, Globe, MessageSquare, Loader2 } from 'lucide-react';
+import { Skull, TrendingDown, Calendar, Trash2, Edit3, Check, X, LifeBuoy, AlertCircle, Heart, Zap, Flame, Globe, MessageSquare, Loader2, ChevronDown } from 'lucide-react';
+import { CATEGORY_MAP } from '../../utils/constants';
 
 const RomanPillar = ({ label, percent, colorClass, dmg, icon: Icon }) => {
   const remainingPercent = Math.max(0, 100 - percent);
@@ -31,6 +32,7 @@ const HistoryView = ({ history, aiComment, isAiProcessing, deleteTransaction, up
 
   const availableMonths = generateMonths();
   const [selectedMonth, setSelectedMonth] = useState(availableMonths[0]);
+  const [showMonthMenu, setShowMonthMenu] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [tempCategory, setTempCategory] = useState("");
   const [clickCounts, setClickCounts] = useState({});
@@ -52,15 +54,12 @@ const HistoryView = ({ history, aiComment, isAiProcessing, deleteTransaction, up
   }, [selectedMonth, persona]);
 
   const handleDenialClick = (id) => {
-    // 🚀 如果成就已經解鎖過，就直接顯示普通警告，不再觸發特效
     if (isDenialUnlocked) {
       alert("🛡️ 電子發票受誠信保護，禁止抹除。");
       return;
     }
-
     const newCount = (clickCounts[id] || 0) + 1;
     setClickCounts(prev => ({ ...prev, [id]: newCount }));
-    
     if (newCount === 10) {
       unlockAchievement('DENIAL_OF_REALITY');
       alert("🏆 獲得隱藏成就：這不是我買的！\n（雖然你嘗試抹除這筆帳 10 次，但這筆錢確實花掉了。）");
@@ -72,15 +71,37 @@ const HistoryView = ({ history, aiComment, isAiProcessing, deleteTransaction, up
 
   return (
     <div className="space-y-6 pb-48 animate-in fade-in slide-in-from-right duration-700 text-left">
-      <div className="px-2 flex justify-between items-end text-left">
+      <div className="px-2 flex justify-between items-center text-left">
         <div><h2 className="text-3xl font-black text-stone-800 tracking-tighter italic leading-none">WAR REPORT</h2><p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mt-2">戰略歷史檔案庫</p></div>
-        <div className="text-right flex items-center gap-2"><Calendar size={14} className="text-stone-300" /><p className="text-sm font-black text-stone-800">{selectedMonth}</p></div>
-      </div>
+        
+        {/* 📅 月份切換下拉選單 */}
+        <div className="relative">
+          <button 
+            onClick={() => setShowMonthMenu(!showMonthMenu)}
+            className="bg-white border-2 border-stone-100 px-4 py-2.5 rounded-2xl flex items-center gap-2 shadow-sm active:scale-95 transition-all text-stone-800 font-black text-xs"
+          >
+            <Calendar size={14} className="text-stone-400" />
+            {selectedMonth.split('/')[0]}年 {selectedMonth.split('/')[1]}月
+            <ChevronDown size={12} className={`transition-transform duration-300 ${showMonthMenu ? 'rotate-180' : ''}`} />
+          </button>
 
-      <div className="flex gap-2 overflow-x-auto no-scrollbar px-2 py-1">
-        {availableMonths.map(m => (
-          <button key={m} onClick={() => setSelectedMonth(m)} className={`px-6 py-2.5 rounded-full text-[11px] font-black transition-all whitespace-nowrap border-2 ${selectedMonth === m ? 'bg-stone-800 border-stone-800 text-white shadow-xl scale-105' : 'bg-white border-stone-100 text-stone-400 hover:border-stone-300'}`}>{m.split('/')[0]}年 {m.split('/')[1]}月</button>
-        ))}
+          {showMonthMenu && (
+            <>
+              <div className="fixed inset-0 z-[210]" onClick={() => setShowMonthMenu(false)} />
+              <div className="absolute top-full mt-2 right-0 w-40 bg-white rounded-2xl shadow-2xl border border-stone-100 py-2 z-[220] animate-in slide-in-from-top-2 duration-200 max-h-60 overflow-y-auto no-scrollbar">
+                {availableMonths.map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => { setSelectedMonth(m); setShowMonthMenu(false); }}
+                    className={`w-full text-left px-4 py-3 text-[11px] font-black transition-colors ${selectedMonth === m ? 'text-amber-600 bg-amber-50' : 'text-stone-500 hover:bg-stone-50'}`}
+                  >
+                    {m.split('/')[0]}年 {m.split('/')[1]}月
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="bg-[#FAF7F2] border border-stone-200/60 p-6 rounded-[3rem] shadow-sm relative overflow-hidden text-left">
