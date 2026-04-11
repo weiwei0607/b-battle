@@ -84,6 +84,20 @@ const App = () => {
   const [isCloudLoading, setIsCloudLoading] = useState(true);
   const [isSplashDone, setIsSplashDone] = useState(false);
 
+  // 🚀 [網址連線機制] 啟動時自動辨識房號與模式
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const r = params.get('room');
+    const m = params.get('mode');
+    if (r) {
+      setRoomId(r);
+      if (m === '1v1' || m === 'team5v5') setActiveMode(m);
+      else setActiveMode('team5v5');
+      // 清除網址參數，保持乾淨
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   // 🚀 [玩家代號與房號]
   const [userName, setUserName] = useState(() => load('user_name', "省錢新兵"));
   const [roomId, setRoomId] = useState(() => load('room_id', ""));
