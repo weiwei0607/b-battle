@@ -36,12 +36,17 @@ const BattleArenaView = ({
   roomId, setRoomId
 }) => {
   const [showRoomInput, setShowRoomInput] = useState(false);
-  const [tempRoom, setTempRoom] = useState(roomId);
+  const [tempRoom, setTempRoom] = useState("");
 
-  const handleJoinRoom = () => {
-    setRoomId(tempRoom);
+  const handleJoinRoom = (id) => {
+    setRoomId(id || tempRoom);
     setShowRoomInput(false);
     setActiveMode('team5v5');
+  };
+
+  const handleRandomJoin = () => {
+    const randomId = Math.floor(1000 + Math.random() * 9000).toString();
+    handleJoinRoom(randomId);
   };
 
   const getPillarLabel = (key) => {
@@ -69,16 +74,31 @@ const BattleArenaView = ({
           <div className="bg-[#F7F4EF] w-full max-w-xs rounded-[3rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
             <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600 mb-4 mx-auto shadow-inner"><Hash size={24} /></div>
             <h3 className="text-xl font-black text-stone-800 mb-1 text-center">戰區連線</h3>
-            <p className="text-[9px] text-stone-400 font-bold mb-6 uppercase tracking-widest text-center">同步好友的意志力支柱</p>
-            <input 
-              value={tempRoom} 
-              onChange={(e)=>setTempRoom(e.target.value)} 
-              placeholder="請輸入房號" 
-              className="w-full bg-white border-2 border-stone-100 p-4 rounded-2xl text-lg font-black text-center mb-6 focus:border-amber-400 transition-all outline-none shadow-sm" 
-            />
-            <div className="flex gap-3">
-              <button onClick={()=>setShowRoomInput(false)} className="flex-1 py-4 bg-stone-200 text-stone-500 rounded-2xl font-black text-xs active:scale-95 transition-all">取消</button>
-              <button onClick={handleJoinRoom} className="flex-1 py-4 bg-stone-800 text-white rounded-2xl font-black text-xs shadow-lg active:scale-95 transition-all">進入</button>
+            <p className="text-[9px] text-stone-400 font-bold mb-6 uppercase tracking-widest text-center">限時 5 分鐘同步戰場</p>
+            
+            <div className="space-y-3">
+              <input 
+                value={tempRoom} 
+                onChange={(e)=>setTempRoom(e.target.value)} 
+                placeholder="輸入房號 (例: 8888)" 
+                className="w-full bg-white border-2 border-stone-100 p-4 rounded-2xl text-lg font-black text-center focus:border-amber-400 transition-all outline-none shadow-sm" 
+              />
+              <button onClick={() => handleJoinRoom()} className="w-full py-4 bg-stone-800 text-white rounded-2xl font-black text-xs shadow-lg active:scale-95 transition-all">進入指定房間</button>
+              
+              <div className="flex items-center gap-3 py-2 opacity-30">
+                <div className="flex-1 h-px bg-stone-400" />
+                <span className="text-[8px] font-bold text-stone-500">OR</span>
+                <div className="flex-1 h-px bg-stone-400" />
+              </div>
+              
+              <button 
+                onClick={() => handleJoinRoom(Math.floor(1000 + Math.random() * 9000).toString())} 
+                className="w-full py-4 bg-white border-2 border-amber-200 text-amber-600 rounded-2xl font-black text-xs flex items-center justify-center gap-2 active:scale-95 transition-all hover:bg-amber-50"
+              >
+                快速加入隨機戰區
+              </button>
+              
+              <button onClick={()=>setShowRoomInput(false)} className="w-full py-3 text-stone-400 font-bold text-[10px] uppercase tracking-widest">下次再戰</button>
             </div>
           </div>
         </div>

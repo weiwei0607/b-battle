@@ -152,7 +152,7 @@ const App = () => {
     setNlpInput, now, homeMaterials, setHomeMaterials, weeklyPools, monthlyPools, currentTier,
     shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles,
     potions, setPotions, achievements, setAchievements, setAchievementNotification, lang,
-    userName, roomId 
+    userName, roomId, setRoomId, setActiveMode 
   );
 
   useEffect(() => {

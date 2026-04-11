@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, onSnapshot, getDoc } from "firebase/firestore";
 import { db } from '../firebase';
 import { CATEGORY_MAP, ACHIEVEMENTS } from '../utils/constants';
 
@@ -29,8 +29,56 @@ export const useBattleCore = (
   potions, setPotions,
   achievements, setAchievements,
   setAchievementNotification,
-  lang
+  lang,
+  userName, roomId, setRoomId
 ) => {
+
+  // 🚀 [即時連線邏輯] 監聽戰區數據 (限時 5 分鐘)
+  useEffect(() => {
+    if (activeMode === 'team5v5' && roomId) {
+      const roomRef = doc(db, "rooms", roomId);
+      
+      const unsubscribe = onSnapshot(roomRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          const nowTime = Date.now();
+          
+          // 檢查是否超過 5 分鐘 (300,000 ms)
+          if (data.createdAt && nowTime - data.createdAt > 300000) {
+            addLog(`⌛ [系統] 戰區 ${roomId} 已過期停戰。`);
+            setRoomId("");
+            setActiveMode('selection');
+            return;
+          }
+
+          // 同步敵方數據：顯示戰區中除了自己以外的所有人總和
+          const allPlayers = data.players || {};
+          const othersDaily = Object.values(allPlayers)
+            .filter(p => p.uid !== user?.uid)
+            .reduce((s, p) => s + (p.daily || 0), 0);
+          
+          setTeamSpentStates.setEnemySpentDaily(othersDaily);
+        } else {
+          // 如果戰區是空的，由第一個進入的人初始化
+          setDoc(roomRef, { createdAt: Date.now(), players: {} }, { merge: true });
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, [activeMode, roomId, user, setRoomId, setActiveMode, addLog, setTeamSpentStates]);
+
+  // 🚀 [數據上傳邏輯] 定時將自己的數據推送到戰區
+  useEffect(() => {
+    if (activeMode === 'team5v5' && roomId && user) {
+      const todayStr = new Date().toLocaleDateString();
+      const myDaily = history.filter(h => h.date === todayStr).reduce((s, h) => s + h.amount, 0);
+      
+      const roomRef = doc(db, "rooms", roomId);
+      setDoc(roomRef, { 
+        [`players.${user.uid}`]: { uid: user.uid, name: userName, daily: myDaily, lastUpdate: Date.now() }
+      }, { merge: true });
+    }
+  }, [history, activeMode, roomId, user, userName]);
 
   const cooldownThreshold = 2000;
 
