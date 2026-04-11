@@ -1,11 +1,13 @@
 import React from 'react';
 import { Zap, BarChart3, User } from 'lucide-react';
+import { LOCALES } from '../../utils/locales';
 
-const BottomNav = ({ view, setView }) => {
+const BottomNav = ({ view, setView, lang }) => {
+  const t = LOCALES[lang] || LOCALES.zh;
   const items = [
-    { id: 'battle', icon: Zap, label: '戰場' },
-    { id: 'history', icon: BarChart3, label: '分析' },
-    { id: 'heroHall', icon: User, label: '殿堂' }
+    { id: 'battle', icon: Zap, label: t.battle },
+    { id: 'history', icon: BarChart3, label: t.history },
+    { id: 'heroHall', icon: User, label: t.hall }
   ];
 
   return (

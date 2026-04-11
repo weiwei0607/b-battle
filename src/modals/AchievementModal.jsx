@@ -1,20 +1,22 @@
 import React, { useMemo } from 'react';
 import { Trophy, X, Sparkles, CheckCircle2, Lock } from 'lucide-react';
 import { ACHIEVEMENTS } from '../utils/constants';
+import { LOCALES } from '../utils/locales';
 
-const AchievementModal = ({ show, onClose, achievements, onClaim }) => {
+const AchievementModal = ({ show, onClose, achievements, onClaim, lang }) => {
+  const t = LOCALES[lang] || LOCALES.zh;
   if (!show) return null;
 
   const medalList = Object.values(ACHIEVEMENTS);
   const visibleMedals = medalList.filter(m => !m.isHidden);
-  const hiddenMedals = medalList.filter(m => m.isHidden && achievements[m.id]?.unlocked);
+  const hiddenMedals = medalList.filter(m => m.isHidden && achievements && achievements[m.id]?.unlocked);
 
-  const unlockedCount = useMemo(() => Object.values(achievements).filter(a => a.unlocked).length, [achievements]);
+  const unlockedCount = useMemo(() => Object.values(achievements || {}).filter(a => a.unlocked).length, [achievements]);
   const totalCount = medalList.length;
   const progressPercent = Math.round((unlockedCount / totalCount) * 100);
 
   const MedalItem = ({ medal }) => {
-    const status = achievements[medal.id] || { unlocked: false, claimed: false };
+    const status = (achievements && achievements[medal.id]) || { unlocked: false, claimed: false };
     const canClaim = status.unlocked && !status.claimed;
     const isDone = status.claimed;
     const isLocked = !status.unlocked;
@@ -75,10 +77,10 @@ const AchievementModal = ({ show, onClose, achievements, onClaim }) => {
           <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3 text-amber-600 shadow-inner">
             <Trophy size={32} />
           </div>
-          <h3 className="text-2xl font-black text-stone-800 tracking-tight">勳章成就館</h3>
+          <h3 className="text-2xl font-black text-stone-800 tracking-tight">{t.achievements_title}</h3>
           <div className="mt-3 px-6">
             <div className="flex justify-between text-[10px] font-black text-stone-400 mb-1.5 uppercase tracking-widest">
-              <span>收集進度</span>
+              <span>{t.collection_progress}</span>
               <span className="text-amber-600">{unlockedCount} / {totalCount}</span>
             </div>
             <div className="w-full h-2 bg-stone-200 rounded-full overflow-hidden shadow-inner">
@@ -89,7 +91,7 @@ const AchievementModal = ({ show, onClose, achievements, onClaim }) => {
 
         <div className="flex-1 overflow-y-auto no-scrollbar pr-1 space-y-8">
           <div>
-            <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 px-2"><Sparkles size={12} /> 公開榮譽榜</h4>
+            <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 px-2"><Sparkles size={12} /> {t.medal_public}</h4>
             <div className="grid grid-cols-1 gap-3">
               {visibleMedals.map(medal => <MedalItem key={medal.id} medal={medal} />)}
             </div>

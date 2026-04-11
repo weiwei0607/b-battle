@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Settings2, Heart, Lock, Sparkles, Clock, Target, AlertCircle, Home, Hammer, LogOut, LogIn, Cloud, Globe } from 'lucide-react';
+import { Settings2, Heart, Lock, Sparkles, Clock, Target, AlertCircle, Home, Hammer, LogOut, LogIn, Cloud, Globe, Plus } from 'lucide-react';
 import { getHomeStatus, getBondLevel, getFrameStyle } from '../../utils/constants';
 import { LOCALES } from '../../utils/locales';
 import { auth, signOut } from '../../firebase';
 
-const HeroHallView = ({ 
+const HeroHallView = ({
   userTitle, userFrame, persona, personaStats, setPersona,
-  setShowBudgetSetup, currentTier, lastPersonaSwitch, setLastPersonaSwitch, 
-  wishlist, setWishlist, debt, homeMaterials, user, setShowLogin, setView, lang, setLang
+  setShowBudgetSetup, currentTier, lastPersonaSwitch, setLastPersonaSwitch,
+  wishlist, setWishlist, debt, homeMaterials, user, setShowLogin, setView, lang, setLang,
+  setShowCustomModal
 }) => {
   const [now, setNow] = useState(Date.now());
   const safeMaterials = homeMaterials || 0;
@@ -117,6 +118,15 @@ const HeroHallView = ({
           );
         })}
       </div>
+
+      {setShowCustomModal && (
+        <button
+          onClick={setShowCustomModal}
+          className="w-full py-4 bg-white border-2 border-dashed border-[#D7C9B1] text-[#BC8F8F] rounded-[2.5rem] font-bold flex items-center justify-center gap-2 text-[11px] tracking-[0.2em] active:scale-95 transition-all hover:bg-[#FAF7F2]"
+        >
+          <Plus size={14} /> 創造自定義人格
+        </button>
+      )}
 
       <div className="bg-white border border-stone-100 p-6 rounded-[2rem] text-left shadow-sm">
         <h3 className="text-[10px] font-black text-stone-400 uppercase tracking-widest flex items-center gap-2 mb-4"><Target size={14} className="text-[#D7C9B1]"/> {t.current_goal}</h3>

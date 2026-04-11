@@ -25,7 +25,7 @@ const AppContent = ({
   deleteTransaction, updateTransaction, weeklyPools, setWeeklyPools, monthlyPools, setMonthlyPools,
   potions, setPotions, healTransaction,
   shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles, handleClaimAchievement,
-  user, setShowLogin, unlockAchievement, generateMonthlyReview
+  user, setShowLogin, unlockAchievement, generateMonthlyReview, lang, setLang
 }) => {
   return (
     <div className={`min-h-screen transition-all duration-1000 ${isSevered ? 'bg-[#450a0a]' : 'bg-[#F7F4EF]'} text-stone-800 font-sans text-left`}>
@@ -55,7 +55,7 @@ const AppContent = ({
             <>
               {view === 'battle' && <BattleArenaView stats={personaStats[persona]} hpData={hpData} enemyHpData={enemyHpData} isAiProcessing={isAiProcessing} aiComment={aiComment} activeMode={activeMode} setActiveMode={setActiveMode} battleLog={battleLog} activeChallenges={activeChallenges} handleClaimChallenge={handleClaimChallenge} handleGiveUpChallenge={handleGiveUpChallenge} />}
               {view === 'history' && <HistoryView history={history} aiComment={aiComment} deleteTransaction={deleteTransaction} updateTransaction={updateTransaction} potions={potions} healTransaction={healTransaction} unlockAchievement={unlockAchievement} generateMonthlyReview={generateMonthlyReview} personaStats={personaStats} persona={persona} isAiProcessing={isAiProcessing} achievements={achievements} />}
-              {view === 'heroHall' && <HeroHallView userTitle={userTitle} persona={persona} personaStats={personaStats} setPersona={setPersona} setShowBudgetSetup={()=>setShowBudgetSetup(true)} currentTier={currentTier} lastPersonaSwitch={lastPersonaSwitch} setLastPersonaSwitch={setLastPersonaSwitch} wishlist={wishlist} setWishlist={setWishlist} debt={debt} userFrame={userFrame} homeMaterials={homeMaterials} user={user} setShowLogin={setShowLogin} setView={setView} />}
+              {view === 'heroHall' && <HeroHallView userTitle={userTitle} persona={persona} personaStats={personaStats} setPersona={setPersona} setShowBudgetSetup={()=>setShowBudgetSetup(true)} currentTier={currentTier} lastPersonaSwitch={lastPersonaSwitch} setLastPersonaSwitch={setLastPersonaSwitch} wishlist={wishlist} setWishlist={setWishlist} debt={debt} userFrame={userFrame} homeMaterials={homeMaterials} user={user} setShowLogin={setShowLogin} setView={setView} lang={lang} setLang={setLang} setShowCustomModal={() => setShowCustomModal(true)} />}
               </>
           )}
         </main>
@@ -69,7 +69,7 @@ const AppContent = ({
             </div>
           </div>
         )}
-        {!isSevered && <BottomNav view={view} setView={setView} />}
+        {!isSevered && <BottomNav view={view} setView={setView} lang={lang} />}
 
         <PendingTxModal pendingTx={pendingTx} setPendingTx={setPendingTx} executeTransaction={executeTransaction} />
         <BudgetSetupModal show={showBudgetSetup} onClose={() => setShowBudgetSetup(false)} salaryInput={salaryInput} setSalaryInput={setSalaryInput} handleAutoCalculate={handleAutoCalculate} weeklyPools={weeklyPools} setWeeklyPools={setWeeklyPools} monthlyPools={monthlyPools} setMonthlyPools={setMonthlyPools} isStudent={isStudent} setIsStudent={setIsStudent} currency={currency} setCurrency={setCurrency} CURRENCIES={CURRENCIES} currentTier={currentTier} setCurrentTier={setCurrentTier} />
