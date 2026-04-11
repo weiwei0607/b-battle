@@ -11,7 +11,7 @@ import { X, Swords, WifiOff } from 'lucide-react';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || window.VITE_GEMINI_API_KEY || "";
 
-// 🚀 [重置機制] 使用 v3 標籤強制所有用戶重新開始
+// 🚀 [版本重置機制] 升級到 v3，清除所有舊 Bug 數據
 const load = (k, f) => { 
   try { 
     const v = localStorage.getItem('bb_v3_' + k); 
@@ -23,7 +23,7 @@ const load = (k, f) => {
 
 const save = (k, v) => localStorage.setItem('bb_v3_' + k, JSON.stringify(v));
 
-// 🌿 獨立穩定的啟動畫面組件
+// 🌿 獨立穩定的啟動畫面組件 (還原 B-BATTLE 與 溫馨吐槽)
 const GlobalSplash = ({ onComplete, persona, lang }) => {
   const [progress, setProgress] = useState(0);
   const t = LOCALES[lang] || LOCALES.zh;
@@ -60,7 +60,7 @@ const GlobalSplash = ({ onComplete, persona, lang }) => {
         </div>
         <div className="text-xl font-black tracking-tighter">B-BATTLE</div>
       </div>
-      <div className="w-48 h-1 bg-stone-200 rounded-full relative overflow-hidden mb-6 shadow-inner">
+      <div className="w-48 h-1 bg-stone-200 rounded-full relative overflow-hidden mb-6">
         <div className="absolute inset-y-0 left-0 bg-stone-800 transition-all duration-300 ease-out" style={{ width: `${progress}%` }} />
       </div>
       <div className="text-[11px] font-black text-stone-400 tracking-[0.2em] uppercase h-4 text-center">
@@ -78,9 +78,9 @@ const App = () => {
   const [view, setView] = useState('battle');
   const [coins, setCoins] = useState(() => load('coins', 2000));
   const [debt, setDebt] = useState(() => load('debt', 0));
-  const [history, setHistory] = useState(() => load('history', []));
-  const [persona, setPersona] = useState(() => load('persona', 'peer'));
-  const [willpowerExp, setWillpowerExp] = useState(() => load('exp', 0)); // 重置從 0 開始
+  const [history, setHistory] = useState(() => load('history', []) || []);
+  const [persona, setPersona] = useState(() => load('persona', 'peer') || 'peer');
+  const [willpowerExp, setWillpowerExp] = useState(() => load('exp', 0)); // 徹底歸零開始
   const [activeMode, setActiveMode] = useState('selection'); 
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isCloudLoading, setIsCloudLoading] = useState(true);
@@ -129,7 +129,7 @@ const App = () => {
   const [weeklyPools, setWeeklyPools] = useState(() => load('weekly_pools', { food: { limit: 3000, label: "餐飲" }, transport: { limit: 1000, label: "交通" }, social: { limit: 1500, label: "社交" }, shopping: { limit: 1500, label: "購物" } }));
   const [monthlyPools, setMonthlyPools] = useState(() => load('monthly_pools', { housing: { limit: 8000, label: "房租" }, education: { limit: 3000, label: "學習" } }));
   
-  // 🛡️ [靈魂還原] 完整的詳細人格設定
+  // 🛡️ [靈魂復原] 滿血版詳細人格設定
   const [personaStats, setPersonaStats] = useState(() => load('persona_stats', { 
     peer: { intimacy: 50, title: "愛酸同學", icon: "🙄", prompt: `你是一個酸言酸語的同學/同事，個性嫉妒又愛嘴砲。看到對方花錢你就忍不住要酸。規則：買衣服酸走秀；咖啡酸燒錢；吃大餐酸請客；3C酸敗家；交通酸腳不能用。口吻：酸、嫉妒、嘴賤，但幽默，限20字。` }, 
     asian_parent: { intimacy: 30, title: "亞洲家長", icon: "🧧", prompt: `你是典型的台灣亞洲家長，永遠在擔心跟碎念。規則：買衣服酸阿珠不亂買；咖啡酸顧身體；外食酸媽媽煮更好；3C酸沒壞幹嘛換；交通酸走路健康。口吻：擔心、碎念、告誡孩子，限20字。` },
