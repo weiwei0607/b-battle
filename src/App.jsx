@@ -12,7 +12,6 @@ import { X, Swords, WifiOff } from 'lucide-react';
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || window.VITE_GEMINI_API_KEY || "";
 const load = (k, f) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : f; } catch { return f; } };
 
-// 🌿 獨立穩定的啟動畫面組件
 const GlobalSplash = ({ onComplete, persona, lang }) => {
   const [progress, setProgress] = useState(0);
   const t = LOCALES[lang] || LOCALES.zh;
@@ -37,14 +36,14 @@ const GlobalSplash = ({ onComplete, persona, lang }) => {
         @keyframes floating { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
         .animate-float { animation: floating 3s ease-in-out infinite; }
       `}</style>
-      <div className="animate-float mb-12 text-center text-stone-800">
+      <div className="animate-float mb-12 text-center">
         <div className="w-20 h-20 bg-stone-800 rounded-[2.5rem] flex items-center justify-center shadow-2xl mx-auto mb-4">
           <Swords size={40} className="text-white" />
         </div>
         <div className="text-2xl mt-2">{greetings[persona]}</div>
       </div>
-      <div className="w-48 h-1 bg-stone-200 rounded-full relative overflow-hidden mb-6">
-        <div className="absolute inset-y-0 left-0 bg-stone-800 transition-all duration-300" style={{ width: `${progress}%` }} />
+      <div className="w-48 h-1 bg-stone-200 rounded-full relative overflow-hidden mb-6 shadow-inner">
+        <div className="absolute inset-y-0 left-0 bg-stone-800 transition-all duration-300 ease-out" style={{ width: `${progress}%` }} />
       </div>
       <div className="text-[11px] font-black text-stone-400 tracking-[0.2em] uppercase h-4 text-center">
         {messages[msgIdx]}
@@ -66,7 +65,6 @@ const App = () => {
   const [isCloudLoading, setIsCloudLoading] = useState(true);
   const [isSplashDone, setIsSplashDone] = useState(false);
 
-  // --- 其他核心狀態 ---
   const [teamSpentDaily, setTeamSpentDaily] = useState(() => load('bb_t_daily', 0));
   const [teamSpentWeekly, setTeamSpentWeekly] = useState(() => load('bb_t_weekly', 0));
   const [teamSpentMonthly, setTeamSpentMonthly] = useState(() => load('bb_t_monthly', 0));
@@ -159,13 +157,7 @@ const App = () => {
   }, []);
 
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
-  useEffect(() => {
-    if (!user) {
-      const data = { bb_coins: coins, bb_debt: debt, bb_history: history, bb_exp: willpowerExp, bb_persona: persona, bb_achievements: achievements, bb_lang: lang };
-      Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, JSON.stringify(v)));
-    }
-  }, [user, coins, debt, history, willpowerExp, persona, achievements, lang]);
-
+  
   const hpData = useMemo(() => {
     const getHp = (p) => {
       const isTeam = activeMode === 'team5v5';
