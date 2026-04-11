@@ -1,22 +1,24 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { db, auth, signInAnonymously } from './firebase';
+import { db, auth } from './firebase';
+import LoginScreen from './components/LoginScreen';
 import { onAuthStateChanged } from "firebase/auth";
-import { getDoc, doc } from "firebase/firestore";
+import { getDoc, doc, setDoc } from "firebase/firestore";
 import { CATEGORY_MAP, getBondLevel, getFrameStyle } from './utils/constants';
 import { useBattleCore } from './hooks/useBattleCore';
 import AppContent from './components/Layout/AppContent';
+import { X } from 'lucide-react';
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || window.VITE_GEMINI_API_KEY || "";
 const load = (k, f) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : f; } catch { return f; } };
 
 const App = () => {
   const [view, setView] = useState('battle');
-  const [coins, setCoins] = useState(() => load('bb_coins', 1500));
+  const [coins, setCoins] = useState(() => load('bb_coins', 2000));
   const [debt, setDebt] = useState(() => load('bb_debt', 0));
   const [history, setHistory] = useState(() => load('bb_history', []));
   const [persona, setPersona] = useState(() => load('bb_persona', 'peer'));
-  const [willpowerExp, setWillpowerExp] = useState(() => load('bb_exp', 450));
-  const [activeMode, setActiveMode] = useState('selection');
+  const [willpowerExp, setWillpowerExp] = useState(() => load('bb_exp', 1000));
+  const [activeMode, setActiveMode] = useState('selection'); 
   
   const [teamSpentDaily, setTeamSpentDaily] = useState(() => load('bb_t_daily', 0));
   const [teamSpentWeekly, setTeamSpentWeekly] = useState(() => load('bb_t_weekly', 0));
@@ -28,12 +30,13 @@ const App = () => {
   const [activeChallenges, setActiveChallenges] = useState(() => load('bb_challenges', []));
   const [claimedAvoidedItems, setClaimedAvoidedItems] = useState(() => load('bb_claimed', []));
   const [isSevered, setIsSevered] = useState(() => load('bb_severed', false));
-  const [battleLog, setBattleLog] = useState(["系統連線穩定..."]);
+  const [battleLog, setBattleLog] = useState(["意志力系統啟動..."]);
   const [aiComment, setAiComment] = useState("意志力防線準備就緒。");
   const [wishlist, setWishlist] = useState(() => load('bb_wishlist', "日本來回機票"));
   const [lastTrackDate, setLastTrackDate] = useState(() => load('bb_lastTrack', null));
   const [isCloudLoading, setIsCloudLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [showLogin, setShowLogin] = useState(false);
   const [pendingTx, setPendingTx] = useState(null);
   const [isAiProcessing, setIsAiProcessing] = useState(false);
   const [reflectionText, setReflectionText] = useState("");
@@ -41,6 +44,8 @@ const App = () => {
   const [showBudgetSetup, setShowBudgetSetup] = useState(false);
   const [showShop, setShowShop] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
+  const [achievementNotification, setAchievementNotification] = useState(null);
   const [nlpInput, setNlpInput] = useState("");
   const [now, setNow] = useState(new Date().getTime());
   
@@ -49,9 +54,13 @@ const App = () => {
   const [salaryInput, setSalaryInput] = useState("");
   const [currency, setCurrency] = useState(() => load('bb_currency', 'TWD'));
   const [userFrame, setUserFrame] = useState(() => load('bb_frame', "none"));
+  const [userTitle, setUserTitle] = useState(() => load('bb_title', "省錢戰士"));
+  const [unlockedTitles, setUnlockedTitles] = useState(() => load('bb_unlocked_titles', ["省錢戰士"]));
+  const [achievements, setAchievements] = useState(() => load('bb_achievements', {})); 
+  const [shield, setShield] = useState(() => load('bb_shield', 0)); 
   const [lastPersonaSwitch, setLastPersonaSwitch] = useState(() => load('bb_last_switch', null));
   const [homeMaterials, setHomeMaterials] = useState(() => load('bb_materials', 0));
-  const [potions, setPotions] = useState(() => load('bb_potions', 0)); // 🛡️ 實裝道具數量
+  const [potions, setPotions] = useState(() => load('bb_potions', 0)); 
 
   const [weeklyPools, setWeeklyPools] = useState(() => load('bb_weekly_pools', { food: { limit: 3000, label: "餐飲" }, transport: { limit: 1000, label: "交通" }, social: { limit: 1500, label: "社交" }, shopping: { limit: 1500, label: "購物" } }));
   const [monthlyPools, setMonthlyPools] = useState(() => load('bb_monthly_pools', { housing: { limit: 8000, label: "房租" }, education: { limit: 3000, label: "學習" } }));
@@ -65,7 +74,7 @@ const App = () => {
 
   const addLog = (m) => setBattleLog(prev => [m, ...prev].slice(0, 30));
 
-  const { executeTransaction, processTransaction, spendCoins, executeRitual, handleClaimChallenge, handleGiveUpChallenge, simulateInvoice, deleteTransaction, updateTransaction } = useBattleCore(
+  const { executeTransaction, processTransaction, spendCoins, executeRitual, handleClaimChallenge, handleGiveUpChallenge, simulateInvoice, deleteTransaction, updateTransaction, handleClaimAchievement, unlockAchievement, generateMonthlyReview } = useBattleCore(
     user, isCloudLoading, coins, setCoins, debt, setDebt, history, setHistory, 
     persona, personaStats, setPersonaStats, willpowerExp, setWillpowerExp,
     activeMode, { setTeamSpentDaily, setTeamSpentWeekly, setTeamSpentMonthly, setEnemySpentDaily, setEnemySpentWeekly, setEnemySpentMonthly }, 
@@ -73,65 +82,95 @@ const App = () => {
     activeChallenges, setActiveChallenges, claimedAvoidedItems, setClaimedAvoidedItems,
     addLog, setAiComment, wishlist, apiKey, setIsSevered, isSevered,
     setColdWarEndTime, coldWarEndTime, lastTrackDate, setLastTrackDate, setPendingTx, setIsAiProcessing, isAiProcessing,
-    setNlpInput, now, homeMaterials, setHomeMaterials, weeklyPools, monthlyPools, currentTier
+    setNlpInput, now, homeMaterials, setHomeMaterials, weeklyPools, monthlyPools, currentTier,
+    shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles,
+    potions, setPotions, achievements, setAchievements, setAchievementNotification
   );
 
   useEffect(() => {
-    signInAnonymously(auth);
-    onAuthStateChanged(auth, async (u) => {
+    const loadingTimeout = setTimeout(() => { setIsCloudLoading(false); }, 1200);
+    const unsubscribe = onAuthStateChanged(auth, async (u) => {
       if (u) {
         setUser(u);
-        const s = await getDoc(doc(db, "users", u.uid));
-        if (s.exists()) {
-          const d = s.data();
-          if (d.coins !== undefined) setCoins(d.coins);
-          if (d.debt !== undefined) setDebt(d.debt);
-          if (d.history !== undefined) setHistory(d.history);
-          if (d.exp !== undefined) setWillpowerExp(d.exp);
-          if (d.homeMaterials !== undefined) setHomeMaterials(d.homeMaterials);
-          if (d.currentTier !== undefined) setCurrentTier(d.currentTier);
-          if (d.isStudent !== undefined) setIsStudent(d.isStudent);
-          if (d.userFrame !== undefined) setUserFrame(d.userFrame);
-          if (d.persona !== undefined) setPersona(d.persona);
-          if (d.personaStats !== undefined) setPersonaStats(prev => ({...prev, ...d.personaStats}));
-          if (d.wishlist !== undefined) setWishlist(d.wishlist);
-          if (d.lastPersonaSwitch !== undefined) setLastPersonaSwitch(d.lastPersonaSwitch);
-          if (d.lastTrackDate !== undefined) setLastTrackDate(d.lastTrackDate);
-          if (d.weeklyPools !== undefined) setWeeklyPools(d.weeklyPools);
-          if (d.monthlyPools !== undefined) setMonthlyPools(d.monthlyPools);
-          if (d.potions !== undefined) setPotions(d.potions);
-        }
-        setIsCloudLoading(false);
-      }
+        try {
+          const s = await getDoc(doc(db, "users", u.uid));
+          if (s.exists()) {
+            const d = s.data();
+            if (d.coins !== undefined) setCoins(d.coins);
+            if (d.debt !== undefined) setDebt(d.debt);
+            if (d.history !== undefined) setHistory(d.history);
+            if (d.exp !== undefined) setWillpowerExp(d.exp);
+            if (d.homeMaterials !== undefined) setHomeMaterials(d.homeMaterials);
+            if (d.currentTier !== undefined) setCurrentTier(d.currentTier);
+            if (d.userFrame !== undefined) setUserFrame(d.userFrame);
+            if (d.persona !== undefined) setPersona(d.persona);
+            if (d.personaStats !== undefined) setPersonaStats(prev => ({...prev, ...d.personaStats}));
+            if (d.wishlist !== undefined) setWishlist(d.wishlist);
+            if (d.lastTrackDate !== undefined) setLastTrackDate(d.lastTrackDate);
+            if (d.weeklyPools !== undefined) setWeeklyPools(d.weeklyPools);
+            if (d.monthlyPools !== undefined) setMonthlyPools(d.monthlyPools);
+            if (d.potions !== undefined) setPotions(d.potions);
+            if (d.shield !== undefined) setShield(d.shield);
+            if (d.userTitle !== undefined) setUserTitle(d.userTitle);
+            if (d.unlockedTitles !== undefined) setUnlockedTitles(d.unlockedTitles);
+            if (d.achievements !== undefined) setAchievements(d.achievements);
+          } else {
+            await setDoc(doc(db, "users", u.uid), { 
+              coins, debt, history, personaStats, persona, exp: willpowerExp, 
+              wishlist, severed: isSevered, lastTrackDate, coldWarEndTime, 
+              homeMaterials, currentTier, potions, shield, userTitle, 
+              unlockedTitles, achievements 
+            });
+          }
+        } catch (err) { console.error("Sync Error:", err); }
+      } else { setUser(null); }
+      setIsCloudLoading(false);
+      clearTimeout(loadingTimeout);
     });
+    return () => { unsubscribe(); clearTimeout(loadingTimeout); };
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      const data = { bb_coins: coins, bb_debt: debt, bb_history: history, bb_exp: willpowerExp, bb_persona: persona, bb_persona_stats: personaStats, bb_achievements: achievements, bb_unlocked_titles: unlockedTitles, bb_title: userTitle, bb_frame: userFrame, bb_potions: potions, bb_shield: shield };
+      Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, JSON.stringify(v)));
+    }
+  }, [user, coins, debt, history, willpowerExp, persona, personaStats, achievements, unlockedTitles, userTitle, userFrame, potions, shield]);
 
   useEffect(() => { const t = setInterval(() => setNow(new Date().getTime()), 1000); return () => clearInterval(t); }, []);
 
-  const limits = useMemo(() => ({
-    survival: (weeklyPools.food?.limit || 1000) + (weeklyPools.transport?.limit || 0) + (monthlyPools.housing?.limit || 0),
-    progress: (monthlyPools.education?.limit || 0),
-    desire: (weeklyPools.social?.limit || 0),
-    expedition: (weeklyPools.shopping?.limit || 0)
-  }), [weeklyPools, monthlyPools]);
-
   const hpData = useMemo(() => {
-    const getHp = (p, l) => {
+    const getHp = (p) => {
       const isTeam = activeMode === 'team5v5';
       const todayStr = new Date().toLocaleDateString();
+      const limits = {
+        survival: (weeklyPools.food?.limit || 1000) + (weeklyPools.transport?.limit || 0) + (monthlyPools.housing?.limit || 0),
+        progress: (monthlyPools.education?.limit || 0),
+        desire: (weeklyPools.social?.limit || 0),
+        expedition: (weeklyPools.shopping?.limit || 0)
+      };
+      const limit = limits[p] || 10000;
       const spent = history.filter(h => CATEGORY_MAP[h.category] === p && (h.date === todayStr || p !== 'survival')).reduce((s, h) => s + h.damage, 0);
       const teamSpent = p === 'survival' ? teamSpentDaily : (p === 'progress' ? teamSpentWeekly : teamSpentMonthly);
-      return Math.max(0, 100 - ((isTeam ? teamSpent : spent) / (isTeam ? l * 5 : l || 1) * 100));
+      return Math.max(0, 100 - ((isTeam ? teamSpent : spent) / (isTeam ? limit * 5 : limit || 1) * 100));
     };
-    return { survival: getHp('survival', limits.survival), progress: getHp('progress', limits.progress), desire: getHp('desire', limits.desire), expedition: getHp('expedition', limits.expedition) };
-  }, [history, activeMode, teamSpentDaily, teamSpentWeekly, teamSpentMonthly, limits]);
+    return { survival: getHp('survival'), progress: getHp('progress'), desire: getHp('desire'), expedition: getHp('expedition') };
+  }, [history, activeMode, teamSpentDaily, teamSpentWeekly, teamSpentMonthly, weeklyPools, monthlyPools]);
 
-  const enemyHpData = useMemo(() => ({
-    survival: Math.max(0, 100 - (enemySpentDaily / (limits.survival * 5 || 1) * 100)),
-    progress: Math.max(0, 100 - (enemySpentWeekly / (limits.progress * 5 || 1) * 100)),
-    desire: Math.max(0, 100 - (enemySpentMonthly / (limits.desire * 5 || 1) * 100)),
-    expedition: Math.max(0, 100 - (enemySpentMonthly / (limits.expedition * 5 || 1) * 100))
-  }), [enemySpentDaily, enemySpentWeekly, enemySpentMonthly, limits]);
+  const enemyHpData = useMemo(() => {
+    const limits = {
+      survival: (weeklyPools.food?.limit || 1000) + (weeklyPools.transport?.limit || 0) + (monthlyPools.housing?.limit || 0),
+      progress: (monthlyPools.education?.limit || 0),
+      desire: (weeklyPools.social?.limit || 0),
+      expedition: (weeklyPools.shopping?.limit || 0)
+    };
+    return {
+      survival: Math.max(0, 100 - (enemySpentDaily / (limits.survival * 5 || 1) * 100)),
+      progress: Math.max(0, 100 - (enemySpentWeekly / (limits.progress * 5 || 1) * 100)),
+      desire: Math.max(0, 100 - (enemySpentMonthly / (limits.desire * 5 || 1) * 100)),
+      expedition: Math.max(0, 100 - (enemySpentMonthly / (limits.expedition * 5 || 1) * 100))
+    };
+  }, [enemySpentDaily, enemySpentWeekly, enemySpentMonthly, weeklyPools, monthlyPools]);
 
   const handleAutoCalculate = () => {
     const total = parseInt(salaryInput) || 0;
@@ -164,7 +203,6 @@ const App = () => {
     return "記帳或『我想買...』發起豪賭";
   };
 
-  // 🛡️ [戰損修復邏輯]
   const healTransaction = (id) => {
     if (potions <= 0) return;
     setHistory(prev => prev.map(h => h.id === id ? { ...h, damage: 0, desc: `✨ [已修復] ${h.desc}` } : h));
@@ -172,19 +210,55 @@ const App = () => {
     addLog("💊 [修復] 使用了忘憂聖水，抹除了一筆戰損血量！");
   };
 
+  if (isCloudLoading) {
+    return (
+      <div className="min-h-screen bg-[#F7F4EF] flex flex-col items-center justify-center font-bold text-stone-500 gap-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-stone-800"></div>
+        <div>戰線讀取中...</div>
+        <button onClick={() => setIsCloudLoading(false)} className="text-[10px] text-stone-400 underline mt-4">強制進入 (如果持續卡住)</button>
+      </div>
+    );
+  }
+
   return (
-    <AppContent 
-      {...{ isSevered, view, setView, coins, setCoins, debt, willpowerExp, persona, personaStats, setPersona,
-        history, wishlist, setWishlist, homeMaterials, activeMode, setActiveMode, battleLog, activeChallenges,
-        pendingTx, setPendingTx, isAiProcessing, aiComment, reflectionText, setReflectionText, 
-        coldWarEndTime, now, nlpInput, setNlpInput, showBudgetSetup, setShowBudgetSetup, showShop, setShowShop, 
-        showCustomModal, setShowCustomModal, hpData, enemyHpData, executeTransaction, processTransaction, 
-        executeRitual, handleClaimChallenge, handleGiveUpChallenge, simulateInvoice, handleAutoCalculate, 
-        handleSavePersona, getSeveredReason, getHellPlaceholder, currentTier, lastPersonaSwitch, setLastPersonaSwitch,
-        userFrame, setUserFrame, salaryInput, setSalaryInput, isStudent, setIsStudent, currency, setCurrency, setCurrentTier,
-        deleteTransaction, updateTransaction, weeklyPools, setWeeklyPools, monthlyPools, setMonthlyPools,
-        getBondLevel, getFrameStyle, potions, setPotions, healTransaction }} 
-    />
+    <>
+      <AppContent 
+        {...{ isSevered, view, setView, coins, setCoins, debt, setDebt, willpowerExp, persona, personaStats, setPersona,
+          history, wishlist, setWishlist, homeMaterials, activeMode, setActiveMode, battleLog, activeChallenges,
+          pendingTx, setPendingTx, isAiProcessing, aiComment, reflectionText, setReflectionText, 
+          coldWarEndTime, now, nlpInput, setNlpInput, showBudgetSetup, setShowBudgetSetup, showShop, setShowShop, 
+          showCustomModal, setShowCustomModal, showAchievements, setShowAchievements, achievements,
+          hpData, enemyHpData, executeTransaction, processTransaction, 
+          executeRitual, handleClaimChallenge, handleGiveUpChallenge, simulateInvoice, handleAutoCalculate, 
+          handleSavePersona, getSeveredReason, getHellPlaceholder, currentTier, lastPersonaSwitch, setLastPersonaSwitch,
+          userFrame, setUserFrame, salaryInput, setSalaryInput, isStudent, setIsStudent, currency, setCurrency, setCurrentTier,
+          deleteTransaction, updateTransaction, weeklyPools, setWeeklyPools, monthlyPools, setMonthlyPools,
+          getBondLevel, getFrameStyle, potions, setPotions, healTransaction,
+          shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles, handleClaimAchievement,
+          user, setShowLogin, unlockAchievement, generateMonthlyReview }} 
+      />
+      {showLogin && (
+        <div className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="relative w-full max-w-md animate-in slide-in-from-bottom-10 duration-300">
+            <button onClick={() => setShowLogin(false)} className="absolute top-4 right-4 z-[1001] p-2 bg-stone-100 rounded-full text-stone-500"><X size={16}/></button>
+            <LoginScreen />
+          </div>
+        </div>
+      )}
+
+      {achievementNotification && (
+        <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[2000] w-[90%] max-w-sm bg-stone-900 text-white p-4 rounded-3xl shadow-2xl flex items-center gap-4 animate-in slide-in-from-top-20 duration-500 border border-amber-500/50">
+          <div className="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-amber-500/20">
+            {achievementNotification.icon}
+          </div>
+          <div className="flex-1">
+            <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest">成就達成！</p>
+            <h4 className="text-sm font-black tracking-tight">{achievementNotification.name}</h4>
+          </div>
+          <button onClick={() => { setShowAchievements(true); setAchievementNotification(null); }} className="bg-stone-800 px-3 py-2 rounded-xl text-[9px] font-black hover:bg-stone-700 active:scale-95 transition-all">點亮</button>
+        </div>
+      )}
+    </>
   );
 };
 export default App;

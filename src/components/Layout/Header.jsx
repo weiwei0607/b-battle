@@ -4,7 +4,7 @@ import { getWalletStatus } from '../../utils/constants';
 
 const Header = ({ currentTier, coins, debt, onShopClick, setView, willpowerExp }) => {
   const wallet = getWalletStatus(willpowerExp);
-  const isInDebt = debt > 0;
+  const isInDebt = debt >= 500;
 
   return (
     <header className="flex justify-between items-center z-10 py-6 shrink-0">
@@ -14,10 +14,10 @@ const Header = ({ currentTier, coins, debt, onShopClick, setView, willpowerExp }
         </div>
         <div className="flex flex-col text-left">
           <span className={`font-bold text-base leading-none ${isInDebt ? 'text-red-600' : 'text-stone-800'}`}>
-            {isInDebt ? '負債超人' : 'B-BATTLE'}
+            B-BATTLE
           </span>
           <span className={`text-[9px] font-bold ${isInDebt ? 'text-red-400' : wallet.color} uppercase tracking-widest mt-1`}>
-            {isInDebt ? `欠債 NT$${debt}` : wallet.name}
+            {isInDebt ? `負債超人 (欠債 NT$${debt})` : wallet.name}
           </span>
         </div>
       </div>

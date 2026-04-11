@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Settings2, Heart, Lock, Sparkles, Clock, Target, AlertCircle, Home, Hammer } from 'lucide-react';
+import { Settings2, Heart, Lock, Sparkles, Clock, Target, AlertCircle, Home, Hammer, LogOut } from 'lucide-react';
 import { getHomeStatus, getBondLevel, getFrameStyle } from '../../utils/constants';
+import { auth, signOut } from '../../firebase';
 
 const HeroHallView = ({ 
   userTitle, userFrame, persona, personaStats, setPersona,
   setShowBudgetSetup, currentTier, lastPersonaSwitch, setLastPersonaSwitch, 
-  setShowCustomModal, wishlist, setWishlist, debt, homeMaterials
+  wishlist, setWishlist, debt, homeMaterials
 }) => {
   const [now, setNow] = useState(Date.now());
   const safeMaterials = homeMaterials || 0;
@@ -72,13 +73,13 @@ const HeroHallView = ({
       </div>
 
       <div className="relative inline-block group text-center w-full">
-        <div className={`w-28 h-28 bg-[#FAF7F2] rounded-[2.5rem] flex items-center justify-center text-5xl rotate-3 mx-auto shadow-sm overflow-hidden transition-transform group-hover:scale-105 ${frameStyle} ${debt > 0 ? 'grayscale sepia' : ''}`}>
+        <div className={`w-28 h-28 bg-[#FAF7F2] rounded-[2.5rem] flex items-center justify-center text-5xl rotate-3 mx-auto shadow-sm overflow-hidden transition-transform group-hover:scale-105 ${frameStyle} ${debt >= 500 ? 'grayscale sepia' : ''}`}>
           {currentPersona.icon?.startsWith('data:') ? <img src={currentPersona.icon} className="w-full h-full object-cover" alt="avatar" /> : currentPersona.icon}
         </div>
-        <div className="absolute left-1/2 -translate-x-1/2 -bottom-2 bg-stone-800 text-white text-[10px] font-bold px-3 py-1.5 rounded-xl shadow-lg border border-white/10">Lv.{bondLevel}</div>
+        <div className="absolute left-1/2 -translate-x-1/2 -bottom-2 bg-stone-800 text-white text-[10px] font-bold px-3 py-1.5 rounded-xl shadow-lg border border-white/10">Lv.{bondLevel.level}</div>
       </div>
       
-      <h2 className={`text-3xl font-black tracking-tight text-center ${debt > 0 ? 'text-red-600' : 'text-stone-800'}`}>{userTitle}</h2>
+      <h2 className={`text-3xl font-black tracking-tight text-center ${debt >= 500 ? 'text-red-600' : 'text-stone-800'}`}>{userTitle}</h2>
 
       <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 px-2">
         {Object.entries(personaStats).map(([pId, stats]) => {
@@ -100,6 +101,10 @@ const HeroHallView = ({
       </div>
 
       <button onClick={setShowBudgetSetup} className="w-full py-5 bg-stone-800 text-white rounded-[2rem] font-black flex items-center justify-center gap-3 shadow-xl text-[11px] tracking-[0.2em] active:scale-95 transition-all"><Settings2 size={18} /> 戰略預算部署</button>
+      
+      <button onClick={() => signOut(auth)} className="w-full py-4 mt-4 bg-transparent border-2 border-stone-200 text-stone-400 hover:text-stone-600 hover:border-stone-300 rounded-[2rem] font-bold flex items-center justify-center gap-2 text-[11px] tracking-[0.2em] active:scale-95 transition-all">
+        <LogOut size={16} /> 登出帳號
+      </button>
     </div>
   );
 };
