@@ -6,7 +6,7 @@ import { getDoc, doc, setDoc } from "firebase/firestore";
 import { CATEGORY_MAP, getBondLevel, getFrameStyle } from './utils/constants';
 import { useBattleCore } from './hooks/useBattleCore';
 import AppContent from './components/Layout/AppContent';
-import { X } from 'lucide-react';
+import { X, Swords } from 'lucide-react';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || window.VITE_GEMINI_API_KEY || "";
 const load = (k, f) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : f; } catch { return f; } };
@@ -88,7 +88,10 @@ const App = () => {
   );
 
   useEffect(() => {
-    const loadingTimeout = setTimeout(() => { setIsCloudLoading(false); }, 1200);
+    // 🌿 無印風體驗優化：強制保留 2.5 秒的呼吸感，讓用戶平靜心情
+    const minLoadingTime = 2500;
+    const startTime = Date.now();
+
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       if (u) {
         setUser(u);
@@ -114,20 +117,19 @@ const App = () => {
             if (d.userTitle !== undefined) setUserTitle(d.userTitle);
             if (d.unlockedTitles !== undefined) setUnlockedTitles(d.unlockedTitles);
             if (d.achievements !== undefined) setAchievements(d.achievements);
-          } else {
-            await setDoc(doc(db, "users", u.uid), { 
-              coins, debt, history, personaStats, persona, exp: willpowerExp, 
-              wishlist, severed: isSevered, lastTrackDate, coldWarEndTime, 
-              homeMaterials, currentTier, potions, shield, userTitle, 
-              unlockedTitles, achievements 
-            });
           }
         } catch (err) { console.error("Sync Error:", err); }
       } else { setUser(null); }
-      setIsCloudLoading(false);
-      clearTimeout(loadingTimeout);
+
+      // 計算還剩多少時間需要等待
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+
+      setTimeout(() => {
+        setIsCloudLoading(false);
+      }, remainingTime);
     });
-    return () => { unsubscribe(); clearTimeout(loadingTimeout); };
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -210,15 +212,61 @@ const App = () => {
     addLog("💊 [修復] 使用了忘憂聖水，抹除了一筆戰損血量！");
   };
 
-  if (isCloudLoading) {
+  const LoadingScreen = () => {
+    const messages = ["正在為您整理戰報...", "AI 夥伴正在就位...", "深呼吸，檢查意志力防線...", "平靜心情，準備記帳..."];
+    const [msgIdx, setMsgIdx] = useState(0);
+    const greetings = {
+      asian_parent: "老媽：『水喝了沒？錢別亂花喔。』",
+      partner: "另一半：『今天辛苦了，我幫你記著呢。』",
+      instructor: "教官：『全體集合！檢查你的皮夾支柱！』",
+      peer: "同學：『又來了？這次要記什麼？』",
+      bestie: "閨蜜：『不管買什麼，我都挺你！』"
+    };
+
+    useEffect(() => {
+      const t = setInterval(() => setMsgIdx(p => (p + 1) % messages.length), 800);
+      return () => clearInterval(t);
+    }, []);
+
     return (
-      <div className="min-h-screen bg-[#F7F4EF] flex flex-col items-center justify-center font-bold text-stone-500 gap-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-stone-800"></div>
-        <div>戰線讀取中...</div>
-        <button onClick={() => setIsCloudLoading(false)} className="text-[10px] text-stone-400 underline mt-4">強制進入 (如果持續卡住)</button>
+      <div className="min-h-screen bg-[#F7F4EF] flex flex-col items-center justify-center animate-in fade-in duration-1000">
+        <style>{`
+          @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+          }
+          .animate-float { animation: floating 3s ease-in-out infinite; }
+        `}</style>
+        
+        <div className="animate-float mb-12">
+          <div className="w-20 h-20 bg-stone-800 rounded-[2.5rem] flex items-center justify-center shadow-2xl shadow-stone-200">
+            <Swords size={40} className="text-white" />
+          </div>
+        </div>
+
+        <div className="w-32 h-px bg-stone-200 relative overflow-hidden mb-6">
+          <div className="absolute inset-0 bg-stone-400 w-1/3 animate-[translateX_2s_infinite_linear]" style={{animation: 'loadingSlide 1.5s infinite ease-in-out'}}></div>
+        </div>
+        <style>{`
+          @keyframes loadingSlide {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(300%); }
+          }
+        `}</style>
+
+        <div className="text-[11px] font-black text-stone-400 tracking-[0.2em] transition-all duration-500 uppercase">
+          {messages[msgIdx]}
+        </div>
+
+        <div className="fixed bottom-16 text-[10px] font-medium text-stone-400 italic px-8 text-center animate-pulse">
+          {greetings[persona] || "正在開啟您的意志力之旅..."}
+        </div>
       </div>
     );
-  }
+  };
+
+  if (isCloudLoading) return <LoadingScreen />;
 
   return (
     <>

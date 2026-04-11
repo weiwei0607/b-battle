@@ -21,9 +21,15 @@ export default defineConfig({
         display: 'standalone',
         icons: [
           {
-            src: 'https://cdn.iconscout.com/icon/free/png-256/free-swords-icon-download-in-svg-png-gif-file-formats--weapon-battle-armor-war-viking-pack-role-playing-icons-2651347.png',
-            sizes: '256x256',
+            src: 'https://cdn-icons-png.flaticon.com/512/1065/1065511.png',
+            sizes: '192x192',
             type: 'image/png'
+          },
+          {
+            src: 'https://cdn-icons-png.flaticon.com/512/1065/1065511.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       }
