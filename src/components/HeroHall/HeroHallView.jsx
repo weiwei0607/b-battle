@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Settings2, Heart, Lock, Sparkles, Clock, Target, AlertCircle, Home, Hammer, LogOut } from 'lucide-react';
+import { Settings2, Heart, Lock, Sparkles, Clock, Target, AlertCircle, Home, Hammer, LogOut, LogIn, Cloud } from 'lucide-react';
 import { getHomeStatus, getBondLevel, getFrameStyle } from '../../utils/constants';
 import { auth, signOut } from '../../firebase';
 
 const HeroHallView = ({ 
   userTitle, userFrame, persona, personaStats, setPersona,
   setShowBudgetSetup, currentTier, lastPersonaSwitch, setLastPersonaSwitch, 
-  wishlist, setWishlist, debt, homeMaterials
+  wishlist, setWishlist, debt, homeMaterials, user, setShowLogin, setView
 }) => {
   const [now, setNow] = useState(Date.now());
   const safeMaterials = homeMaterials || 0;
@@ -24,6 +24,16 @@ const HeroHallView = ({
   const currentPersona = personaStats[persona];
   const bondLevel = getBondLevel(currentPersona.intimacy);
   const frameStyle = getFrameStyle(userFrame);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      alert("已安全登出，資料將保留在本地瀏覽器。");
+      setView('battle'); // 自動跳轉回首頁，增加「動態感」
+    } catch (err) {
+      alert("登出失敗：" + err.message);
+    }
+  };
 
   const checkAndSetPersona = (pId) => {
     if (pId === persona) return;
@@ -57,7 +67,7 @@ const HeroHallView = ({
         </div>
         <div className="relative z-10 flex flex-col items-center">
           <div className="text-6xl mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] animate-bounce">{home.icon}</div>
-          <p className="text-[10px] font-black text-amber-400 uppercase tracking-[0.3em] mb-1">Dream Territory</p>
+          <p className="text-[10px] font-black text-amber-400 uppercase tracking-[0.3em] mb-1">Dream Territory {user ? "☁️" : "📡"}</p>
           <h3 className="text-xl font-black text-white tracking-tight">{home.name}</h3>
           <div className="mt-6 w-full space-y-2">
             <div className="flex justify-between items-end">
@@ -102,9 +112,15 @@ const HeroHallView = ({
 
       <button onClick={setShowBudgetSetup} className="w-full py-5 bg-stone-800 text-white rounded-[2rem] font-black flex items-center justify-center gap-3 shadow-xl text-[11px] tracking-[0.2em] active:scale-95 transition-all"><Settings2 size={18} /> 戰略預算部署</button>
       
-      <button onClick={() => signOut(auth)} className="w-full py-4 mt-4 bg-transparent border-2 border-stone-200 text-stone-400 hover:text-stone-600 hover:border-stone-300 rounded-[2rem] font-bold flex items-center justify-center gap-2 text-[11px] tracking-[0.2em] active:scale-95 transition-all">
-        <LogOut size={16} /> 登出帳號
-      </button>
+      {user ? (
+        <button onClick={handleLogout} className="w-full py-4 mt-4 bg-transparent border-2 border-stone-200 text-stone-400 hover:text-stone-600 hover:border-stone-300 rounded-[2rem] font-bold flex items-center justify-center gap-2 text-[11px] tracking-[0.2em] active:scale-95 transition-all">
+          <LogOut size={16} /> 登出帳號並備份
+        </button>
+      ) : (
+        <button onClick={() => setShowLogin(true)} className="w-full py-4 mt-4 bg-blue-50 border-2 border-blue-100 text-blue-600 hover:bg-blue-100 rounded-[2rem] font-bold flex items-center justify-center gap-2 text-[11px] tracking-[0.2em] active:scale-95 transition-all shadow-sm">
+          <LogIn size={16} /> 登入並同步雲端
+        </button>
+      )}
     </div>
   );
 };
