@@ -24,10 +24,16 @@ const BattleArenaView = ({
   const [showInviteQR, setShowInviteQR] = useState(false);
   const [tempRoom, setTempRoom] = useState("");
 
-  const handleJoinRoom = (id, mode = 'team5v5') => {
-    setRoomId(id || tempRoom);
+  const handleJoinRoom = (id) => {
+    const finalRoom = id || tempRoom;
+    setRoomId(finalRoom);
     setShowRoomInput(false);
-    setActiveMode(mode);
+    // 如果是 1v1 或房號是 4 位數，通常視為 1v1
+    if (activeMode === 'selection' || activeMode === '1v1' || finalRoom.length === 4) {
+      setActiveMode('1v1');
+    } else {
+      setActiveMode('team5v5');
+    }
   };
 
   const handleStart1v1Duel = () => {
@@ -50,10 +56,27 @@ const BattleArenaView = ({
           <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mt-2">意志力戰略防線</p>
         </div>
         <div className="flex gap-2">
-          {/* 1v1 切換與發起對決 */}
+          {/* 🚀 模式切換與 1v1 房號按鈕 */}
           <div className="flex bg-white border border-stone-100 rounded-xl overflow-hidden shadow-sm">
-            <button onClick={() => setActiveMode('selection')} className={`px-3 py-2 text-[9px] font-black transition-all ${activeMode === 'selection' || activeMode === '1v1' ? 'bg-stone-800 text-white' : 'text-stone-400'}`}>1v1</button>
-            <button onClick={() => setShowRoomInput(true)} className={`px-3 py-2 text-[9px] font-black transition-all ${activeMode === 'team5v5' ? 'bg-amber-500 text-white' : 'text-stone-400'}`}>5v5</button>
+            <button 
+              onClick={() => setActiveMode('selection')} 
+              className={`px-3 py-2 text-[9px] font-black transition-all ${activeMode === 'selection' || activeMode === '1v1' ? 'bg-stone-800 text-white' : 'text-stone-400'}`}
+            >
+              1v1
+            </button>
+            <button 
+              onClick={() => { setShowRoomInput(true); setTempRoom(""); }} 
+              className="px-2 py-2 bg-stone-50 text-stone-400 hover:text-stone-800 border-l border-stone-100 transition-colors"
+              title="輸入 1v1 房號"
+            >
+              <Hash size={12} />
+            </button>
+            <button 
+              onClick={() => { setShowRoomInput(true); setTempRoom(""); }} 
+              className={`px-3 py-2 text-[9px] font-black transition-all ${activeMode === 'team5v5' ? 'bg-amber-500 text-white' : 'text-stone-400'}`}
+            >
+              5v5
+            </button>
           </div>
         </div>
       </div>
