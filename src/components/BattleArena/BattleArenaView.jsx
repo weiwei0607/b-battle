@@ -56,24 +56,16 @@ const BattleArenaView = ({
           <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mt-2">意志力戰略防線</p>
         </div>
         <div className="flex gap-2">
-          {/* 🚀 模式切換與 1v1 房號按鈕 */}
           <div className="flex bg-white border border-stone-100 rounded-xl overflow-hidden shadow-sm">
             <button 
               onClick={() => setActiveMode('selection')} 
-              className={`px-3 py-2 text-[9px] font-black transition-all ${activeMode === 'selection' || activeMode === '1v1' ? 'bg-stone-800 text-white' : 'text-stone-400'}`}
+              className={`px-4 py-2 text-[9px] font-black transition-all ${activeMode === 'selection' || activeMode === '1v1' ? 'bg-stone-800 text-white' : 'text-stone-400'}`}
             >
               1v1
             </button>
             <button 
-              onClick={() => { setShowRoomInput(true); setTempRoom(""); }} 
-              className="px-2 py-2 bg-stone-50 text-stone-400 hover:text-stone-800 border-l border-stone-100 transition-colors"
-              title="輸入 1v1 房號"
-            >
-              <Hash size={12} />
-            </button>
-            <button 
-              onClick={() => { setShowRoomInput(true); setTempRoom(""); }} 
-              className={`px-3 py-2 text-[9px] font-black transition-all ${activeMode === 'team5v5' ? 'bg-amber-500 text-white' : 'text-stone-400'}`}
+              onClick={() => setShowRoomInput(true)} 
+              className={`px-4 py-2 text-[9px] font-black transition-all ${activeMode === 'team5v5' ? 'bg-amber-500 text-white' : 'text-stone-400'}`}
             >
               5v5
             </button>
@@ -100,26 +92,43 @@ const BattleArenaView = ({
         </div>
       )}
 
-      {/* 📱 邀請彈窗 (QR Code) */}
+      {/* 📱 對決中心 (QR Code + 手動輸入融合版) */}
       {showInviteQR && (
         <div className="fixed inset-0 z-[6000] bg-stone-900/60 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-xs rounded-[3rem] p-8 shadow-2xl text-center">
-            <h3 className="text-xl font-black text-stone-800 mb-1">邀請戰友</h3>
-            <p className="text-[9px] text-stone-400 font-bold mb-6 uppercase tracking-widest">掃描二維碼一鍵進入戰場</p>
+          <div className="bg-[#F7F4EF] w-full max-w-xs rounded-[3rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300 text-center">
+            <h3 className="text-xl font-black text-stone-800 mb-1">對決中心</h3>
+            <p className="text-[9px] text-stone-400 font-bold mb-6 uppercase tracking-widest">邀請戰友或加入戰場</p>
             
-            <div className="bg-white p-4 rounded-3xl border-2 border-stone-50 mb-6 flex justify-center shadow-inner">
+            {/* 上部：我的房號與 QR */}
+            <div className="bg-white p-4 rounded-3xl border border-stone-100 mb-6 shadow-inner">
               <img 
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(getInviteUrl())}&bgcolor=F7F4EF`} 
                 alt="Invite QR" 
-                className="w-40 h-40 rounded-xl"
+                className="w-32 h-32 mx-auto rounded-xl mb-3"
               />
+              <p className="text-[10px] font-black text-stone-400 uppercase">我的房號</p>
+              <p className="text-2xl font-black text-stone-800 tracking-widest">{roomId || "----"}</p>
             </div>
 
-            <div className="bg-stone-50 p-3 rounded-xl mb-6 select-all font-mono text-[10px] text-stone-500 break-all border border-stone-100">
-              {getInviteUrl()}
+            {/* 中部：加入好友的戰場 */}
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center gap-2">
+                <input 
+                  value={tempRoom} 
+                  onChange={(e)=>setTempRoom(e.target.value)} 
+                  placeholder="輸入好友房號" 
+                  className="flex-1 bg-white border border-stone-200 p-3 rounded-xl text-sm font-black text-center focus:border-amber-400 outline-none" 
+                />
+                <button 
+                  onClick={() => handleJoinRoom(tempRoom, '1v1')} 
+                  className="bg-stone-800 text-white p-3 rounded-xl active:scale-90 transition-all shadow-md"
+                >
+                  加入
+                </button>
+              </div>
             </div>
 
-            <button onClick={() => setShowInviteQR(false)} className="w-full py-4 bg-stone-800 text-white rounded-2xl font-black text-xs active:scale-95 transition-all">關閉</button>
+            <button onClick={() => setShowInviteQR(false)} className="w-full py-4 bg-stone-200 text-stone-600 rounded-2xl font-black text-xs active:scale-95 transition-all">返回戰線</button>
           </div>
         </div>
       )}
