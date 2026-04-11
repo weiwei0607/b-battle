@@ -4,6 +4,7 @@ import LoginScreen from './components/LoginScreen';
 import { onAuthStateChanged } from "firebase/auth";
 import { getDoc, doc, setDoc } from "firebase/firestore";
 import { CATEGORY_MAP, getBondLevel, getFrameStyle } from './utils/constants';
+import { LOCALES } from './utils/locales';
 import { useBattleCore } from './hooks/useBattleCore';
 import AppContent from './components/Layout/AppContent';
 import { X, Swords, WifiOff } from 'lucide-react';
@@ -11,16 +12,13 @@ import { X, Swords, WifiOff } from 'lucide-react';
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || window.VITE_GEMINI_API_KEY || "";
 const load = (k, f) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : f; } catch { return f; } };
 
-// 🌿 將 LoadingScreen 移到外部，確保狀態穩定不被重設
-const LoadingScreen = ({ onComplete, persona }) => {
+const LoadingScreen = ({ onComplete, persona, lang }) => {
   const [progress, setProgress] = useState(0);
-  const messages = ["正在整理戰報...", "同步雲端數據...", "AI 夥伴就位中...", "即將進入戰線..."];
+  const t = LOCALES[lang] || LOCALES.zh;
+  const messages = [t.loading_report, t.loading_sync, t.loading_ai, t.loading_ready];
+  
   const greetings = {
-    peer: "同學：『又來了？這次要記什麼？』",
-    asian_parent: "老媽：『水喝了沒？錢別亂花喔。』",
-    bestie: "閨蜜：『不管買什麼，我都挺你！』",
-    instructor: "教官：『全體集合！檢查你的皮夾支柱！』",
-    partner: "另一半：『今天辛苦了，我幫你記著呢。』"
+    peer: "🙄", asian_parent: "🧧", bestie: "💅", instructor: "👺", partner: "🌹"
   };
 
   useEffect(() => {
@@ -28,12 +26,12 @@ const LoadingScreen = ({ onComplete, persona }) => {
       setProgress(p => {
         if (p >= 100) { 
           clearInterval(interval); 
-          setTimeout(onComplete, 400); // 滿格後停留 400ms 增加圓滿感
+          setTimeout(onComplete, 400);
           return 100; 
         }
         return p + 1;
       });
-    }, 25); // 總共約 2.5 秒跑完
+    }, 25);
     return () => clearInterval(interval);
   }, [onComplete]);
 
@@ -45,32 +43,24 @@ const LoadingScreen = ({ onComplete, persona }) => {
         @keyframes floating { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
         .animate-float { animation: floating 3s ease-in-out infinite; }
       `}</style>
-      <div className="animate-float mb-12">
-        <div className={`w-20 h-20 bg-stone-800 rounded-[2.5rem] flex items-center justify-center shadow-2xl transition-all duration-500 ${progress === 100 ? 'scale-110 shadow-stone-400' : 'shadow-stone-200'}`}>
+      <div className="animate-float mb-12 text-center">
+        <div className="w-20 h-20 bg-stone-800 rounded-[2.5rem] flex items-center justify-center shadow-2xl mx-auto mb-4">
           <Swords size={40} className="text-white" />
         </div>
+        <div className="text-2xl mt-2">{greetings[persona]}</div>
       </div>
-      
-      {/* 100% 平滑進度條 */}
       <div className="w-48 h-1 bg-stone-200 rounded-full relative overflow-hidden mb-6">
-        <div 
-          className="absolute inset-y-0 left-0 bg-stone-800 transition-all duration-300 ease-out" 
-          style={{ width: `${progress}%` }}
-        />
+        <div className="absolute inset-y-0 left-0 bg-stone-800 transition-all duration-300 ease-out" style={{ width: `${progress}%` }} />
       </div>
-
-      <div className="text-[11px] font-black text-stone-400 tracking-[0.2em] transition-all duration-300 uppercase h-4 text-center">
+      <div className="text-[11px] font-black text-stone-400 tracking-[0.2em] uppercase h-4 text-center">
         {messages[msgIdx]}
-      </div>
-
-      <div className="fixed bottom-16 text-[10px] font-medium text-stone-400 italic px-8 text-center animate-pulse">
-        {greetings[persona] || "正在開啟您的意志力之旅..."}
       </div>
     </div>
   );
 };
 
 const App = () => {
+  const [lang, setLang] = useState(() => load('bb_lang', 'zh'));
   const [view, setView] = useState('battle');
   const [coins, setCoins] = useState(() => load('bb_coins', 2000));
   const [debt, setDebt] = useState(() => load('bb_debt', 0));
@@ -95,7 +85,7 @@ const App = () => {
   const [wishlist, setWishlist] = useState(() => load('bb_wishlist', "日本來回機票"));
   const [lastTrackDate, setLastTrackDate] = useState(() => load('bb_lastTrack', null));
   const [isCloudLoading, setIsCloudLoading] = useState(true);
-  const [shouldShowApp, setShouldShowApp] = useState(false); // 控制最終跳轉
+  const [shouldShowApp, setShouldShowApp] = useState(false);
   const [user, setUser] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
   const [pendingTx, setPendingTx] = useState(null);
@@ -145,12 +135,12 @@ const App = () => {
     setColdWarEndTime, coldWarEndTime, lastTrackDate, setLastTrackDate, setPendingTx, setIsAiProcessing, isAiProcessing,
     setNlpInput, now, homeMaterials, setHomeMaterials, weeklyPools, monthlyPools, currentTier,
     shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles,
-    potions, setPotions, achievements, setAchievements, setAchievementNotification
+    potions, setPotions, achievements, setAchievements, setAchievementNotification, lang
   );
 
   useEffect(() => {
-    const handleOnline = () => { setIsOnline(true); addLog("🌐 連線恢復，雲端同步啟動。"); };
-    const handleOffline = () => { setIsOnline(false); addLog("📡 目前處於離線模式。"); };
+    const handleOnline = () => { setIsOnline(true); };
+    const handleOffline = () => { setIsOnline(false); };
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     return () => { window.removeEventListener('online', handleOnline); window.removeEventListener('offline', handleOffline); };
@@ -182,6 +172,7 @@ const App = () => {
             if (d.userTitle !== undefined) setUserTitle(d.userTitle);
             if (d.unlockedTitles !== undefined) setUnlockedTitles(d.unlockedTitles);
             if (d.achievements !== undefined) setAchievements(d.achievements);
+            if (d.lang !== undefined) setLang(d.lang);
           }
         } catch (err) { console.error("Sync Error:", err); }
       } else { setUser(null); }
@@ -192,10 +183,10 @@ const App = () => {
 
   useEffect(() => {
     if (!user) {
-      const data = { bb_coins: coins, bb_debt: debt, bb_history: history, bb_exp: willpowerExp, bb_persona: persona, bb_persona_stats: personaStats, bb_achievements: achievements, bb_unlocked_titles: unlockedTitles, bb_title: userTitle, bb_frame: userFrame, bb_potions: potions, bb_shield: shield };
+      const data = { bb_coins: coins, bb_debt: debt, bb_history: history, bb_exp: willpowerExp, bb_persona: persona, bb_persona_stats: personaStats, bb_achievements: achievements, bb_unlocked_titles: unlockedTitles, bb_title: userTitle, bb_frame: userFrame, bb_potions: potions, bb_shield: shield, bb_lang: lang };
       Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, JSON.stringify(v)));
     }
-  }, [user, coins, debt, history, willpowerExp, persona, personaStats, achievements, unlockedTitles, userTitle, userFrame, potions, shield]);
+  }, [user, coins, debt, history, willpowerExp, persona, personaStats, achievements, unlockedTitles, userTitle, userFrame, potions, shield, lang]);
 
   useEffect(() => { const t = setInterval(() => setNow(new Date().getTime()), 1000); return () => clearInterval(t); }, []);
 
@@ -270,18 +261,16 @@ const App = () => {
     addLog("💊 [修復] 使用了忘憂聖水，抹除了一筆戰損血量！");
   };
 
-  // 🚀 如果資料載入完成 且 進度條跑完 100%，才顯示 App
   if (isCloudLoading || !shouldShowApp) {
-    return <LoadingScreen onComplete={() => setShouldShowApp(true)} persona={persona} />;
+    return <LoadingScreen onComplete={() => setShouldShowApp(true)} persona={persona} lang={lang} />;
   }
 
   return (
     <>
-      {/* 📡 離線模式提示條 */}
       {!isOnline && (
         <div className="fixed top-0 left-0 w-full z-[2000] bg-stone-100/90 backdrop-blur-md py-2 border-b border-stone-200 flex items-center justify-center gap-2 animate-in slide-in-from-top duration-500">
           <WifiOff size={12} className="text-stone-400" />
-          <span className="text-[10px] font-black text-stone-500 uppercase tracking-widest">目前處於離線模式，部分功能受限</span>
+          <span className="text-[10px] font-black text-stone-500 uppercase tracking-widest">{LOCALES[lang]?.offline_mode}</span>
         </div>
       )}
 
@@ -298,7 +287,7 @@ const App = () => {
           deleteTransaction, updateTransaction, weeklyPools, setWeeklyPools, monthlyPools, setMonthlyPools,
           getBondLevel, getFrameStyle, potions, setPotions, healTransaction,
           shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles, handleClaimAchievement,
-          user, setShowLogin, unlockAchievement, generateMonthlyReview, isOnline }} 
+          user, setShowLogin, unlockAchievement, generateMonthlyReview, isOnline, lang, setLang }} 
       />
       {showLogin && (
         <div className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">

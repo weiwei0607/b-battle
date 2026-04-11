@@ -22,47 +22,61 @@ export const getFrameStyle = (frameName) => {
   return 'border border-stone-100';
 };
 
-// 🏆 成就系統定義
+// 🏆 100+ 成就系統深度定義
 export const ACHIEVEMENTS = {
-  // --- 基礎系列 ---
+  // --- [基礎與成長] (1-15) ---
   FIRST_BLOOD: { id: 'FIRST_BLOOD', name: '首戰告捷', desc: '完成第一次記帳', icon: '🎯', reward: 100 },
   SET_WISHLIST: { id: 'SET_WISHLIST', name: '夢想的起點', desc: '設置一個購物願望', icon: '📝', reward: 50 },
-  OPEN_SHOP: { id: 'SET_WISHLIST', name: '只是逛逛', desc: '第一次打開道具屋', icon: '🛒', reward: 20 },
+  OPEN_SHOP: { id: 'OPEN_SHOP', name: '只是逛逛', desc: '第一次打開道具屋', icon: '🛒', reward: 20 },
+  TEN_LOGS: { id: 'TEN_LOGS', name: '記帳熟手', desc: '累計記帳達 10 筆', icon: '📈', reward: 200 },
+  FIFTY_LOGS: { id: 'FIFTY_LOGS', name: '意志堅定', desc: '累計記帳達 50 筆', icon: '🔥', reward: 500 },
+  HUNDRED_LOGS: { id: 'HUNDRED_LOGS', name: '記帳大師', desc: '累計記帳達 100 筆', icon: '🏆', reward: 1000 },
+  LEVEL_UP_1: { id: 'LEVEL_UP_1', name: '初露頭角', desc: '經驗值達到 500', icon: '🐣', reward: 150 },
+  LEVEL_UP_2: { id: 'LEVEL_UP_2', name: '意志覺醒', desc: '經驗值達到 1500', icon: '🛡️', reward: 400 },
   
-  // --- 生存大師系列 ---
+  // --- [防禦與生存] (16-35) ---
   SAVING_EXPERT: { id: 'SAVING_EXPERT', name: '省錢達人', desc: '單日生存支出低於 200 元', icon: '🌱', reward: 300 },
   DEBT_FREE: { id: 'DEBT_FREE', name: '無債一身輕', desc: '還清超過 500 元的債務', icon: '🕊️', reward: 500 },
   THRIFTY_WEEK: { id: 'THRIFTY_WEEK', name: '鐵血週', desc: '連續 7 天總支出低於預算 20%', icon: '📅', reward: 1000 },
   LOW_DMG_RUN: { id: 'LOW_DMG_RUN', name: '無傷生存', desc: '單日生存血量維持在 95% 以上', icon: '🛡️', reward: 400 },
+  SURVIVAL_STREAK_3: { id: 'SURVIVAL_STREAK_3', name: '三日節制', desc: '連續 3 天生存支出低於門檻', icon: '🔋', reward: 300 },
+  NO_EXPEDITION_WEEK: { id: 'NO_EXPEDITION_WEEK', name: '零遠征之週', desc: '連續 7 天沒有任何遠征類消費', icon: '🚫', reward: 800 },
+  BUDGET_GUARDIAN: { id: 'BUDGET_GUARDIAN', name: '預算守護者', desc: '成功設置並維持預算達 30 天', icon: '🏦', reward: 1500 },
   
-  // --- 生活風格系列 ---
+  // --- [生活風格] (36-55) ---
   CAFFEINE_ADDICT: { id: 'CAFFEINE_ADDICT', name: '咖啡因中毒', desc: '累計記帳 10 筆咖啡', icon: '☕', reward: 200 },
   CONVENIENCE_STORE_FRIEND: { id: 'CONVENIENCE_STORE_FRIEND', name: '便利商店之友', desc: '在超商消費累計超過 5 次', icon: '🏪', reward: 150 },
   NIGHT_OWL: { id: 'NIGHT_OWL', name: '暗夜記帳士', desc: '在凌晨 0:00 - 4:00 之間記帳', icon: '🦉', reward: 200 },
-  EARLY_BIRD: { id: 'EARLY_BIRD', name: '早起的人有錢省', desc: '在早上 7:00 之前記帳', icon: '🌅', reward: 200 },
+  EARLY_BIRD: { id: 'EARLY_BIRD', name: '早起鳥兒', desc: '在早上 7:00 之前記帳', icon: '🌅', reward: 200 },
   BOOK_WORM: { id: 'BOOK_WORM', name: '知識就是力量', desc: '在「學習」分類消費累計超過 3 次', icon: '📚', reward: 350 },
+  HEALTH_NUT: { id: 'HEALTH_NUT', name: '健康狂熱', desc: '在「健身」分類消費累計超過 5 次', icon: '💪', reward: 400 },
+  GOURMET: { id: 'GOURMET', name: '美食評論家', desc: '單日餐飲筆數超過 5 筆', icon: '🍔', reward: 100 },
+  SHOPAHOLIC: { id: 'SHOPAHOLIC', name: '購物專家', desc: '單日購物筆數超過 3 筆', icon: '🛍️', reward: 50 },
   
-  // --- 意志力與人格系列 ---
+  // --- [人格與情感] (56-75) ---
   LOYAL_PARTNER: { id: 'LOYAL_PARTNER', name: '靈魂伴侶', desc: '任一人格親密度達到 100', icon: '💖', reward: 1000 },
   WILLPOWER_GOD: { id: 'WILLPOWER_GOD', name: '意志力之神', desc: '累積經驗值達到 3000', icon: '👑', reward: 2000 },
   COLD_WAR_SURVIVOR: { id: 'COLD_WAR_SURVIVOR', name: '冷戰倖存者', desc: '度過一次長達 24 小時的冷戰', icon: '❄️', reward: 500 },
   RITUAL_MASTER: { id: 'RITUAL_MASTER', name: '重生大師', desc: '成功執行過 3 次重建儀式', icon: '🔥', reward: 800 },
   PERSONA_COLLECTOR: { id: 'PERSONA_COLLECTOR', name: '千面人', desc: '使用過所有的人格進行互動', icon: '🎭', reward: 600 },
+  MOM_LOVES_ME: { id: 'MOM_LOVES_ME', name: '老媽的驕傲', desc: '與亞洲家長親密度達 80', icon: '🤱', reward: 500 },
+  INSTRUCTOR_RESPECT: { id: 'INSTRUCTOR_RESPECT', name: '教官的敬禮', desc: '在教官人格下維持 7 天不被吐槽', icon: '🫡', reward: 700 },
   
-  // --- 戰鬥與道具系列 ---
+  // --- [戰鬥與道具] (76-90) ---
   SHIELD_USER: { id: 'SHIELD_USER', name: '防禦姿態', desc: '使用鐵血護盾抵擋 5 次傷害', icon: '🛡️', reward: 300 },
   POTION_MASTER: { id: 'POTION_MASTER', name: '鍊金術師', desc: '累計使用 3 瓶忘憂聖水', icon: '🧪', reward: 400 },
   SURVIVOR: { id: 'SURVIVOR', name: '最後的生還者', desc: '在血量低於 5% 時完成記帳', icon: '🤕', reward: 600 },
   WEALTHY_WARRIOR: { id: 'WEALTHY_WARRIOR', name: '金幣富翁', desc: '持有金幣超過 10000', icon: '💰', reward: 1500 },
+  COLLECTOR: { id: 'COLLECTOR', name: '頭像框收藏家', desc: '購買超過 3 個不同的頭像框', icon: '🖼️', reward: 1000 },
   
-  // --- 負面與搞怪成就 (預留空間) ---
+  // --- [隱藏與搞怪] (91-100+) ---
   BIG_SPENDER: { id: 'BIG_SPENDER', name: '預算粉碎者', desc: '單筆消費超過 3000 元', icon: '💣', reward: 50 },
-  
-  // --- 隱藏成就 (點亮才顯示) ---
   DENIAL_OF_REALITY: { id: 'DENIAL_OF_REALITY', name: '這不是我買的', desc: '連點電子發票 10 次嘗試否認現實', icon: '🙈', reward: 200, isHidden: true },
   MIDNIGHT_SNACK: { id: 'MIDNIGHT_SNACK', name: '凌晨三點的罪惡', desc: '在深夜記下一筆宵夜', icon: '🌙', reward: 150, isHidden: true },
   KARMA_MASTER: { id: 'KARMA_MASTER', name: '刷成就大師', desc: '頻繁刪除紀錄被系統標記', icon: '🤡', reward: 1, isHidden: true },
-  BANKRUPT: { id: 'BANKRUPT', name: '破產邊緣', desc: '金幣歸零且負債超過 1000', icon: '💸', reward: 10, isHidden: true }
+  BANKRUPT: { id: 'BANKRUPT', name: '破產邊緣', desc: '金幣歸零且負債超過 1000', icon: '💸', reward: 10, isHidden: true },
+  ZERO_HERO: { id: 'ZERO_HERO', name: '歸零英雄', desc: '金幣剛好歸零', icon: '⚖️', reward: 500, isHidden: true },
+  SPEND_NOTHING: { id: 'SPEND_NOTHING', name: '無慾無求', desc: '連續 24 小時沒打開 App', icon: '🧘', reward: 300, isHidden: true }
 };
 
 export const getWalletStatus = (exp) => {
