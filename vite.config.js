@@ -9,9 +9,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      devOptions: {
-        enabled: true
-      },
+      devOptions: { enabled: true },
       manifest: {
         name: 'B-Battle: 意志力記帳',
         short_name: 'B-Battle',
@@ -20,20 +18,27 @@ export default defineConfig({
         background_color: '#F7F4EF',
         display: 'standalone',
         icons: [
-          {
-            src: 'https://cdn-icons-png.flaticon.com/512/1065/1065511.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'https://cdn-icons-png.flaticon.com/512/1065/1065511.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable'
-          }
+          { src: 'https://cdn-icons-png.flaticon.com/512/1065/1065511.png', sizes: '192x192', type: 'image/png' },
+          { src: 'https://cdn-icons-png.flaticon.com/512/1065/1065511.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
         ]
       }
     })
   ],
   base: '/',
+  build: {
+    rollupOptions: {
+      output: {
+        // 🚀 Code Splitting: 解決 500k 警告，將套件拆分出獨立檔案
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('firebase')) return 'vendor-firebase';
+            if (id.includes('react')) return 'vendor-react';
+            if (id.includes('lucide')) return 'vendor-icons';
+            return 'vendor-others';
+          }
+        }
+      }
+    },
+    chunkSizeWarningLimit: 800 // 提高警告閾值至 800k
+  }
 })

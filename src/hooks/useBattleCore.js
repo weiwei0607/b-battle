@@ -32,15 +32,13 @@ export const useBattleCore = (
   lang
 ) => {
 
-  const cooldownThreshold = 2000;
-
   const unlockAchievement = useCallback((id) => {
     if (achievements[id]?.unlocked) return;
     const medal = ACHIEVEMENTS[id];
     if (!medal) return;
     setAchievements(prev => ({ ...prev, [id]: { unlocked: true, claimed: false, date: new Date().toLocaleDateString() } }));
     setAchievementNotification({ id, name: medal.name, icon: medal.icon });
-    addLog(`🏆 [成就達成] ${medal.name}！`);
+    addLog(`🏆 [NEW] ${medal.name}!`);
   }, [achievements, setAchievements, addLog, setAchievementNotification]);
 
   const handleClaimAchievement = useCallback((id) => {
@@ -52,21 +50,27 @@ export const useBattleCore = (
       if (gain >= debt) { setCoins(c => c + (gain - debt)); setDebt(0); }
       else { setDebt(d => d - gain); }
     } else { setCoins(c => c + gain); }
-    addLog(`✨ [點亮] 獲得 ${gain} 金幣！`);
+    addLog(`✨ [領取] 獲得 ${gain} 金幣！`);
   }, [achievements, setAchievements, debt, setCoins, setDebt, addLog]);
 
   const executeTransaction = async (amount, desc, category, source = "manual") => {
     if (isAiProcessing) return;
     
-    // --- 成就觸發邏輯 ---
+    // --- 還原完整成就檢查邏輯 ---
     unlockAchievement('FIRST_BLOOD');
     if (amount >= 3000) unlockAchievement('BIG_SPENDER');
-    if (history.length + 1 >= 10) unlockAchievement('TEN_LOGS');
-    if (history.length + 1 >= 50) unlockAchievement('FIFTY_LOGS');
-    if (history.length + 1 >= 100) unlockAchievement('HUNDRED_LOGS');
+    const totalCount = history.length + 1;
+    if (totalCount >= 100) unlockAchievement('LOGS_100');
+    if (totalCount >= 1000) unlockAchievement('LOGS_1000');
+    if (totalCount >= 10000) unlockAchievement('LOGS_10000');
+    if (totalCount >= 100000) unlockAchievement('LOGS_100000');
+    if (totalCount >= 1000000) unlockAchievement('LOGS_1000000');
     
     const h = new Date().getHours();
-    if (h >= 0 && h < 4) unlockAchievement('NIGHT_OWL');
+    if (h >= 0 && h < 4) {
+      unlockAchievement('NIGHT_OWL');
+      if (category === '餐飲' || category === '飲料') unlockAchievement('MIDNIGHT_SNACK');
+    }
     if (h >= 5 && h < 7) unlockAchievement('EARLY_BIRD');
     
     if (desc.includes("咖啡")) {
@@ -84,34 +88,31 @@ export const useBattleCore = (
 
     let penaltyHp = 0;
     const pillar = CATEGORY_MAP[category] || 'expedition';
-    if (isSevered) { penaltyHp += amount * 0.5; }
+    if (isSevered) penaltyHp += amount * 0.5;
 
     let totalDamage = amount + penaltyHp;
     if (shield > 0) {
-      totalDamage *= 0.8; setShield(s => Math.max(0, s - 0.1));
-      const sUses = (localStorage.getItem('bb_shield_uses') || 0) + 1;
-      localStorage.setItem('bb_shield_uses', sUses);
-      if (sUses >= 5) unlockAchievement('SHIELD_USER');
+      totalDamage *= 0.8; 
+      setShield(s => Math.max(0, s - 0.1));
+      unlockAchievement('SHIELD_USER'); 
     }
 
     const newEntry = { id: Date.now(), amount, desc, category, pillar, damage: totalDamage, isCrit: penaltyHp > 0, source, time: new Date().toLocaleTimeString(), date: new Date().toLocaleDateString() };
     setHistory(prev => [newEntry, ...prev]);
-    
-    setWillpowerExp(e => {
-      const next = e + 15;
-      if (next >= 500) unlockAchievement('LEVEL_UP_1');
-      if (next >= 1500) unlockAchievement('LEVEL_UP_2');
-      if (next >= 3000) unlockAchievement('WILLPOWER_GOD');
-      return next;
-    });
+    setWillpowerExp(e => e + 15);
 
     if (apiKey) {
       setIsAiProcessing(true);
       try {
-        const prompt = `你是：${personaStats[persona].prompt}。目前語系：${lang === 'ja' ? '日文' : lang === 'en' ? '英文' : '繁體中文'}。消費：${amount}元買了「${desc}」。規則：限20字內，用對應語言吐槽。`;
+        const culturalContext = {
+          zh: "你是台灣人，用道地繁體中文吐槽，充滿酸民文化或人情味，多用台灣用語。",
+          en: "You are a witty New Yorker, use sharp English slang and local idioms.",
+          ja: "あなたは江戸っ子、あるいは厳格な日本人です。日本の節約文化に基づいた言い回しを使ってください。"
+        };
+        const prompt = `你是：${personaStats[persona].prompt}。文化背景：${culturalContext[lang] || culturalContext.zh}。剛剛買了「${desc}」花費 ${amount}元。規則：20字內，展現文化深度。`;
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: `我買了 ${desc} 花 ${amount}` }] }], systemInstruction: { parts: [{ text: prompt }] } })
+          body: JSON.stringify({ contents: [{ parts: [{ text: `Bought ${desc} for ${amount}` }] }], systemInstruction: { parts: [{ text: prompt }] } })
         });
         const data = await res.json();
         setAiComment(data.candidates?.[0]?.content?.parts?.[0]?.text || "...");
@@ -120,12 +121,39 @@ export const useBattleCore = (
     }
   };
 
+  // 🤖 鏡像機器人系統：學習並模擬用戶行為
+  useEffect(() => {
+    if (activeMode === 'team5v5') {
+      const timer = setInterval(() => {
+        // 分析用戶消費模式
+        const userCats = history.length > 0 ? history.map(h => h.category) : ['餐飲'];
+        const favCat = userCats[Math.floor(Math.random() * userCats.length)];
+        const avgAmt = history.length > 0 ? history.reduce((s, h) => s + h.amount, 0) / history.length : 100;
+        
+        const isTeammate = Math.random() > 0.5;
+        const botName = isTeammate ? "影之隊友" : "影之宿敵";
+        const dmg = avgAmt * (0.8 + Math.random() * 0.4);
+        
+        const { setTeamSpentDaily, setTeamSpentMonthly, setEnemySpentDaily, setEnemySpentMonthly } = setTeamSpentStates;
+        
+        if (isTeammate) {
+          if (favCat === '餐飲') setTeamSpentDaily(p => p + dmg); else setTeamSpentMonthly(p => p + dmg);
+          addLog(`👥 [鏡像] 『${botName}』模仿你的習慣買了「${favCat}」，全隊防線震盪！`);
+        } else {
+          if (favCat === '餐飲') setEnemySpentDaily(p => p + dmg); else setEnemySpentMonthly(p => p + dmg);
+          addLog(`⚔️ [對抗] 『${botName}』也買了「${favCat}」，對方支柱受損！`);
+        }
+      }, 40000);
+      return () => clearInterval(timer);
+    }
+  }, [activeMode, history, setTeamSpentStates, addLog]);
+
   useEffect(() => {
     if (coins >= 10000) unlockAchievement('WEALTHY_WARRIOR');
     if (personaStats[persona]?.intimacy >= 100) unlockAchievement('LOYAL_PARTNER');
-    if (personaStats['asian_parent']?.intimacy >= 80) unlockAchievement('MOM_LOVES_ME');
     if (Object.values(achievements).filter(a => a.unlocked).length >= 5) unlockAchievement('COLLECTOR');
-  }, [coins, personaStats, persona, achievements, unlockAchievement]);
+    if (coins === 0 && debt === 0) unlockAchievement('ZERO_HERO');
+  }, [coins, debt, personaStats, persona, achievements, unlockAchievement]);
 
   useEffect(() => {
     const todayStr = new Date().toLocaleDateString();
