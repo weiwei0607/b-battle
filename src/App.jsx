@@ -217,7 +217,7 @@ const App = () => {
     addLog("💊 [修復] 使用了忘憂聖水，抹除了一筆戰損血量！");
   };
 
-  const LoadingScreen = () => {
+  const LoadingScreen = ({ onComplete }) => {
     const [progress, setProgress] = useState(0);
     const messages = ["正在為您整理戰報...", "同步雲端數據...", "AI 夥伴就位中...", "即將進入戰線..."];
     const greetings = {
@@ -231,7 +231,11 @@ const App = () => {
     useEffect(() => {
       const interval = setInterval(() => {
         setProgress(p => {
-          if (p >= 100) { clearInterval(interval); return 100; }
+          if (p >= 100) { 
+            clearInterval(interval); 
+            setTimeout(onComplete, 300); // 滿格後停留 300ms 增加回饋感再跳轉
+            return 100; 
+          }
           return p + 1;
         });
       }, 20); 
@@ -245,7 +249,6 @@ const App = () => {
         <style>{`
           @keyframes floating { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
           .animate-float { animation: floating 3s ease-in-out infinite; }
-          @keyframes loadingSlide { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
         `}</style>
         <div className="animate-float mb-12">
           <div className={`w-20 h-20 bg-stone-800 rounded-[2.5rem] flex items-center justify-center shadow-2xl transition-all duration-500 ${progress === 100 ? 'scale-110 shadow-stone-400' : 'shadow-stone-200'}`}>
@@ -255,7 +258,7 @@ const App = () => {
         <div className="w-48 h-1 bg-stone-200 rounded-full relative overflow-hidden mb-6">
           <div className="absolute inset-y-0 left-0 bg-stone-800 transition-all duration-300 ease-out" style={{ width: `${progress}%` }} />
         </div>
-        <div className="text-[11px] font-black text-stone-400 tracking-[0.2em] transition-all duration-300 uppercase h-4">
+        <div className="text-[11px] font-black text-stone-400 tracking-[0.2em] transition-all duration-300 uppercase h-4 text-center">
           {messages[msgIdx]}
         </div>
         <div className="fixed bottom-16 text-[10px] font-medium text-stone-400 italic px-8 text-center">
@@ -265,7 +268,8 @@ const App = () => {
     );
   };
 
-  if (isCloudLoading) return <LoadingScreen />;
+  const [shouldShowApp, setShouldShowApp] = useState(false);
+  if (isCloudLoading || !shouldShowApp) return <LoadingScreen onComplete={() => setShouldShowApp(true)} />;
 
   return (
     <>
