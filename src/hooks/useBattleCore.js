@@ -81,27 +81,22 @@ export const useBattleCore = (
       [id]: { unlocked: true, claimed: false, date: new Date().toLocaleDateString() }
     }));
     
-    // 彈出全局通知
     setAchievementNotification({ id, name: medal.name, icon: medal.icon });
     addLog(`🏆 [成就達成] ${medal.name}！`);
   }, [achievements, setAchievements, addLog, setAchievementNotification]);
 
   const handleClaimAchievement = useCallback((id) => {
     const medal = ACHIEVEMENTS[id];
-    // 🛡️ 嚴格防止重複領獎
     if (!medal || !achievements || achievements[id]?.claimed) return;
-
+    
     setAchievements(prev => ({
       ...prev,
       [id]: { ...prev[id], claimed: true }
     }));
     const gain = medal.reward || 100;
-    if (debt > 0) {
-      if (gain >= debt) { setCoins(c => c + (gain - debt)); setDebt(0); }
-      else { setDebt(d => d - gain); }
-    } else { setCoins(c => c + gain); }
-    addLog(`✨ [領取] 獲得 ${gain} 金幣！`);
-  }, [achievements, setAchievements, debt, setCoins, setDebt, addLog]);
+    addCoinsWithDebtCheck(gain);
+    addLog(`✨ [領取獎勵] 獲得 ${gain} 金幣！`);
+  }, [achievements, setAchievements, addCoinsWithDebtCheck, addLog]);
 
   const executeTransaction = async (amount, desc, category, source = "manual") => {
     if (isAiProcessing) return;
@@ -117,7 +112,6 @@ export const useBattleCore = (
     if (totalCount >= 100000) unlockAchievement('LOGS_100000');
     if (totalCount >= 1000000) unlockAchievement('LOGS_1000000');
     
-    // 檢查深夜與早鳥
     const hours = new Date().getHours();
     if (hours >= 0 && hours < 4) {
       unlockAchievement('NIGHT_OWL');
@@ -125,7 +119,6 @@ export const useBattleCore = (
     }
     if (hours >= 5 && hours < 7) unlockAchievement('EARLY_BIRD');
     
-    // 檢查咖啡與超商
     if (desc.includes("咖啡")) {
       const coffeeCount = history.filter(h => h.desc.includes("咖啡")).length + 1;
       if (coffeeCount >= 10) unlockAchievement('CAFFEINE_ADDICT');
@@ -139,6 +132,7 @@ export const useBattleCore = (
       if (bCount >= 3) unlockAchievement('BOOK_WORM');
     }
 
+    // --- 戰鬥邏輯核心 (還原靈魂) ---
     let penaltyHp = 0; let isPreReported = false; let isLying = false;
     const pillar = CATEGORY_MAP[category] || 'expedition';
     const isUnnecessary = ['desire', 'expedition'].includes(pillar);
@@ -186,26 +180,21 @@ export const useBattleCore = (
 
     let totalDamage = amount + penaltyHp;
     
-    // 🛡️ [鐵血護盾]
     if (shield > 0) {
       const reduction = totalDamage * 0.2;
       totalDamage -= reduction;
       setShield(s => Math.max(0, s - 0.1));
       addLog("🛡️ [護盾] 鐵血護盾啟動，減少 20% 傷害！");
-      // 檢查護盾成就
-      const shieldUses = history.filter(h => h.shielded).length + 1;
-      if (shieldUses >= 5) unlockAchievement('SHIELD_USER');
+      unlockAchievement('SHIELD_USER');
     }
 
-    const newEntry = { id: new Date().getTime(), amount, desc, category, pillar, damage: totalDamage, isCrit: penaltyHp > 0, source, time: new Date().toLocaleTimeString(), date: new Date().toLocaleDateString(), shielded: shield > 0 };
+    const newEntry = { id: Date.now(), amount, desc, category, pillar, damage: totalDamage, isCrit: penaltyHp > 0, source, time: new Date().toLocaleTimeString(), date: new Date().toLocaleDateString(), shielded: shield > 0 };
     setHistory(prev => [newEntry, ...prev]);
     
     const dmgPct = getDmgPercent(totalDamage, pillar);
     addLog(`${source === 'invoice' ? '🧾' : '⚔️'} [${category}] 造成該支柱 ${dmgPct}% 戰損`);
     
-    // 檢查生存成就
-    const hpData_survival = 100 - (totalDamage / 10000 * 100); // 簡化估算
-    if (hpData_survival < 5) unlockAchievement('SURVIVOR');
+    if (totalDamage > 5000) unlockAchievement('SURVIVOR');
 
     let coinGain = (currentTier === 'prime' ? 20 : 10);
     if (pillar === 'progress') coinGain *= 2;
@@ -213,10 +202,7 @@ export const useBattleCore = (
     
     setWillpowerExp(e => {
       const next = e + 15;
-      if (next >= 500) unlockAchievement('LEVEL_UP_1');
-      if (next >= 1500) unlockAchievement('LEVEL_UP_2');
-      if (next >= 3000) unlockAchievement('WILLPOWER_GOD');
-      return Math.min(5000, next);
+      return Math.min(1000000, next);
     });
 
     if (!isSevered) setPersonaStats(p => ({...p, [persona]: {...p[persona], intimacy: Math.min(100, p[persona].intimacy + 1)}}));
@@ -229,15 +215,17 @@ export const useBattleCore = (
           en: "You are a witty New Yorker, use sharp English slang and local idioms.",
           ja: "あなたは江戸っ子、あるいは厳格な日本人です。日本の節約文化に基づいた言い回しを使ってください。"
         };
-        const systemInstruction = `你是：${personaStats[persona].prompt}。文化背景：${culturalContext[lang] || culturalContext.zh}。玩家目標：${wishlist}。剛剛消費：${amount} 元買了「${desc}」（分類：${category}）。
-          規則：1.直接進入角色。2.根據金額與目標吐槽。3.限20字內。`;
+        const systemInstruction = `你是：${personaStats[persona].prompt}。文化背景：${culturalContext[lang] || culturalContext.zh}。
+          玩家的終極願望是「${wishlist}」，現在他卻花了 ${amount} 元買「${desc}」。
+          規則：1.直接進入角色吐槽。2.讓他明白這筆小錢正在推遲他實現願望的時間。3.限20字內。`;
+        
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: `我買了 ${desc} 花 ${amount}` }] }], systemInstruction: { parts: [{ text: systemInstruction }] } })
+          body: JSON.stringify({ contents: [{ parts: [{ text: `我花了 ${amount} 元買 ${desc}` }] }], systemInstruction: { parts: [{ text: systemInstruction }] } })
         });
         const result = await response.json();
-        setAiComment(result.candidates?.[0]?.content?.parts?.[0]?.text || "紀錄成功。");
-      } catch { setAiComment("紀錄完成。"); }
+        setAiComment(result.candidates?.[0]?.content?.parts?.[0]?.text || "紀錄完成。");
+      } catch { setAiComment("Done."); }
       setIsAiProcessing(false);
     }
   };
@@ -248,14 +236,14 @@ export const useBattleCore = (
     try {
       const summary = filteredHistory.reduce((acc, h) => { acc[h.pillar] = (acc[h.pillar] || 0) + h.damage; return acc; }, {});
       const total = Object.values(summary).reduce((a, b) => a + b, 0);
-      const systemInstruction = `角色：${personaStats[persona].prompt}。總支出 ${total} 元。目標：${wishlist}。回覆限30字。`;
+      const systemInstruction = `角色：${personaStats[persona].prompt}。語系：${lang}。總支出 ${total} 元。目標：${wishlist}。回覆限30字。`;
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts: [{ text: `月報：${JSON.stringify(summary)}` }] }], systemInstruction: { parts: [{ text: systemInstruction }] } })
       });
       const result = await response.json();
       setAiComment(result.candidates?.[0]?.content?.parts?.[0]?.text || "分析完畢。");
-    } catch { setAiComment("戰報完畢。"); }
+    } catch { setAiComment("Done."); }
     setIsAiProcessing(false);
   };
 
@@ -265,14 +253,12 @@ export const useBattleCore = (
       if (!target) return prev;
       if (target.source === 'invoice') { alert("🛡️ 誠信警告：電子發票禁止抹除！"); return prev; }
       
-      // 因果律：扣回金幣獎勵
       const penalty = 20; 
       spendCoins(penalty, true);
-      addLog(`🗑️ [修正] 移除紀錄，扣回獎勵 ${penalty} 金幣。`);
+      addLog(`🗑️ [因果律] 抹除紀錄，扣回獎勵金 ${penalty} 並標記業力。`);
       
-      // 標記可能作弊
-      const deleteCount = (parseInt(localStorage.getItem('bb_delete_count')) || 0) + 1;
-      localStorage.setItem('bb_delete_count', deleteCount.toString());
+      const deleteCount = (parseInt(localStorage.getItem('bb_v3_delete_count')) || 0) + 1;
+      localStorage.setItem('bb_v3_delete_count', deleteCount.toString());
       if (deleteCount >= 5) unlockAchievement('KARMA_MASTER');
 
       return prev.filter(h => h.id !== id);
@@ -289,7 +275,7 @@ export const useBattleCore = (
     if (input.trim() === "" || isAiProcessing) return;
     if (input.includes("我想買") || input.includes("挑戰")) {
       const item = input.replace(/我想買|挑戰/g, '').trim() || "奢侈品";
-      if (spendCoins(500)) { setActiveChallenges(p => [...p, { item, startTime: now }]); addLog(`🛡️ [挑戰] 暫扣 500 挑戰：${item}`); }
+      if (spendCoins(500)) { setActiveChallenges(p => [...p, { item, startTime: now }]); addLog(`🛡️ [挑戰] 暫扣 500 押金：${item}`); }
       else { alert("金幣不足 500！"); }
       setNlpInput(""); return;
     }
@@ -346,20 +332,17 @@ export const useBattleCore = (
     addLog(`🧾 偵測到消費：${item.desc}`);
   }, [setPendingTx, addLog]);
 
-  // 🤖 鏡像機器人系統：模擬用戶行為
+  // 🤖 鏡像機器人系統：學習並模擬用戶行為
   useEffect(() => {
     if (activeMode === 'team5v5') {
       const timer = setInterval(() => {
         const userCats = history.length > 0 ? history.map(h => h.category) : ['餐飲'];
         const favCat = userCats[Math.floor(Math.random() * userCats.length)];
         const avgAmt = history.length > 0 ? history.reduce((s, h) => s + h.amount, 0) / history.length : 100;
-        
         const isTeammate = Math.random() > 0.5;
         const botName = isTeammate ? "影之隊友" : "影之宿敵";
         const dmg = avgAmt * (0.8 + Math.random() * 0.4);
-        
         const { setTeamSpentDaily, setTeamSpentMonthly, setEnemySpentDaily, setEnemySpentMonthly } = setTeamSpentStates;
-        
         if (isTeammate) {
           if (favCat === '餐飲') setTeamSpentDaily(p => p + dmg); else setTeamSpentMonthly(p => p + dmg);
           addLog(`👥 [鏡像] 『${botName}』模仿你的習慣買了「${favCat}」，全隊防線震盪！`);
@@ -377,8 +360,8 @@ export const useBattleCore = (
     if (personaStats[persona]?.intimacy >= 100) unlockAchievement('LOYAL_PARTNER');
     if (personaStats['asian_parent']?.intimacy >= 80) unlockAchievement('MOM_LOVES_ME');
     if (achievements && Object.values(achievements).filter(a => a.unlocked).length >= 5) unlockAchievement('COLLECTOR');
-    if (coins === 0 && debt === 0) unlockAchievement('ZERO_HERO');
-  }, [coins, debt, personaStats, persona, achievements, unlockAchievement]);
+    if (history.length > 0 && coins === 0 && debt === 0) unlockAchievement('ZERO_HERO');
+  }, [coins, debt, personaStats, persona, achievements, unlockAchievement, history]);
 
   useEffect(() => {
     const todayStr = new Date().toLocaleDateString();
@@ -388,20 +371,16 @@ export const useBattleCore = (
       if (nowTime.getDate() !== last.getDate()) { 
         addLog("📅 每日重置。"); 
         setTeamSpentStates.setTeamSpentDaily(0); 
-        
         const lastDayStr = last.toLocaleDateString();
         const lastDaySpent = history.filter(h => h.date === lastDayStr && h.pillar === 'survival').reduce((s, h) => s + h.amount, 0);
-        if (lastDaySpent > 0 && lastDaySpent < 200) {
-          unlockAchievement('SAVING_EXPERT');
-        }
+        if (lastDaySpent > 0 && lastDaySpent < 200) unlockAchievement('SAVING_EXPERT');
       }
       if (nowTime.getDay() === 1 && nowTime.getDate() !== last.getDate()) { addLog("📅 週重置。"); setTeamSpentStates.setTeamSpentWeekly(0); }
       if (nowTime.getDate() === 1 && nowTime.getMonth() !== last.getMonth()) {
         addLog("📅 月重置！"); setTeamSpentStates.setTeamSpentMonthly(0);
         const lastMonthStr = lastTrackDate.slice(0, 7);
         const monthlySpent = history.filter(h => h.date && h.date.startsWith(lastMonthStr)).reduce((s, h) => s + h.damage, 0);
-        const totalMonthlyBudget = 30000;
-        const savingsPercent = totalMonthlyBudget > 0 ? ((totalMonthlyBudget - monthlySpent) / totalMonthlyBudget * 100) : 0;
+        const savingsPercent = 30000 > 0 ? ((30000 - monthlySpent) / 30000 * 100) : 0;
         let gain = 0;
         if (savingsPercent >= 20) gain = 10000; else if (savingsPercent >= 10) gain = 2000;
         if (gain > 0) { setHomeMaterials(prev => prev + gain); addLog(`🏛️ 月結獲得 ${gain} 建材！`); }
@@ -414,15 +393,11 @@ export const useBattleCore = (
     if (!user || isCloudLoading) return;
     const timeout = setTimeout(() => {
       setDoc(doc(db, "users", user.uid), { 
-        coins, debt, history, personaStats, persona, 
-        exp: willpowerExp, wishlist, severed: isSevered, 
-        lastTrackDate, coldWarEndTime, homeMaterials, 
-        currentTier, potions, shield, userTitle, unlockedTitles,
-        achievements, lang
+        coins, debt, history, personaStats, persona, exp: willpowerExp, wishlist, lastTrackDate, homeMaterials, currentTier, potions, shield, userTitle, unlockedTitles, achievements, lang 
       }, { merge: true });
     }, 2000);
     return () => clearTimeout(timeout);
-  }, [user, isCloudLoading, coins, debt, history, personaStats, persona, willpowerExp, wishlist, isSevered, lastTrackDate, coldWarEndTime, homeMaterials, currentTier, potions, shield, userTitle, unlockedTitles, achievements, lang]);
+  }, [user, isCloudLoading, coins, debt, history, personaStats, persona, willpowerExp, wishlist, lastTrackDate, homeMaterials, currentTier, potions, shield, userTitle, unlockedTitles, achievements, lang]);
 
   return { executeTransaction, processTransaction, deleteTransaction, updateTransaction, generateMonthlyReview, spendCoins, addCoinsWithDebtCheck, executeRitual, handleClaimChallenge, handleGiveUpChallenge, simulateInvoice, handleClaimAchievement, unlockAchievement };
 };
