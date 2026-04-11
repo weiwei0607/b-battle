@@ -9,7 +9,7 @@ import { useBattleCore } from './hooks/useBattleCore';
 import AppContent from './components/Layout/AppContent';
 import { X, Swords, WifiOff } from 'lucide-react';
 
-const apiKey = import.meta.env.VITE_GEMICS_API_KEY || window.VITE_GEMINI_API_KEY || "";
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || window.VITE_GEMINI_API_KEY || "";
 
 const load = (k, f) => { 
   try { 
@@ -26,7 +26,13 @@ const GlobalSplash = ({ onComplete, persona, lang }) => {
   const [progress, setProgress] = useState(0);
   const t = LOCALES[lang] || LOCALES.zh;
   const messages = [t.loading_report, t.loading_sync, t.loading_ai, t.loading_ready];
-  const greetings = { peer: "同學：『又來了？這次要記什麼？』", asian_parent: "老媽：『水喝了沒？錢別亂花喔。』", bestie: "閨蜜：『不管買什麼，我都挺你！』", instructor: "教官：『全體集合！檢查你的皮夾支柱！』", partner: "另一半：『今天辛苦了，我幫你記著呢。』" };
+  const greetings = { 
+    peer: "同學：『又來了？這次要記什麼？』", 
+    asian_parent: "老媽：『水喝了沒？錢別亂花喔。』", 
+    bestie: "閨蜜：『不管買什麼，我都挺你！』", 
+    instructor: "教官：『全體集合！檢查你的皮夾支柱！』", 
+    partner: "另一半：『今天辛苦了，我幫你記著呢。』" 
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -47,14 +53,20 @@ const GlobalSplash = ({ onComplete, persona, lang }) => {
         .animate-float { animation: floating 3s ease-in-out infinite; }
       `}</style>
       <div className="animate-float mb-12 text-center text-stone-800">
-        <div className="w-20 h-20 bg-stone-800 rounded-[2.5rem] flex items-center justify-center shadow-2xl mx-auto mb-4"><Swords size={40} className="text-white" /></div>
+        <div className="w-20 h-20 bg-stone-800 rounded-[2.5rem] flex items-center justify-center shadow-2xl mx-auto mb-4">
+          <Swords size={40} className="text-white" />
+        </div>
         <div className="text-xl font-black tracking-tighter">B-BATTLE</div>
       </div>
       <div className="w-48 h-1 bg-stone-200 rounded-full relative overflow-hidden mb-6 shadow-inner">
         <div className="absolute inset-y-0 left-0 bg-stone-800 transition-all duration-300 ease-out" style={{ width: `${progress}%` }} />
       </div>
-      <div className="text-[11px] font-black text-stone-400 tracking-[0.2em] uppercase h-4 text-center">{messages[msgIdx]}</div>
-      <div className="fixed bottom-16 text-[10px] font-medium text-stone-400 italic px-8 text-center animate-pulse">{greetings[persona] || "正在開啟您的意志力之旅..."}</div>
+      <div className="text-[11px] font-black text-stone-400 tracking-[0.2em] uppercase h-4 text-center">
+        {messages[msgIdx]}
+      </div>
+      <div className="fixed bottom-16 text-[10px] font-medium text-stone-400 italic px-8 text-center animate-pulse">
+        {greetings[persona] || "正在開啟您的意志力之旅..."}
+      </div>
     </div>
   );
 };
@@ -72,7 +84,7 @@ const App = () => {
   const [isCloudLoading, setIsCloudLoading] = useState(true);
   const [isSplashDone, setIsSplashDone] = useState(false);
 
-  // 🚀 [連線機制] 新增玩家代號與房號
+  // 🚀 [玩家代號與房號]
   const [userName, setUserName] = useState(() => load('user_name', "省錢新兵"));
   const [roomId, setRoomId] = useState(() => load('room_id', ""));
 
@@ -124,7 +136,7 @@ const App = () => {
     asian_parent: { intimacy: 30, title: "亞洲家長", icon: "🧧", prompt: `你是典型的台灣亞洲家長，永遠在擔心跟碎念。規則：買衣服酸阿珠不亂買；咖啡酸顧身體；外食酸媽媽煮更好；3C酸沒壞幹嘛換；交通酸走路健康。口吻：擔心、碎念、告誡孩子，限20字。` },
     bestie: { intimacy: 60, title: "好閨蜜", icon: "💅", prompt: `你是超級好閨蜜，支持朋友但幫忙把關荷包。規則：買衣服求拍照但提醒這個月買多了；咖啡提議辦月卡；大餐提議下次一起但要存旅遊基金。口吻：開心、支持、帶到旅遊基金，限20字。` },
     instructor: { intimacy: 10, title: "毒舌教官", icon: "👺", prompt: `你是軍事化教官，理財是紀律。規則：買衣服酸制服就夠；咖啡酸意志力不足；大餐酸超出口糧預算；超支就酸違反紀律。口吻：嚴厲命令式，軍事感，限20字。` },
-    partner: { intimacy: 80, title: "溫柔另一半", icon: "🌹", prompt: `你是溫柔但有原則的另一半，在乎未來。規則：買衣服問好看嗎但提存款目標；咖啡問累嗎但提自泡；大餐問好吃嗎但提旅遊基金。口吻：溫柔、撒嬌中帶著在意，限20字。` }
+    partner: { intimacy: 80, title: "溫柔另一半", icon: "🌹", prompt: `你是溫柔但有原則的另一半，在乎未來。規則：買衣服問好看嗎但提存款目標；咖啡問累嗎但提自泡；大餐問好吃嗎長提旅遊基金。口吻：溫柔、撒嬌中帶著在意，限20字。` }
   }));
 
   const addLog = (m) => setBattleLog(prev => [m, ...prev].slice(0, 30));
@@ -140,10 +152,12 @@ const App = () => {
     setNlpInput, now, homeMaterials, setHomeMaterials, weeklyPools, monthlyPools, currentTier,
     shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles,
     potions, setPotions, achievements, setAchievements, setAchievementNotification, lang,
-    userName, roomId // 傳入姓名與房號
+    userName, roomId 
   );
 
   useEffect(() => {
+    window.addEventListener('online', () => setIsOnline(true));
+    window.addEventListener('offline', () => setIsOnline(false));
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       if (u) {
         setUser(u);
@@ -178,28 +192,77 @@ const App = () => {
     }
   }, [user, isCloudLoading, lang, coins, debt, history, persona, willpowerExp, achievements, userTitle, userFrame, potions, shield, personaStats, userName, roomId]);
 
+  // 🛡️ [還原靈魂] 基於真實預算的 HP 計算
   const hpData = useMemo(() => {
     const getHp = (p) => {
       const isTeam = activeMode === 'team5v5';
       const todayStr = new Date().toLocaleDateString();
-      const limits = { survival: 10000, progress: 5000, desire: 3000, expedition: 15000 };
+      const limits = {
+        survival: (weeklyPools.food?.limit || 1000) + (weeklyPools.transport?.limit || 0) + (monthlyPools.housing?.limit || 0),
+        progress: (monthlyPools.education?.limit || 0),
+        desire: (weeklyPools.social?.limit || 0),
+        expedition: (weeklyPools.shopping?.limit || 0)
+      };
       const limit = limits[p] || 10000;
       const spent = history.filter(h => CATEGORY_MAP[h.category] === p && (h.date === todayStr || p !== 'survival')).reduce((s, h) => s + h.damage, 0);
       const teamSpent = p === 'survival' ? teamSpentDaily : (p === 'progress' ? teamSpentWeekly : teamSpentMonthly);
       return Math.max(0, 100 - ((isTeam ? teamSpent : spent) / (isTeam ? limit * 5 : limit || 1) * 100));
     };
     return { survival: getHp('survival'), progress: getHp('progress'), desire: getHp('desire'), expedition: getHp('expedition') };
-  }, [history, activeMode, teamSpentDaily, teamSpentWeekly, teamSpentMonthly]);
+  }, [history, activeMode, teamSpentDaily, teamSpentWeekly, teamSpentMonthly, weeklyPools, monthlyPools]);
 
   const enemyHpData = useMemo(() => {
-    const limits = { survival: 10000, progress: 5000, desire: 3000, expedition: 15000 };
+    const limits = {
+      survival: (weeklyPools.food?.limit || 1000) + (weeklyPools.transport?.limit || 0) + (monthlyPools.housing?.limit || 0),
+      progress: (monthlyPools.education?.limit || 0),
+      desire: (weeklyPools.social?.limit || 0),
+      expedition: (weeklyPools.shopping?.limit || 0)
+    };
     return {
       survival: Math.max(0, 100 - (enemySpentDaily / (limits.survival * 5 || 1) * 100)),
       progress: Math.max(0, 100 - (enemySpentWeekly / (limits.progress * 5 || 1) * 100)),
       desire: Math.max(0, 100 - (enemySpentMonthly / (limits.desire * 5 || 1) * 100)),
       expedition: Math.max(0, 100 - (enemySpentMonthly / (limits.expedition * 5 || 1) * 100))
     };
-  }, [enemySpentDaily, enemySpentWeekly, enemySpentMonthly]);
+  }, [enemySpentDaily, enemySpentWeekly, enemySpentMonthly, weeklyPools, monthlyPools]);
+
+  const handleAutoCalculate = () => {
+    const total = parseInt(salaryInput) || 0;
+    const monthly = Math.floor(total * 0.6);
+    const weeklyTotal = Math.floor(total * 0.4 / 4);
+    setMonthlyPools({ housing: { limit: Math.floor(monthly * 0.7), label: "住居帳單" }, education: { limit: Math.floor(monthly * 0.3), label: "學習健康" } });
+    setWeeklyPools({ food: { limit: Math.floor(weeklyTotal * 0.4), label: "餐飲" }, transport: { limit: Math.floor(weeklyTotal * 0.15), label: "交通" }, social: { limit: Math.floor(weeklyTotal * 0.2), label: "社交娛樂" }, shopping: { limit: Math.floor(weeklyTotal * 0.25), label: "購物娛樂" } });
+  };
+
+  const handleSavePersona = (id, stats) => { setPersonaStats(prev => ({ ...prev, [id]: stats })); setPersona(id); setShowCustomModal(false); };
+
+  const getSeveredReason = () => {
+    if (persona === 'asian_parent') return "老媽：『寫 50 字以上的反省書，保證以後多喝熱水少亂花，不然別想回家！』";
+    if (persona === 'peer' || persona === 'instructor') return "對方：『支付 500 金幣請我喝精品咖啡，我才考慮原諒你。』";
+    if (persona === 'partner' || persona === 'bestie') {
+      if (coldWarEndTime && now < coldWarEndTime) {
+        const rem = coldWarEndTime - now;
+        return `另一半：『進入冷戰期。還有 ${Math.floor(rem/3600000)} 小時 ${Math.floor((rem%3600000)/60000)} 分鐘。』`;
+      }
+      return "冷戰結束，執行重生儀式。";
+    }
+    return "預算防線崩潰！";
+  };
+
+  const getHellPlaceholder = () => {
+    if (isSevered) {
+      const map = { asian_parent: "又是買這些垃圾？", partner: "哼，誰管你有沒有錢...", bestie: "反正我們已經完了...", instructor: "報上你的遺言，戰犯。", peer: "破產了還買？笑死。" };
+      return map[persona] || "在恥辱中記錄你的罪行...";
+    }
+    return "記帳或『我想買...』發起豪賭";
+  };
+
+  const healTransaction = (id) => {
+    if (potions <= 0) return;
+    setHistory(prev => prev.map(h => h.id === id ? { ...h, damage: 0, desc: `✨ [已修復] ${h.desc}` } : h));
+    setPotions(p => p - 1);
+    addLog("💊 [修復] 使用了忘憂聖水，抹除了一筆戰損血量！");
+  };
 
   const handleSplashComplete = useCallback(() => setIsSplashDone(true), []);
 
@@ -215,13 +278,11 @@ const App = () => {
             coldWarEndTime, now, nlpInput, setNlpInput, showBudgetSetup, setShowBudgetSetup, showShop, setShowShop, 
             showCustomModal, setShowCustomModal, showAchievements, setShowAchievements, achievements,
             hpData, enemyHpData, executeTransaction, processTransaction, 
-            executeRitual, handleClaimChallenge, handleGiveUpChallenge, simulateInvoice, handleAutoCalculate: () => {}, 
-            handleSavePersona: (id, stats) => { setPersonaStats(prev => ({ ...prev, [id]: stats })); setPersona(id); setShowCustomModal(false); }, 
-            getSeveredReason: () => "關係暫時斷絕...", 
-            getHellPlaceholder: () => "記帳...", currentTier, lastPersonaSwitch, setLastPersonaSwitch,
+            executeRitual, handleClaimChallenge, handleGiveUpChallenge, simulateInvoice, handleAutoCalculate, 
+            handleSavePersona, getSeveredReason, getHellPlaceholder, currentTier, lastPersonaSwitch, setLastPersonaSwitch,
             userFrame, setUserFrame, salaryInput, setSalaryInput, isStudent, setIsStudent, currency, setCurrency, setCurrentTier,
             deleteTransaction, updateTransaction, weeklyPools, setWeeklyPools, monthlyPools, setMonthlyPools,
-            getBondLevel, getFrameStyle, potions, setPotions, healTransaction: (id) => {},
+            getBondLevel, getFrameStyle, potions, setPotions, healTransaction,
             shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles, handleClaimAchievement,
             user, setShowLogin, unlockAchievement, generateMonthlyReview, isOnline, lang, setLang,
             userName, setUserName, roomId, setRoomId }} 
