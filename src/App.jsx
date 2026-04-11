@@ -13,14 +13,14 @@ const apiKey = import.meta.env.VITE_GEMINI_API_KEY || window.VITE_GEMINI_API_KEY
 
 const load = (k, f) => { 
   try { 
-    const v = localStorage.getItem('bb_v3_' + k); 
+    const v = localStorage.getItem('bb_v4_' + k); 
     if (!v || v === 'null') return f; 
     const p = JSON.parse(v); 
     return p !== null ? p : f; 
   } catch { return f; } 
 };
 
-const save = (k, v) => localStorage.setItem('bb_v3_' + k, JSON.stringify(v));
+const save = (k, v) => localStorage.setItem('bb_v4_' + k, JSON.stringify(v));
 
 const GlobalSplash = ({ onComplete, persona, lang }) => {
   const [progress, setProgress] = useState(0);
