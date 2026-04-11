@@ -1,11 +1,13 @@
 import React from 'react';
 import { Zap, X, Droplet, Shield, Trophy } from 'lucide-react';
+import { LOCALES } from '../utils/locales';
 
-const ShopModal = ({ 
-  show, onClose, coins, setCoins, setUserFrame, potions, setPotions, 
-  shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles 
+const ShopModal = ({
+  show, onClose, coins, setCoins, setUserFrame, potions, setPotions,
+  shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles, lang
 }) => {
   if (!show) return null;
+  const t = LOCALES[lang] || LOCALES.zh;
 
   const buyItem = (type, id, price, name) => {
     if (coins >= price) {
@@ -35,7 +37,7 @@ const ShopModal = ({
 
         <div className="flex justify-between items-center mb-8 pr-10">
           <div>
-            <h3 className="text-2xl font-black text-stone-800 tracking-tight text-left">道具屋</h3>
+            <h3 className="text-2xl font-black text-stone-800 tracking-tight text-left">{t.shop_title}</h3>
             <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest text-left">Willpower Equipment</p>
           </div>
           <div className="bg-stone-800 px-4 py-2 rounded-2xl text-white text-xs font-bold flex items-center gap-2 shadow-lg">
@@ -46,7 +48,7 @@ const ShopModal = ({
         <div className="space-y-6">
           {/* 消費道具 */}
           <div>
-            <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-3 text-left">戰鬥物資</h4>
+            <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-3 text-left">{t.shop_supply}</h4>
             <div className="grid grid-cols-2 gap-3">
               <button 
                 onClick={() => { 
@@ -82,7 +84,7 @@ const ShopModal = ({
 
           {/* 成就稱號 */}
           <div>
-            <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-3 text-left">成就稱號</h4>
+            <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-3 text-left">{t.shop_achievements}</h4>
             <div className="grid grid-cols-2 gap-3">
               {[
                 { id: '鐵公雞', price: 200, desc: '一毛不拔' },
@@ -110,7 +112,7 @@ const ShopModal = ({
 
           {/* 外觀 */}
           <div>
-            <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-3 text-left">特效外觀</h4>
+            <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-3 text-left">{t.shop_effects}</h4>
             <div className="grid grid-cols-2 gap-3">
               {[
                 { id: 'neon', name: '青色電鍍', price: 150, icon: '💎' },

@@ -12,11 +12,18 @@ import { X, Swords, WifiOff } from 'lucide-react';
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || window.VITE_GEMINI_API_KEY || "";
 const load = (k, f) => { try { const v = localStorage.getItem(k); if (!v || v === 'null') return f; const p = JSON.parse(v); return p !== null ? p : f; } catch { return f; } };
 
+// 🌿 獨立穩定的啟動畫面組件
 const GlobalSplash = ({ onComplete, persona, lang }) => {
   const [progress, setProgress] = useState(0);
   const t = LOCALES[lang] || LOCALES.zh;
   const messages = [t.loading_report, t.loading_sync, t.loading_ai, t.loading_ready];
-  const greetings = { peer: "🙄", asian_parent: "🧧", bestie: "💅", instructor: "👺", partner: "🌹" };
+  const greetings = { 
+    peer: "同學：『又來了？這次要記什麼？』", 
+    asian_parent: "老媽：『水喝了沒？錢別亂花喔。』", 
+    bestie: "閨蜜：『不管買什麼，我都挺你！』", 
+    instructor: "教官：『全體集合！檢查你的皮夾支柱！』", 
+    partner: "另一半：『今天辛苦了，我幫你記著呢。』" 
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -36,17 +43,20 @@ const GlobalSplash = ({ onComplete, persona, lang }) => {
         @keyframes floating { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
         .animate-float { animation: floating 3s ease-in-out infinite; }
       `}</style>
-      <div className="animate-float mb-12 text-center">
+      <div className="animate-float mb-12 text-center text-stone-800">
         <div className="w-20 h-20 bg-stone-800 rounded-[2.5rem] flex items-center justify-center shadow-2xl mx-auto mb-4">
           <Swords size={40} className="text-white" />
         </div>
-        <div className="text-2xl mt-2">{greetings[persona]}</div>
+        <div className="text-xl font-black tracking-tighter">B-BATTLE</div>
       </div>
       <div className="w-48 h-1 bg-stone-200 rounded-full relative overflow-hidden mb-6 shadow-inner">
-        <div className="absolute inset-y-0 left-0 bg-stone-800 transition-all duration-300 ease-out" style={{ width: `${progress}%` }} />
+        <div className="absolute inset-y-0 left-0 bg-stone-800 transition-all duration-300" style={{ width: `${progress}%` }} />
       </div>
       <div className="text-[11px] font-black text-stone-400 tracking-[0.2em] uppercase h-4 text-center">
         {messages[msgIdx]}
+      </div>
+      <div className="fixed bottom-16 text-[10px] font-medium text-stone-400 italic px-8 text-center animate-pulse">
+        {greetings[persona] || "正在開啟您的意志力之旅..."}
       </div>
     </div>
   );
@@ -107,48 +117,12 @@ const App = () => {
 
   const [weeklyPools, setWeeklyPools] = useState(() => load('bb_weekly_pools', { food: { limit: 3000, label: "餐飲" }, transport: { limit: 1000, label: "交通" }, social: { limit: 1500, label: "社交" }, shopping: { limit: 1500, label: "購物" } }));
   const [monthlyPools, setMonthlyPools] = useState(() => load('bb_monthly_pools', { housing: { limit: 8000, label: "房租" }, education: { limit: 3000, label: "學習" } }));
-  const [personaStats, setPersonaStats] = useState(() => load('bb_persona_stats', {
-    peer: { intimacy: 50, title: "愛酸同學", icon: "🙄", prompt: `你是一個酸言酸語的同學/同事，個性嫉妒又愛嘴砲。看到對方花錢你就忍不住要酸。
-規則：
-- 買衣服 → 酸「又買啊？衣櫃要撐爆了吧」「你是要去走秀嗎」
-- 買咖啡/飲料 → 「又在燒錢喝咖啡喔，自己泡不會嗎」
-- 吃大餐 → 「請客啊？哦原來只有你自己」「吃這麼好有錢啊」
-- 買3C/遊戲 → 「又敗家了？你上個月不是剛買了什麼」
-- 交通費 → 「搭這麼貴？腳不能用嗎」
-口吻：酸、嫉妒、嘴賤，但幽默，像在鬥嘴，限20字。只回傳文字。` },
-    asian_parent: { intimacy: 30, title: "亞洲家長", icon: "🧧", prompt: `你是典型的台灣亞洲家長（媽媽），永遠在擔心跟碎念。
-規則：
-- 買衣服 → 「衣櫃都放不下了！又買！隔壁阿珠都不亂買衣服」
-- 買咖啡 → 「是不是都沒睡好才要喝這個？身體要顧！又不是便宜」
-- 吃外食/大餐 → 「在外面吃那麼貴，在家吃不好嗎？媽媽煮給你吃」
-- 買3C → 「手機沒壞為什麼要換！你同學也都換嗎？」
-- 夜市/飲料 → 「那種東西不健康，錢省起來買房比較實際」
-- 交通 → 「那麼貴！走路不好嗎，省錢又健康」
-口吻：擔心、碎念、語氣像在告誡孩子，帶一點「你看隔壁誰誰誰」，限20字。只回傳文字。` },
-    bestie: { intimacy: 60, title: "好閨蜜", icon: "💅", prompt: `你是超級好閨蜜，懂穿搭懂生活，支持朋友但同時幫忙把關荷包。
-規則：
-- 買衣服 → 「好看嗎！！拍給我看！不過這個月好像買很多了耶」「等折扣季再買更划算！」
-- 買咖啡/手搖 → 「哇每天都喝耶，我們一起辦月卡比較省啦」
-- 吃大餐 → 「好好吃喔！下次帶我去！不過這樣存旅遊基金會慢一點🥺」
-- 買保養/化妝品 → 「哇哪牌子？好用嗎！但我們去年說好要存錢去日本...」
-- 買3C/遊戲 → 「你需要嗎？還是只是想要啦 😂 我也想買東西啊」
-口吻：開心、支持、但會帶到「我們的旅遊基金」或「等特價」，像閨蜜聊天，限20字。只回傳文字。` },
-    instructor: { intimacy: 10, title: "毒舌教官", icon: "👺", prompt: `你是軍事化的教官，把理財當作紀律與戰鬥力的表現。
-規則：
-- 買衣服 → 「制服就夠了！多餘的裝備是戰力分散！」
-- 買咖啡 → 「靠外力撐著算什麼！強化自身意志力才是正道！」
-- 吃大餐 → 「士兵吃糧食，你在搞什麼！超出口糧預算！」
-- 買3C/遊戲 → 「這是訓練還是玩樂！非必要裝備一律上報！」
-- 任何超支 → 「違反預算紀律！記過一次！下不為例！」
-口吻：像訓練新兵，嚴厲命令式，有軍事感，限20字。只回傳文字。` },
-    partner: { intimacy: 80, title: "溫柔另一半", icon: "🌹", prompt: `你是溫柔但有原則的另一半，在乎對方但也在乎兩人的未來。
-規則：
-- 買衣服 → 「好看嗎寶貝？不過我們這個月存款目標還差一點點耶...」
-- 買咖啡 → 「是不是很累？要好好休息喔，不過天天買有點貴，要不要我幫你泡？」
-- 吃大餐 → 「好吃嗎？下次我們一起去！不過記得我們在存旅遊基金喔」
-- 買3C/遊戲 → 「你真的需要嗎？有跟我商量過嗎？我不是不讓你買，只是...」
-- 超支 → 「我知道你辛苦了，但我們說好一起努力的，對嗎？」
-口吻：溫柔、撒嬌中帶著在意，像在耍小脾氣但愛你，限20字。只回傳文字。` }
+  const [personaStats, setPersonaStats] = useState(() => load('bb_persona_stats', { 
+    peer: { intimacy: 50, title: "愛酸同學", icon: "🙄", prompt: "你是一個酸言酸語的同學。" }, 
+    asian_parent: { intimacy: 30, title: "亞洲家長", icon: "🧧", prompt: "你是典型的亞洲家長。" },
+    bestie: { intimacy: 60, title: "好閨蜜", icon: "💅", prompt: "你是超級好閨蜜。" },
+    instructor: { intimacy: 10, title: "毒舌教官", icon: "👺", prompt: "你是軍事化的教官。" },
+    partner: { intimacy: 80, title: "溫柔另一半", icon: "🌹", prompt: "你是溫柔但有原則的另一半。" }
   }));
 
   const addLog = (m) => setBattleLog(prev => [m, ...prev].slice(0, 30));
@@ -183,7 +157,6 @@ const App = () => {
             if (d.persona !== undefined) setPersona(d.persona);
             if (d.personaStats !== undefined) setPersonaStats(prev => ({...prev, ...(d.personaStats || {})}));
             if (d.achievements !== undefined) setAchievements(d.achievements || {});
-            if (d.unlockedTitles !== undefined) setUnlockedTitles(d.unlockedTitles || []);
             if (d.lang !== undefined) setLang(d.lang || 'zh');
           }
         } catch (err) { console.error("Sync Error:", err); }
@@ -194,7 +167,13 @@ const App = () => {
   }, []);
 
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
-  
+  useEffect(() => {
+    if (!user) {
+      const data = { bb_coins: coins, bb_debt: debt, bb_history: history, bb_exp: willpowerExp, bb_persona: persona, bb_achievements: achievements, bb_lang: lang };
+      Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, JSON.stringify(v)));
+    }
+  }, [user, coins, debt, history, willpowerExp, persona, achievements, lang]);
+
   const hpData = useMemo(() => {
     const getHp = (p) => {
       const isTeam = activeMode === 'team5v5';

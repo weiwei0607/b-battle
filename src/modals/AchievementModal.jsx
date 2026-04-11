@@ -52,14 +52,14 @@ const AchievementModal = ({ show, onClose, achievements, onClaim, lang }) => {
           </p>
           {!isLocked && !isDone && (
             <p className="text-[9px] font-black text-amber-600 mt-1 uppercase tracking-tighter text-left">
-              Reward: {medal.reward} Coins
+              {t.reward}: {medal.reward} Coins
             </p>
           )}
         </div>
 
         {canClaim && (
           <div className="bg-amber-500 text-white text-[9px] font-black px-3 py-1.5 rounded-full shadow-lg shadow-amber-200 animate-bounce">
-            領獎
+            {t.claim}
           </div>
         )}
       </div>
@@ -100,7 +100,7 @@ const AchievementModal = ({ show, onClose, achievements, onClaim, lang }) => {
           {hiddenMedals.length > 0 && (
             <div className="pb-6">
               <h4 className="text-[10px] font-black text-purple-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 px-2">
-                <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" /> 神祕禁忌勳章
+                <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" /> {t.medal_hidden}
               </h4>
               <div className="grid grid-cols-1 gap-3">
                 {hiddenMedals.map(medal => <MedalItem key={medal.id} medal={medal} />)}
