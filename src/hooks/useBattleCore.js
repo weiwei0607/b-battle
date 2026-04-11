@@ -88,8 +88,9 @@ export const useBattleCore = (
 
   const handleClaimAchievement = useCallback((id) => {
     const medal = ACHIEVEMENTS[id];
-    if (!medal || (achievements && achievements[id]?.claimed)) return;
-    
+    // 🛡️ 嚴格防止重複領獎
+    if (!medal || !achievements || achievements[id]?.claimed) return;
+
     setAchievements(prev => ({
       ...prev,
       [id]: { ...prev[id], claimed: true }
@@ -99,7 +100,7 @@ export const useBattleCore = (
       if (gain >= debt) { setCoins(c => c + (gain - debt)); setDebt(0); }
       else { setDebt(d => d - gain); }
     } else { setCoins(c => c + gain); }
-    addLog(`✨ [點亮成就] 領取了 ${gain} 金幣獎勵！`);
+    addLog(`✨ [領取] 獲得 ${gain} 金幣！`);
   }, [achievements, setAchievements, debt, setCoins, setDebt, addLog]);
 
   const executeTransaction = async (amount, desc, category, source = "manual") => {
