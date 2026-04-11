@@ -26,7 +26,8 @@ const AppContent = ({
   deleteTransaction, updateTransaction, weeklyPools, setWeeklyPools, monthlyPools, setMonthlyPools,
   getBondLevel, getFrameStyle, potions, setPotions, healTransaction,
   shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles, handleClaimAchievement,
-  user, setShowLogin, unlockAchievement, generateMonthlyReview, isOnline, lang, setLang
+  user, setShowLogin, unlockAchievement, generateMonthlyReview, isOnline, lang, setLang,
+  userName, setUserName, roomId, setRoomId
 }) => {
   const t = LOCALES[lang] || LOCALES.zh;
 
@@ -34,7 +35,7 @@ const AppContent = ({
     <div className={`min-h-screen transition-all duration-1000 ${isSevered ? 'bg-[#450a0a]' : 'bg-[#F7F4EF]'} text-stone-800 font-sans text-left`}>
       <div className="max-w-md mx-auto p-6 h-screen flex flex-col relative overflow-hidden">
         
-        {/* 🏆 [還原] 將成就獎盃移回右上角 Header 旁邊 */}
+        {/* 🏆 [還原] 獎盃移回右上角 Header 旁邊 */}
         {!isSevered && (
           <div className="flex justify-between items-center z-20 mb-2 gap-2">
             <div className="flex-1">
@@ -58,9 +59,9 @@ const AppContent = ({
             </div>
           ) : (
             <>
-              {view === 'battle' && <BattleArenaView stats={personaStats[persona]} hpData={hpData} enemyHpData={enemyHpData} isAiProcessing={isAiProcessing} aiComment={aiComment} activeMode={activeMode} setActiveMode={setActiveMode} battleLog={battleLog} activeChallenges={activeChallenges} handleClaimChallenge={handleClaimChallenge} handleGiveUpChallenge={handleGiveUpChallenge} />}
-              {view === 'history' && <HistoryView history={history} aiComment={aiComment} deleteTransaction={deleteTransaction} updateTransaction={updateTransaction} potions={potions} healTransaction={healTransaction} unlockAchievement={unlockAchievement} generateMonthlyReview={generateMonthlyReview} personaStats={personaStats} persona={persona} isAiProcessing={isAiProcessing} achievements={achievements} />}
-              {view === 'heroHall' && <HeroHallView userTitle={userTitle} persona={persona} personaStats={personaStats} setPersona={setPersona} setShowBudgetSetup={()=>setShowBudgetSetup(true)} currentTier={currentTier} lastPersonaSwitch={lastPersonaSwitch} setLastPersonaSwitch={setLastPersonaSwitch} wishlist={wishlist} setWishlist={setWishlist} debt={debt} userFrame={userFrame} homeMaterials={homeMaterials} user={user} setShowLogin={setShowLogin} setView={setView} lang={lang} />}
+              {view === 'battle' && <BattleArenaView stats={personaStats[persona]} hpData={hpData} enemyHpData={enemyHpData} isAiProcessing={isAiProcessing} aiComment={aiComment} activeMode={activeMode} setActiveMode={setActiveMode} battleLog={battleLog} activeChallenges={activeChallenges} handleClaimChallenge={handleClaimChallenge} handleGiveUpChallenge={handleGiveUpChallenge} roomId={roomId} setRoomId={setRoomId} />}
+              {view === 'history' && <HistoryView history={history} aiComment={aiComment} deleteTransaction={deleteTransaction} updateTransaction={updateTransaction} potions={potions} healTransaction={healTransaction} unlockAchievement={unlockAchievement} generateMonthlyReview={generateMonthlyReview} personaStats={personaStats} persona={persona} isAiProcessing={isAiProcessing} achievements={achievements} lang={lang} />}
+              {view === 'heroHall' && <HeroHallView userTitle={userTitle} persona={persona} personaStats={personaStats} setPersona={setPersona} setShowBudgetSetup={()=>setShowBudgetSetup(true)} currentTier={currentTier} lastPersonaSwitch={lastPersonaSwitch} setLastPersonaSwitch={setLastPersonaSwitch} wishlist={wishlist} setWishlist={setWishlist} debt={debt} userFrame={userFrame} homeMaterials={homeMaterials} user={user} setShowLogin={setShowLogin} setView={setView} lang={lang} userName={userName} setUserName={setUserName} />}
             </>
           )}
         </main>
