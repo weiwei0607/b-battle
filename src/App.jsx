@@ -12,7 +12,7 @@ import { X, Swords, WifiOff } from 'lucide-react';
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || window.VITE_GEMINI_API_KEY || "";
 const load = (k, f) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : f; } catch { return f; } };
 
-// 🌿 外部穩定組件：不受 App 重繪影響，保證進度條跑滿 100%
+// 🌿 獨立穩定的啟動畫面組件
 const GlobalSplash = ({ onComplete, persona, lang }) => {
   const [progress, setProgress] = useState(0);
   const t = LOCALES[lang] || LOCALES.zh;
@@ -37,7 +37,7 @@ const GlobalSplash = ({ onComplete, persona, lang }) => {
         @keyframes floating { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
         .animate-float { animation: floating 3s ease-in-out infinite; }
       `}</style>
-      <div className="animate-float mb-12 text-center">
+      <div className="animate-float mb-12 text-center text-stone-800">
         <div className="w-20 h-20 bg-stone-800 rounded-[2.5rem] flex items-center justify-center shadow-2xl mx-auto mb-4">
           <Swords size={40} className="text-white" />
         </div>
@@ -66,7 +66,7 @@ const App = () => {
   const [isCloudLoading, setIsCloudLoading] = useState(true);
   const [isSplashDone, setIsSplashDone] = useState(false);
 
-  // --- 戰場數據 (確保不被刪除) ---
+  // --- 其他核心狀態 ---
   const [teamSpentDaily, setTeamSpentDaily] = useState(() => load('bb_t_daily', 0));
   const [teamSpentWeekly, setTeamSpentWeekly] = useState(() => load('bb_t_weekly', 0));
   const [teamSpentMonthly, setTeamSpentMonthly] = useState(() => load('bb_t_monthly', 0));
@@ -133,6 +133,8 @@ const App = () => {
   );
 
   useEffect(() => {
+    window.addEventListener('online', () => setIsOnline(true));
+    window.addEventListener('offline', () => setIsOnline(false));
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       if (u) {
         setUser(u);
@@ -157,45 +159,28 @@ const App = () => {
   }, []);
 
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
+  useEffect(() => {
+    if (!user) {
+      const data = { bb_coins: coins, bb_debt: debt, bb_history: history, bb_exp: willpowerExp, bb_persona: persona, bb_achievements: achievements, bb_lang: lang };
+      Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, JSON.stringify(v)));
+    }
+  }, [user, coins, debt, history, willpowerExp, persona, achievements, lang]);
 
   const hpData = useMemo(() => {
     const getHp = (p) => {
-      const isTeam = activeMode === 'team5v5';
-      const todayStr = new Date().toLocaleDateString();
-      const limits = {
-        survival: (weeklyPools.food?.limit || 1000) + (weeklyPools.transport?.limit || 0) + (monthlyPools.housing?.limit || 0),
-        progress: (monthlyPools.education?.limit || 0),
-        desire: (weeklyPools.social?.limit || 0),
-        expedition: (weeklyPools.shopping?.limit || 0)
-      };
-      const limit = limits[p] || 10000;
-      const spent = history.filter(h => CATEGORY_MAP[h.category] === p && (h.date === todayStr || p !== 'survival')).reduce((s, h) => s + h.damage, 0);
-      const teamSpent = p === 'survival' ? teamSpentDaily : (p === 'progress' ? teamSpentWeekly : teamSpentMonthly);
-      return Math.max(0, 100 - ((isTeam ? teamSpent : spent) / (isTeam ? limit * 5 : limit || 1) * 100));
+      const limits = { survival: 10000, progress: 5000, desire: 3000, expedition: 15000 };
+      const spent = history.filter(h => CATEGORY_MAP[h.category] === p).reduce((s, h) => s + h.damage, 0);
+      return Math.max(0, 100 - (spent / (limits[p] || 10000) * 100));
     };
     return { survival: getHp('survival'), progress: getHp('progress'), desire: getHp('desire'), expedition: getHp('expedition') };
-  }, [history, activeMode, teamSpentDaily, teamSpentWeekly, teamSpentMonthly, weeklyPools, monthlyPools]);
+  }, [history]);
 
-  const enemyHpData = useMemo(() => {
-    const limits = {
-      survival: (weeklyPools.food?.limit || 1000) + (weeklyPools.transport?.limit || 0) + (monthlyPools.housing?.limit || 0),
-      progress: (monthlyPools.education?.limit || 0),
-      desire: (weeklyPools.social?.limit || 0),
-      expedition: (weeklyPools.shopping?.limit || 0)
-    };
-    return {
-      survival: Math.max(0, 100 - (enemySpentDaily / (limits.survival * 5 || 1) * 100)),
-      progress: Math.max(0, 100 - (enemySpentWeekly / (limits.progress * 5 || 1) * 100)),
-      desire: Math.max(0, 100 - (enemySpentMonthly / (limits.desire * 5 || 1) * 100)),
-      expedition: Math.max(0, 100 - (enemySpentMonthly / (limits.expedition * 5 || 1) * 100))
-    };
-  }, [enemySpentDaily, enemySpentWeekly, enemySpentMonthly, weeklyPools, monthlyPools]);
+  const enemyHpData = { survival: 100, progress: 100, desire: 100, expedition: 100 };
 
   const handleSplashComplete = useCallback(() => setIsSplashDone(true), []);
 
   return (
     <>
-      {/* 🌿 頂層 Splash Screen，絕對保證跑滿 100% */}
       {!isSplashDone && <GlobalSplash onComplete={handleSplashComplete} persona={persona} lang={lang} />}
       
       <div className={`transition-opacity duration-1000 ${isSplashDone ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
@@ -225,9 +210,9 @@ const App = () => {
 
       {showLogin && (
         <div className="fixed inset-0 z-[6000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="relative w-full max-w-md animate-in slide-in-from-bottom-10">
-            <button onClick={() => setShowLogin(false)} className="absolute top-4 right-4 z-[6001] p-2 bg-stone-100 rounded-full text-stone-500"><X size={16}/></button>
-            <LoginScreen />
+          <div className="relative w-full max-w-md animate-in slide-in-from-bottom-10 duration-300">
+            <button onClick={() => setShowLogin(false)} className="absolute top-4 right-4 z-[6001] p-2 bg-stone-100 rounded-full text-stone-500 hover:bg-stone-200 transition-colors"><X size={16}/></button>
+            <LoginScreen isModal={true} onClose={() => setShowLogin(false)} />
           </div>
         </div>
       )}
