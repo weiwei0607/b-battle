@@ -129,6 +129,7 @@ const App = () => {
   const [activeMode, setActiveMode] = useState('selection'); 
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isCloudLoading, setIsCloudLoading] = useState(true);
+  const [savingStreak, setSavingStreak] = useState(() => load('saving_streak', 0));
   const [isSplashDone, setIsSplashDone] = useState(false);
 
   // 🚀 [新手教學狀態]
@@ -239,7 +240,8 @@ const App = () => {
     setNlpInput, now, homeMaterials, setHomeMaterials, weeklyPools, monthlyPools, currentTier,
     shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles,
     potions, setPotions, achievements, setAchievements, setAchievementNotification, lang,
-    userName, userAvatar, roomId, setRoomId, setActiveMode 
+    userName, userAvatar, roomId, setRoomId, setActiveMode,
+    savingStreak, setSavingStreak
   );
 
   useEffect(() => {
@@ -372,6 +374,7 @@ const App = () => {
             user, setShowLogin, unlockAchievement, generateMonthlyReview, isOnline, lang, setLang,
             userName, setUserName, userId, userAvatar, setUserAvatar, roomId, setRoomId,
             enemyConnected: enemySpentDaily >= 0,
+            savingStreak,
             hasCompletedTutorial, setHasCompletedTutorial, showTutorial, setShowTutorial }} 
         />
       </div>

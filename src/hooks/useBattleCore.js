@@ -31,7 +31,8 @@ export const useBattleCore = (
   achievements, setAchievements,
   setAchievementNotification,
   lang,
-  userName, roomId, setRoomId, setActiveMode
+  userName, roomId, setRoomId, setActiveMode,
+  savingStreak, setSavingStreak
 ) => {
 
   // 🚀 [即時連線邏輯] 監聽戰區數據 (限時 5 分鐘)
@@ -274,7 +275,11 @@ export const useBattleCore = (
     
     if (totalDamage > 5000) unlockAchievement('SURVIVOR');
 
-    addCoinsWithDebtCheck(pillar === 'progress' ? 40 : 20);
+    const isCombo = savingStreak >= 3;
+    const baseCoins = pillar === 'progress' ? 40 : 20;
+    const coinGain = isCombo ? baseCoins * 2 : baseCoins;
+    addCoinsWithDebtCheck(coinGain);
+    if (isCombo) addLog(`💰 +${coinGain} (x2 Combo Bonus! 🔥${savingStreak} Days)`);
     setWillpowerExp(e => {
       const next = e + 15;
       if (next >= 3000) unlockAchievement('WILLPOWER_GOD');
@@ -288,7 +293,8 @@ export const useBattleCore = (
       try {
         const personaData = personaStats[persona];
         const systemBase = (personaData.prompts && personaData.prompts[lang]) || personaData.prompt;
-        const prompt = `System: ${systemBase}. Goal: ${wishlist}. Action: spent ${amount} on ${desc}. Rules: limit 20 words, must use language: ${lang}.`;
+        const comboInstruction = isCombo ? ` IMPORTANT: The user is on a ${savingStreak}-day saving streak! React with extreme praise, worship, and disbelief — like witnessing a miracle. Go over the top.` : '';
+        const prompt = `System: ${systemBase}.${comboInstruction} Goal: ${wishlist}. Action: spent ${amount} on ${desc}. Rules: limit 20 words, must use language: ${lang}.`;
         
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -458,7 +464,14 @@ export const useBattleCore = (
       if (nowTime.getDate() !== last.getDate()) { 
         addLog("📅 Daily reset."); setTeamSpentStates.setTeamSpentDaily(0); 
         const lastDaySpent = history.filter(h => h.date === last.toLocaleDateString() && h.pillar === 'survival').reduce((s, h) => s + h.amount, 0);
-        if (lastDaySpent > 0 && lastDaySpent < 200) unlockAchievement('SAVING_EXPERT');
+        if (lastDaySpent > 0 && lastDaySpent < 200) {
+          unlockAchievement('SAVING_EXPERT');
+          setSavingStreak(s => s + 1);
+          addLog("🔥 [Combo] Saving streak continues!");
+        } else if (lastDaySpent >= 200) {
+          setSavingStreak(0);
+          addLog("❄️ [Streak Lost] Daily spending exceeded threshold.");
+        }
       }
       if (nowTime.getDay() === 1 && nowTime.getDate() !== last.getDate()) { addLog("📅 Weekly reset."); setTeamSpentStates.setTeamSpentWeekly(0); }
       if (nowTime.getDate() === 1 && nowTime.getMonth() !== last.getMonth()) {

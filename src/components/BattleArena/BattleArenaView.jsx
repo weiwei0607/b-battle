@@ -12,6 +12,11 @@ const SHAKE_STYLE = `
     80%  { transform: translateX(1.5px)  rotate(-0.3deg); }
   }
   .pillar-shake { animation: pillar-shake 0.45s ease-in-out infinite; }
+  @keyframes combo-glow {
+    0%, 100% { filter: drop-shadow(0 0 6px gold) drop-shadow(0 0 3px #fbbf24); }
+    50%       { filter: drop-shadow(0 0 14px gold) drop-shadow(0 0 8px #f59e0b); }
+  }
+  .pillar-combo { animation: combo-glow 1.8s ease-in-out infinite; }
 `;
 
 const PillarCracks = ({ isCollapsing }) => (
@@ -72,36 +77,37 @@ const PillarCracks = ({ isCollapsing }) => (
   </svg>
 );
 
-const VerticalPillar = ({ label, percent, colorClass, icon: Icon, isEnemy = false }) => {
+const VerticalPillar = ({ label, percent, colorClass, icon: Icon, isEnemy = false, isCombo = false }) => {
   const isCracked    = percent < 30;
   const isCollapsing = percent < 15;
+  const capColor = isEnemy ? 'bg-red-400' : isCollapsing ? 'bg-red-500' : isCombo ? 'bg-amber-400' : 'bg-stone-400';
 
   return (
-    <div className={`flex flex-col items-center gap-2 ${isEnemy ? 'scale-90 opacity-80' : ''} ${isCollapsing ? 'pillar-shake' : ''}`}>
-      <div className={`w-10 h-1 rounded-full shadow-sm ${isCollapsing ? 'bg-red-300' : 'bg-stone-300'}`} />
-      <div className="w-6 h-32 bg-stone-100 border-x border-stone-200 relative flex justify-center shadow-inner overflow-hidden rounded-sm">
-        <div className={`absolute bottom-0 w-full transition-all duration-1000 ease-out ${colorClass} opacity-70`} style={{ height: `${percent}%` }} />
+    <div className={`flex flex-col items-center gap-2 ${isEnemy ? 'scale-90 opacity-80' : ''} ${isCollapsing ? 'pillar-shake' : ''} ${isCombo && !isEnemy ? 'pillar-combo' : ''}`}>
+      <div className={`w-10 h-1 rounded-full shadow-sm ${isCollapsing ? 'bg-red-300' : isCombo && !isEnemy ? 'bg-amber-300' : 'bg-stone-300'}`} />
+      <div className={`w-6 h-32 border-x relative flex justify-center shadow-inner overflow-hidden rounded-sm ${isCombo && !isEnemy ? 'bg-amber-50 border-amber-200' : 'bg-stone-100 border-stone-200'}`}>
+        <div className={`absolute bottom-0 w-full transition-all duration-1000 ease-out ${isCombo && !isEnemy ? 'bg-amber-400' : colorClass} opacity-70`} style={{ height: `${percent}%` }} />
         <div className="absolute inset-0 flex justify-evenly opacity-20">
           <div className="w-px h-full bg-white" />
           <div className="w-px h-full bg-white" />
         </div>
-        {isCracked && <PillarCracks isCollapsing={isCollapsing} />}
+        {isCracked && !isCombo && <PillarCracks isCollapsing={isCollapsing} />}
       </div>
-      <div className={`w-12 h-2 ${isEnemy ? 'bg-red-400' : isCollapsing ? 'bg-red-500' : 'bg-stone-400'} rounded-b-sm shadow-md flex items-center justify-center`}>
+      <div className={`w-12 h-2 ${capColor} rounded-b-sm shadow-md flex items-center justify-center`}>
         <Icon size={8} className="text-white/50" />
       </div>
       <span className="text-[7px] font-black text-stone-400 uppercase tracking-tighter text-center leading-none mt-1">{label}</span>
-      <span className={`text-[9px] font-black ${isCollapsing ? 'text-red-600 animate-pulse' : isCracked ? 'text-red-400 animate-pulse' : 'text-stone-600'}`}>
+      <span className={`text-[9px] font-black ${isCollapsing ? 'text-red-600 animate-pulse' : isCracked ? 'text-red-400 animate-pulse' : isCombo && !isEnemy ? 'text-amber-500 animate-pulse' : 'text-stone-600'}`}>
         {percent.toFixed(0)}%
       </span>
     </div>
   );
 };
 
-const BattleArenaView = ({ 
+const BattleArenaView = ({
   stats, hpData, enemyHpData, isAiProcessing, aiComment, activeMode, setActiveMode, battleLog, activeChallenges, handleClaimChallenge, handleGiveUpChallenge,
   roomId, setRoomId, userId, lang, showFriends, setShowFriends, showRoomInput, setShowRoomInput, showInviteQR, setShowInviteQR,
-  enemyConnected
+  enemyConnected, savingStreak = 0
 }) => {
   const [isMatchmaking, setIsMatchmaking] = useState(false);
   const [tempRoom, setTempRoom] = useState("");
@@ -150,6 +156,7 @@ const BattleArenaView = ({
   const isBotRoom = roomId?.startsWith("BOT_");
   // 用 enemyConnected 判斷是否有對手，不再依賴 HP 值（幣別無關，比例制）
   const hasOpponent = enemyConnected;
+  const isCombo = savingStreak >= 3;
 
   return (
     <div className="space-y-6 pb-48 animate-in fade-in slide-in-from-left duration-700 text-left">
@@ -158,6 +165,11 @@ const BattleArenaView = ({
         <div>
           <h2 className="text-3xl font-black text-stone-800 tracking-tighter italic leading-none uppercase">{t.battle}</h2>
           <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mt-2">{t.war_zone_subtitle}</p>
+          {isCombo && (
+            <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full shadow-md animate-pulse">
+              <span className="text-[10px] font-black text-white tracking-widest">🔥 {savingStreak} DAYS STREAK!</span>
+            </div>
+          )}
         </div>
         <div className="flex gap-2">
           <button onClick={() => setShowFriends(true)} className="p-2 bg-white border border-stone-100 rounded-xl text-stone-400 hover:text-stone-800 transition-colors shadow-sm active:scale-90"><UserPlus size={18} /></button>
@@ -238,10 +250,10 @@ const BattleArenaView = ({
 
         <div className="flex items-center justify-between gap-4 mt-4 relative">
           <div className="grid grid-cols-2 gap-x-4 gap-y-6 flex-1">
-            <VerticalPillar label={t.cat_food.slice(0,2)} percent={hpData.survival} colorClass="bg-blue-400" icon={Heart} />
-            <VerticalPillar label={t.cat_study.slice(0,2)} percent={hpData.progress} colorClass="bg-emerald-400" icon={Zap} />
-            <VerticalPillar label={t.cat_ent.slice(0,2)} percent={hpData.desire} colorClass="bg-orange-400" icon={Flame} />
-            <VerticalPillar label={t.cat_shop.slice(0,2)} percent={hpData.expedition} colorClass="bg-purple-500" icon={Globe} />
+            <VerticalPillar label={t.cat_food.slice(0,2)} percent={hpData.survival} colorClass="bg-blue-400" icon={Heart} isCombo={isCombo} />
+            <VerticalPillar label={t.cat_study.slice(0,2)} percent={hpData.progress} colorClass="bg-emerald-400" icon={Zap} isCombo={isCombo} />
+            <VerticalPillar label={t.cat_ent.slice(0,2)} percent={hpData.desire} colorClass="bg-orange-400" icon={Flame} isCombo={isCombo} />
+            <VerticalPillar label={t.cat_shop.slice(0,2)} percent={hpData.expedition} colorClass="bg-purple-500" icon={Globe} isCombo={isCombo} />
           </div>
           <div className="flex flex-col items-center gap-4">
             <div className="w-px h-20 bg-gradient-to-b from-transparent via-stone-200 to-transparent" />
@@ -268,7 +280,7 @@ const BattleArenaView = ({
         </div>
       </div>
 
-      <div className="bg-[#FAF7F2] border border-[#D7C9B1]/30 p-6 rounded-[3rem] flex items-start gap-4 shadow-sm">
+      <div className={`p-6 rounded-[3rem] flex items-start gap-4 shadow-sm ${isCombo ? 'bg-amber-50 border-2 border-amber-400 shadow-amber-200' : 'bg-[#FAF7F2] border border-[#D7C9B1]/30'}`}>
         <div className="w-14 h-14 bg-white border border-stone-200 rounded-2xl flex items-center justify-center text-3xl shadow-sm shrink-0">{stats.icon}</div>
         <div className="flex-1 min-h-[60px] flex flex-col justify-center">
           <p className="text-[9px] font-black text-[#BC8F8F] uppercase tracking-[0.2em] mb-1 flex items-center gap-1.5"><MessageSquare size={10} fill="#BC8F8F" fillOpacity={0.2} /> {t[stats.titleKey] || stats.titleKey} {t.report_suffix}</p>
