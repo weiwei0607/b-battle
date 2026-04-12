@@ -137,6 +137,8 @@ const App = () => {
   const [isCloudLoading, setIsCloudLoading] = useState(true);
   const [isSplashDone, setIsSplashDone] = useState(false);
 
+  const t = LOCALES[lang] || LOCALES.zh;
+
   // 🚀 [玩家代號與房號]
   const [userName, setUserName] = useState(() => load('user_name', "title_rookie"));
   const [userId, setUserId] = useState(() => load('user_id', ""));
@@ -165,9 +167,9 @@ const App = () => {
   const [activeChallenges, setActiveChallenges] = useState(() => load('challenges', []) || []);
   const [claimedAvoidedItems, setClaimedAvoidedItems] = useState(() => load('claimed', []) || []);
   const [isSevered, setIsSevered] = useState(() => load('severed', false));
-  const [battleLog, setBattleLog] = useState(["意志力系統啟動..."]);
-  const [aiComment, setAiComment] = useState("意志力防線準備就緒。");
-  const [wishlist, setWishlist] = useState(() => load('wishlist', "日本來回機票"));
+  const [battleLog, setBattleLog] = useState(() => [t.system_start]);
+  const [aiComment, setAiComment] = useState("...");
+  const [wishlist, setWishlist] = useState(() => load('wishlist', t.default_wishlist));
   const [lastTrackDate, setLastTrackDate] = useState(() => load('lastTrack', null));
   const [user, setUser] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
@@ -313,31 +315,30 @@ const App = () => {
   const handleSavePersona = (id, stats) => { setPersonaStats(prev => ({ ...prev, [id]: stats })); setPersona(id); setShowCustomModal(false); };
 
   const getSeveredReason = () => {
-    if (persona === 'asian_parent') return "老媽：『寫 50 字以上的反省書，保證以後多喝熱水少亂花，不然別想回家！』";
-    if (persona === 'peer' || persona === 'instructor') return "對方：『支付 500 金幣請我喝精品咖啡，我才考慮原諒你。』";
+    if (persona === 'asian_parent') return t.severed_asian_parent;
+    if (persona === 'peer' || persona === 'instructor') return t.severed_standard;
     if (persona === 'partner' || persona === 'bestie') {
       if (coldWarEndTime && now < coldWarEndTime) {
         const rem = coldWarEndTime - now;
-        return `另一半：『進入冷戰期。還有 ${Math.floor(rem/3600000)} 小時 ${Math.floor((rem%3600000)/60000)} 分鐘。』`;
+        return `${t.severed_partner} ${Math.floor(rem/3600000)}h ${Math.floor((rem%3600000)/60000)}m.`;
       }
-      return "冷戰結束，執行重生儀式。";
+      return t.severed_ended;
     }
-    return "預算防線崩潰！";
+    return "Budget defense collapsed!";
   };
 
   const getHellPlaceholder = () => {
     if (isSevered) {
-      const map = { asian_parent: "又是買這些垃圾？", partner: "哼，誰管你有錢...", bestie: "反正我們已經完了...", instructor: "報上你的遺言，戰犯。", peer: "破產了還買？笑死。" };
-      return map[persona] || "在恥辱中記錄你的罪行...";
+      return t[`placeholder_severed_${persona}`] || t.placeholder_severed_default;
     }
-    return "記帳或『我想買...』發起豪賭";
+    return t.placeholder_normal;
   };
 
   const healTransaction = (id) => {
     if (potions <= 0) return;
-    setHistory(prev => prev.map(h => h.id === id ? { ...h, damage: 0, desc: `✨ [已修復] ${h.desc}` } : h));
+    setHistory(prev => prev.map(h => h.id === id ? { ...h, damage: 0, desc: `✨ [Healed] ${h.desc}` } : h));
     setPotions(p => p - 1);
-    addLog("💊 [修復] 使用了忘憂聖水，抹除了一筆戰損血量！");
+    addLog("💊 [Heal] Potion used!");
   };
 
   const handleSplashComplete = useCallback(() => setIsSplashDone(true), []);
@@ -346,7 +347,7 @@ const App = () => {
     <>
       {!isSplashDone && <GlobalSplash onComplete={handleSplashComplete} persona={persona} lang={lang} />}
       <div className={`transition-opacity duration-1000 ${isSplashDone ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
-        {!isOnline && <div className="fixed top-0 left-0 w-full z-[4000] bg-stone-100/90 backdrop-blur-md py-2 border-b border-stone-200 flex items-center justify-center gap-2 animate-in slide-in-from-top"><WifiOff size={12} className="text-stone-400" /><span className="text-[10px] font-black text-stone-500 uppercase tracking-widest">{LOCALES[lang]?.offline_mode}</span></div>}
+        {!isOnline && <div className="fixed top-0 left-0 w-full z-[4000] bg-stone-100/90 backdrop-blur-md py-2 border-b border-stone-200 flex items-center justify-center gap-2 animate-in slide-in-from-top"><WifiOff size={12} className="text-stone-400" /><span className="text-[10px] font-black text-stone-500 uppercase tracking-widest">{t.offline_mode}</span></div>}
         <AppContent 
           {...{ isSevered, view, setView, coins, setCoins, debt, setDebt, willpowerExp, persona, personaStats, setPersona,
             history, wishlist, setWishlist, homeMaterials, activeMode, setActiveMode, battleLog, activeChallenges,

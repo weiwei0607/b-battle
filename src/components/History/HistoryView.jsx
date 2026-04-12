@@ -118,7 +118,7 @@ const HistoryView = ({ history, aiComment, isAiProcessing, deleteTransaction, up
         <div className="w-16 h-16 bg-white border border-stone-200 rounded-[1.5rem] flex items-center justify-center text-4xl shadow-sm rotate-2 shrink-0">{currentPersona.icon}</div>
         <div className="bg-white border border-stone-200 rounded-[2rem] rounded-tl-none p-5 shadow-sm relative flex-1 min-h-[80px] flex flex-col justify-center">
           <div className="absolute -top-[1px] left-0 w-4 h-4 bg-white border-l border-t border-stone-200 -translate-y-1/2 -rotate-45" />
-          <p className="text-[10px] font-black text-[#BC8F8F] uppercase tracking-[0.2em] mb-1 flex items-center gap-1.5"><MessageSquare size={10} fill="#BC8F8F" fillOpacity={0.2} /> {currentPersona.title} {t.persona_review}</p>
+          <p className="text-[10px] font-black text-[#BC8F8F] uppercase tracking-[0.2em] mb-1 flex items-center gap-1.5"><MessageSquare size={10} fill="#BC8F8F" fillOpacity={0.2} /> {t[currentPersona.titleKey] || currentPersona.title} {t.persona_review}</p>
           {isAiProcessing ? <div className="flex items-center gap-2 text-stone-400 text-[10px] italic font-medium"><Loader2 size={12} className="animate-spin text-stone-300" />...</div> : <p className="text-xs text-stone-600 leading-relaxed font-bold">「{aiComment}」</p>}
         </div>
       </div>

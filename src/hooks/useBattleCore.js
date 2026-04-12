@@ -212,13 +212,14 @@ export const useBattleCore = (
     if (shield > 0) {
       totalDamage *= 0.8; 
       setShield(s => Math.max(0, s - 0.1));
-      addLog("🛡️ [護盾] 鐵血護盾啟動！");
+      addLog(`🛡️ [Shield] ${lang === 'zh' ? '鐵血護盾啟動！' : 'Shield Active!'}`);
       unlockAchievement('SHIELD_USER');
     }
 
     const newEntry = { id: Date.now(), amount, desc, category, pillar, damage: totalDamage, isCrit: penaltyHp > 0, source, time: new Date().toLocaleTimeString(), date: new Date().toLocaleDateString(), shielded: shield > 0 };
     setHistory(prev => [newEntry, ...prev]);
-    addLog(`${source === 'invoice' ? '🧾' : '⚔️'} 造成支柱 ${getDmgPercent(totalDamage, pillar)}% 戰損`);
+    const t = LOCALES[lang] || LOCALES.zh;
+    addLog(`${source === 'invoice' ? '🧾' : '⚔️'} ${t.log_damage} ${getDmgPercent(totalDamage, pillar)}%`);
     
     if (totalDamage > 5000) unlockAchievement('SURVIVOR');
 

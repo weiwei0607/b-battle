@@ -28,14 +28,30 @@ export const LOCALES = {
     // 人格
     persona_peer: '愛酸同學', persona_asian_parent: '亞洲家長', persona_bestie: '好閨蜜', persona_instructor: '毒舌教官', persona_partner: '溫柔另一半',
     // 稱號
-    title_rookie: '省錢新兵', title_warrior: '省錢戰士', title_elite: '意志精銳', title_master: '理財大師', title_legend: '不朽傳傳奇',
+    title_rookie: '省錢新兵', title_warrior: '省錢戰士', title_elite: '意志精銳', title_master: '理財大師', title_legend: '不朽傳奇',
     // 基地/皮夾等級
     home_tent: '簡陋帳篷', home_apt: '都市公寓', home_villa: '郊區別墅', home_castle: '宏偉城堡', home_sky: '天際宮殿',
     wallet_bag: '破掉的塑膠袋', wallet_velcro: '魔鬼氈錢包', wallet_long: '質感長皮夾', wallet_vault: '巔峰金庫',
     survival_survivor: '街頭生存者', urban_nomad: '都市遊牧民', middle_class: '中產奮鬥者', wealth_army: '財富自由軍',
     wilderness_pioneer: '荒野開拓者', city_settler: '城市定居者', mansion_owner: '豪宅之主', kingdom_lord: '王國領主', sky_master: '天際主宰',
     // 頭像
-    avatar_default: '預設兵員', avatar_soldier: '意志戰士', avatar_ninja: '省錢忍者', avatar_king: '理財國王', avatar_ghost: '記帳幽靈', avatar_cool: '酷帥型男', avatar_cat: '精明貓'
+    avatar_default: '預設兵員', avatar_soldier: '意志戰士', avatar_ninja: '省錢忍者', avatar_king: '理財國王', avatar_ghost: '記帳幽靈', avatar_cool: '酷帥型男', avatar_cat: '精明貓',
+    // 新增
+    placeholder_normal: '記帳或『我想買...』發起豪賭',
+    system_start: '意志力系統啟動...',
+    default_wishlist: '日本來回機票',
+    report_suffix: '戰報',
+    severed_asian_parent: '老媽：『寫 50 字以上的反省書，不然別想回家！』',
+    severed_standard: '對方：『支付 500 金幣請我喝咖啡，我才原諒你。』',
+    severed_partner: '進入冷戰期。',
+    severed_ended: '冷戰結束，執行重生儀式。',
+    placeholder_severed_asian_parent: '又是買這些垃圾？',
+    placeholder_severed_partner: '哼，誰管你有錢...',
+    placeholder_severed_bestie: '反正我們已經完了...',
+    placeholder_severed_instructor: '報上你的遺言，戰犯。',
+    placeholder_severed_peer: '破產了還買？笑死。',
+    placeholder_severed_default: '在恥辱中記錄你的罪行...',
+    log_damage: '造成支柱戰損'
   },
   en: {
     app_name: 'B-Battle: Willpower Finance',
@@ -66,7 +82,22 @@ export const LOCALES = {
     wallet_bag: 'Broken Plastic Bag', wallet_velcro: 'Velcro Wallet', wallet_long: 'Leather Wallet', wallet_vault: 'Ultimate Vault',
     survival_survivor: 'Street Survivor', urban_nomad: 'Urban Nomad', middle_class: 'Middle-class Striver', wealth_army: 'Wealthy General',
     wilderness_pioneer: 'Wilderness Pioneer', city_settler: 'City Settler', mansion_owner: 'Mansion Owner', kingdom_lord: 'Kingdom Lord', sky_master: 'Sky Master',
-    avatar_default: 'Recruit', avatar_soldier: 'Will Warrior', avatar_ninja: 'Money Ninja', avatar_king: 'Finance King', avatar_ghost: 'Ghost Logger', avatar_cool: 'Cool Guy', avatar_cat: 'Smart Cat'
+    avatar_default: 'Recruit', avatar_soldier: 'Will Warrior', avatar_ninja: 'Money Ninja', avatar_king: 'Finance King', avatar_ghost: 'Ghost Logger', avatar_cool: 'Cool Guy', avatar_cat: 'Smart Cat',
+    placeholder_normal: 'Record or "I want to buy..." to bet',
+    system_start: 'Willpower System Active...',
+    default_wishlist: 'Trip to Japan',
+    report_suffix: 'Report',
+    severed_asian_parent: 'Mom: "Write a 50-word reflection, or don\'t come home!"',
+    severed_standard: 'The other: "Pay 500 coins for coffee, then I\'ll forgive you."',
+    severed_partner: 'In Cold War.',
+    severed_ended: 'Cold War ended, starting ritual.',
+    placeholder_severed_asian_parent: 'Buying this trash again?',
+    placeholder_severed_partner: 'Hmph, who cares if you have money...',
+    placeholder_severed_bestie: 'Anyway, we are done...',
+    placeholder_severed_instructor: 'Tell me your last words, war criminal.',
+    placeholder_severed_peer: 'Broke and still buying? Hilarious.',
+    placeholder_severed_default: 'Record your crimes in shame...',
+    log_damage: 'caused pillar damage'
   },
   ja: {
     app_name: 'B-Battle: 意志力家計簿',
@@ -96,6 +127,21 @@ export const LOCALES = {
     wallet_bag: '破れたポリ袋', wallet_velcro: 'マジックテープ財布', wallet_long: '長財布', wallet_vault: '金庫',
     survival_survivor: 'サバイバー', urban_nomad: 'ノマド', middle_class: 'ミドルクラス', wealth_army: 'ウェルスアーミー',
     wilderness_pioneer: '開拓者', city_settler: '定住者', mansion_owner: '邸宅の主', kingdom_lord: '領主', sky_master: '天際の主宰',
-    avatar_default: '新兵', avatar_soldier: '意志の戦士', avatar_ninja: '節約忍者', avatar_king: '理財国王', avatar_ghost: '幽霊', avatar_cool: 'クールガイ', avatar_cat: '賢い猫'
+    avatar_default: '新兵', avatar_soldier: '意志の戦士', avatar_ninja: '節約忍者', avatar_king: '理財国王', avatar_ghost: '幽霊', avatar_cool: 'クールガイ', avatar_cat: '賢い猫',
+    placeholder_normal: '家計簿入力または「...を買いたい」で賭ける',
+    system_start: '意志力システム起動...',
+    default_wishlist: '日本往復航空券',
+    report_suffix: '戦報',
+    severed_asian_parent: 'お母さん：『反省文を書きなさい！さもないと家に入れません！』',
+    severed_standard: '相手：『500コインでコーヒーを奢ってくれたら、許してあげる。』',
+    severed_partner: '冷戦状態です。',
+    severed_ended: '冷戦終了。再生の儀式を執行します。',
+    placeholder_severed_asian_parent: 'またゴミを買ったの？',
+    placeholder_severed_partner: 'ふん、お金なんてどうでもいいわ...',
+    placeholder_severed_bestie: 'とにかく、私たちは終わりよ...',
+    placeholder_severed_instructor: '遺言を言いなさい、戦犯。',
+    placeholder_severed_peer: '破産したのにまだ買うの？笑える。',
+    placeholder_severed_default: '屈辱の中で罪を記録しなさい...',
+    log_damage: 'がダメージを受けました'
   }
 };

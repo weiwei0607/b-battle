@@ -52,7 +52,7 @@ const FriendsListView = ({ onClose, friends = [], userId }) => {
               <input 
                 value={friendIdInput}
                 onChange={(e) => setFriendIdInput(e.target.value)}
-                placeholder="輸入房號或 ID..." 
+                placeholder="輸入好友 6 碼 ID..." 
                 className="w-full bg-stone-50 border-2 border-stone-100 p-4 rounded-2xl text-sm font-black focus:border-stone-800 outline-none transition-all"
               />
             </div>
