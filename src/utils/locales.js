@@ -53,7 +53,13 @@ export const LOCALES = {
     placeholder_severed_instructor: '報上你的遺言，戰犯。',
     placeholder_severed_peer: '破產了還買？笑死。',
     placeholder_severed_default: '在恥辱中記錄你的罪行...',
-    log_damage: '造成支柱戰損'
+    log_damage: '造成支柱戰損',
+    // Splash Greetings
+    splash_peer: "同學：『又來了？這次要記什麼？』",
+    splash_asian_parent: "老媽：『水喝了沒？錢別亂花喔。』",
+    splash_bestie: "閨蜜：『不管買什麼，我都挺你！』",
+    splash_instructor: "教官：『全體集合！檢查你的皮夾支柱！』",
+    splash_partner: "另一半：『今天辛苦了，我幫你記著呢。』"
   },
   en: {
     app_name: 'B-Battle: Willpower Finance',
@@ -101,7 +107,12 @@ export const LOCALES = {
     placeholder_severed_instructor: 'Tell me your last words, war criminal.',
     placeholder_severed_peer: 'Broke and still buying? Hilarious.',
     placeholder_severed_default: 'Record your crimes in shame...',
-    log_damage: 'caused pillar damage'
+    log_damage: 'caused pillar damage',
+    splash_peer: "Peer: 'Back again? What now?'",
+    splash_asian_parent: "Mom: 'Did you drink water? Stop wasting money.'",
+    splash_bestie: "Bestie: 'Whatever you buy, I got you!'",
+    splash_instructor: "Instructor: 'Attention! Check your wallet pillars!'",
+    splash_partner: "Partner: 'Hard work today, I'll record it for you.'",
   },
   ja: {
     app_name: 'B-Battle: 意志力家計簿',
@@ -148,6 +159,11 @@ export const LOCALES = {
     placeholder_severed_instructor: '遺言を言いなさい、戦犯。',
     placeholder_severed_peer: '破産したのにまだ買うの？笑える。',
     placeholder_severed_default: '屈辱の中で罪を記録しなさい...',
-    log_damage: 'がダメージを受けました'
+    log_damage: 'がダメージを受けました',
+    splash_peer: "同級生：『また来たの？今度は何を記録するの？』",
+    splash_asian_parent: "お母さん：『お水飲んだ？無駄遣いしちゃダメよ。』",
+    splash_bestie: "親友：『何を買っても、私はあなたの味方よ！』",
+    splash_instructor: "教官：『全員集合！財布の支柱を確認しろ！』",
+    splash_partner: "パートナー：『今日もお疲れ様。私が記録しておくね。』",
   }
 };

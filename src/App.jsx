@@ -79,13 +79,6 @@ const GlobalSplash = ({ onComplete, persona, lang }) => {
   const [progress, setProgress] = useState(0);
   const t = LOCALES[lang] || LOCALES.zh;
   const messages = [t.loading_report, t.loading_sync, t.loading_ai, t.loading_ready];
-  const greetings = { 
-    peer: "同學：『又來了？這次要記什麼？』", 
-    asian_parent: "老媽：『水喝了沒？錢別亂花喔。』", 
-    bestie: "閨蜜：『不管買什麼，我都挺你！』", 
-    instructor: "教官：『全體集合！檢查你的皮夾支柱！』", 
-    partner: "另一半：『今天辛苦了，我幫你記著呢。』" 
-  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -118,7 +111,7 @@ const GlobalSplash = ({ onComplete, persona, lang }) => {
         {messages[msgIdx]}
       </div>
       <div className="fixed bottom-16 text-[10px] font-medium text-stone-400 italic px-8 text-center animate-pulse">
-        {greetings[persona] || "正在開啟您的意志力之旅..."}
+        {t[`splash_${persona}`] || "Loading your willpower journey..."}
       </div>
     </div>
   );
