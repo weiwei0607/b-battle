@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { User, ShieldCheck, Settings2, LogOut, LogIn, Target, Edit2, Check } from 'lucide-react';
-import { getBondLevel, getFrameStyle, getHomeStatus } from '../../utils/constants';
+import { getBondLevel, getFrameStyle, getHomeStatus, AVATAR_OPTIONS, WALLET_LEVELS, HOME_LEVELS } from '../../utils/constants';
 import { LOCALES } from '../../utils/locales';
+import { auth } from '../../firebase';
 
 const HeroHallView = ({ 
   userTitle, persona, personaStats, setPersona, setShowBudgetSetup, 
   currentTier, lastPersonaSwitch, setLastPersonaSwitch, wishlist, setWishlist,
   debt, userFrame, homeMaterials, user, setShowLogin, setView, lang,
-  userName, setUserName, userAvatar, setUserAvatar, showEvolutionPath, setShowEvolutionPath, willpowerExp
+  userName, setUserName, userId, userAvatar, setUserAvatar, showEvolutionPath, setShowEvolutionPath, willpowerExp
 }) => {
   const t = LOCALES[lang] || LOCALES.zh;
   const currentPersona = personaStats[persona];
@@ -15,7 +16,8 @@ const HeroHallView = ({
   const home = getHomeStatus(homeMaterials);
   
   const [isEditingName, setIsEditingName] = useState(false);
-  const [tempName, setTempCategory] = useState(userName);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [tempName, setTempName] = useState(userName);
 
   const handleSaveName = () => {
     setUserName(tempName);
@@ -51,7 +53,7 @@ const HeroHallView = ({
             <div className="flex items-center gap-2 mb-1">
               {isEditingName ? (
                 <div className="flex items-center gap-2">
-                  <input value={tempName} onChange={(e)=>setTempCategory(e.target.value)} className="bg-stone-50 border-none px-2 py-1 rounded-lg text-sm font-black w-24 outline-none ring-2 ring-stone-200" />
+                  <input value={tempName} onChange={(e)=>setTempName(e.target.value)} className="bg-stone-50 border-none px-2 py-1 rounded-lg text-sm font-black w-24 outline-none ring-2 ring-stone-200" />
                   <button onClick={handleSaveName} className="text-emerald-500"><Check size={16}/></button>
                 </div>
               ) : (
