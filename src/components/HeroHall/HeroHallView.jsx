@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, ShieldCheck, Settings2, LogOut, LogIn, Target, Edit2, Check } from 'lucide-react';
-import { getBondLevel, getFrameStyle, getHomeStatus, AVATAR_OPTIONS, WALLET_LEVELS, HOME_LEVELS } from '../../utils/constants';
+import { getBondLevel, getFrameStyle, getHomeStatus, getWalletStatus, AVATAR_OPTIONS, WALLET_LEVELS, HOME_LEVELS } from '../../utils/constants';
 import { LOCALES } from '../../utils/locales';
 import { auth } from '../../firebase';
 
