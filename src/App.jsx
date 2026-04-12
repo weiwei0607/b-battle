@@ -7,6 +7,7 @@ import { CATEGORY_MAP, getBondLevel, getFrameStyle } from './utils/constants';
 import { LOCALES } from './utils/locales';
 import { useBattleCore } from './hooks/useBattleCore';
 import AppContent from './components/Layout/AppContent';
+import { TutorialOverlay } from './components/TutorialOverlay';
 import { X, Swords, WifiOff } from 'lucide-react';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || window.VITE_GEMINI_API_KEY || "";
@@ -130,9 +131,27 @@ const App = () => {
   const [isCloudLoading, setIsCloudLoading] = useState(true);
   const [isSplashDone, setIsSplashDone] = useState(false);
 
-  // 🚀 [新手教學狀態] - 預留給 Claude 實裝 UI
+  // 🚀 [新手教學狀態]
   const [hasCompletedTutorial, setHasCompletedTutorial] = useState(() => load('has_tutorial', false));
   const [showTutorial, setShowTutorial] = useState(false);
+
+  useEffect(() => {
+    if (!hasCompletedTutorial && isSplashDone) {
+      setShowTutorial(true);
+    }
+  }, [hasCompletedTutorial, isSplashDone]);
+
+  const handleSkipTutorial = () => {
+    setHasCompletedTutorial(true);
+    save('has_tutorial', true);
+    setShowTutorial(false);
+  };
+
+  const handleCompleteTutorial = () => {
+    setHasCompletedTutorial(true);
+    save('has_tutorial', true);
+    setShowTutorial(false);
+  };
 
   const t = LOCALES[lang] || LOCALES.zh;
 
@@ -356,7 +375,17 @@ const App = () => {
             hasCompletedTutorial, setHasCompletedTutorial, showTutorial, setShowTutorial }} 
         />
       </div>
-      {showLogin && <div className="fixed inset-0 z-[6000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"><div className="relative w-full max-w-md animate-in slide-in-from-bottom-10 duration-300"><button onClick={() => setShowLogin(false)} className="absolute top-4 right-4 z-[6001] p-2 bg-stone-100 rounded-full text-stone-500 hover:bg-stone-200 transition-colors"><X size={16}/></button><LoginScreen isModal={true} onClose={() => setShowLogin(false)} /></div></div>}
+      {showTutorial && (
+        <TutorialOverlay
+          persona={persona}
+          personaStats={personaStats}
+          lang={lang}
+          onSkip={handleSkipTutorial}
+          onComplete={handleCompleteTutorial}
+          setShowBudgetSetup={setShowBudgetSetup}
+        />
+      )}
+      {showLogin &&<div className="fixed inset-0 z-[6000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"><div className="relative w-full max-w-md animate-in slide-in-from-bottom-10 duration-300"><button onClick={() => setShowLogin(false)} className="absolute top-4 right-4 z-[6001] p-2 bg-stone-100 rounded-full text-stone-500 hover:bg-stone-200 transition-colors"><X size={16}/></button><LoginScreen isModal={true} onClose={() => setShowLogin(false)} /></div></div>}
       {achievementNotification && <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[7000] w-[90%] max-w-sm bg-stone-900 text-white p-4 rounded-3xl shadow-2xl flex items-center gap-4 animate-in slide-in-from-top-20 border border-amber-500/50"><div className="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-amber-500/20">{achievementNotification.icon}</div><div className="flex-1 text-left"><p className="text-[10px] font-black text-amber-500 uppercase tracking-widest text-left">成就達成！</p><h4 className="text-sm font-black tracking-tight text-left">{achievementNotification.name}</h4></div><button onClick={() => { setShowAchievements(true); setAchievementNotification(null); }} className="bg-stone-800 px-3 py-2 rounded-xl text-[9px] font-black">點亮</button></div>}
     </>
   );
