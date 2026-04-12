@@ -61,10 +61,16 @@ export const useBattleCore = (
           
           if (others.length > 0) {
             const othersDaily = others.reduce((s, p) => s + (p.daily || 0), 0);
+            const othersWeekly = others.reduce((s, p) => s + (p.weekly || 0), 0);
+            const othersMonthly = others.reduce((s, p) => s + (p.monthly || 0), 0);
             setTeamSpentStates.setEnemySpentDaily(othersDaily);
+            setTeamSpentStates.setEnemySpentWeekly(othersWeekly);
+            setTeamSpentStates.setEnemySpentMonthly(othersMonthly);
           } else {
             // 如果房間沒別人了，重置對手數據
             setTeamSpentStates.setEnemySpentDaily(0);
+            setTeamSpentStates.setEnemySpentWeekly(0);
+            setTeamSpentStates.setEnemySpentMonthly(0);
           }
         } else {
           setDoc(roomRef, { createdAt: Date.now(), players: {} }, { merge: true });
@@ -78,9 +84,22 @@ export const useBattleCore = (
   useEffect(() => {
     if ((activeMode === 'team5v5' || activeMode === '1v1') && roomId && roomId !== "MATCHMAKING_QUEUE" && user) {
       const todayStr = new Date().toLocaleDateString();
+      const nowDate = new Date();
+
+      const dayOfWeek = nowDate.getDay();
+      const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      const weekStart = new Date(nowDate);
+      weekStart.setDate(nowDate.getDate() - daysFromMonday);
+      weekStart.setHours(0, 0, 0, 0);
+
+      const monthStart = new Date(nowDate.getFullYear(), nowDate.getMonth(), 1);
+
       const myDaily = history.filter(h => h.date === todayStr).reduce((s, h) => s + h.amount, 0);
-      setDoc(doc(db, "rooms", roomId), { 
-        [`players.${user.uid}`]: { uid: user.uid, name: userName, daily: myDaily, lastUpdate: Date.now() }
+      const myWeekly = history.filter(h => new Date(h.date) >= weekStart).reduce((s, h) => s + h.amount, 0);
+      const myMonthly = history.filter(h => new Date(h.date) >= monthStart).reduce((s, h) => s + h.amount, 0);
+
+      setDoc(doc(db, "rooms", roomId), {
+        [`players.${user.uid}`]: { uid: user.uid, name: userName, daily: myDaily, weekly: myWeekly, monthly: myMonthly, lastUpdate: Date.now() }
       }, { merge: true });
     }
   }, [history, activeMode, roomId, user, userName]);
@@ -290,8 +309,8 @@ export const useBattleCore = (
       if (target.source === 'invoice') { alert("🛡️ Lock!"); return prev; }
       spendCoins(20, true);
       addLog(`🗑️ [Karma] Record removed, fine 20.`);
-      const deleteCount = (parseInt(localStorage.getItem('bb_v3_delete_count')) || 0) + 1;
-      localStorage.setItem('bb_v3_delete_count', deleteCount.toString());
+      const deleteCount = (parseInt(localStorage.getItem('bb_v4_delete_count')) || 0) + 1;
+      localStorage.setItem('bb_v4_delete_count', deleteCount.toString());
       if (deleteCount >= 5) unlockAchievement('KARMA_MASTER');
       return prev.filter(h => h.id !== id);
     });

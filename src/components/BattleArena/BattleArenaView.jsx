@@ -74,14 +74,14 @@ const BattleArenaView = ({
     <div className="space-y-6 pb-48 animate-in fade-in slide-in-from-left duration-700 text-left">
       <div className="flex justify-between items-center px-2">
         <div>
-          <h2 className="text-3xl font-black text-stone-800 tracking-tighter italic leading-none uppercase">{t.battle} ZONE</h2>
+          <h2 className="text-3xl font-black text-stone-800 tracking-tighter italic leading-none uppercase">{t.battle}</h2>
           <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mt-2">{t.war_zone_subtitle}</p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => setShowFriends(true)} className="p-2 bg-white border border-stone-100 rounded-xl text-stone-400 hover:text-stone-800 transition-colors shadow-sm active:scale-90"><UserPlus size={18} /></button>
           <div className="flex bg-white border border-stone-100 rounded-xl overflow-hidden shadow-sm">
             <button onClick={() => setActiveMode('selection')} className={`px-4 py-2 text-[9px] font-black transition-all ${activeMode === 'selection' || (activeMode === '1v1' && !isBotRoom) ? 'bg-stone-800 text-white' : 'text-stone-400'}`}>1v1</button>
-            <button onClick={() => setShowRoomInput(true)} className={`px-4 py-2 text-[9px] font-black transition-all ${activeMode === 'team5v5' || isBotRoom ? 'bg-amber-500 text-white' : 'text-stone-400'}`}>5v5 / BOT</button>
+            <button onClick={() => setShowRoomInput(true)} className={`px-4 py-2 text-[9px] font-black transition-all ${activeMode === 'team5v5' || isBotRoom ? 'bg-amber-500 text-white' : 'text-stone-400'}`}>5v5 / {t.bot_mode.split(' ')[0]}</button>
           </div>
         </div>
       </div>
@@ -140,7 +140,7 @@ const BattleArenaView = ({
       <div className="bg-white border border-stone-100 p-8 rounded-[3.5rem] shadow-sm relative overflow-hidden text-left">
         <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1 bg-amber-50 text-amber-600 rounded-full border border-amber-100 z-20">
           <Clock size={10} className="animate-spin-slow" />
-          <span className="text-[8px] font-black uppercase tracking-widest">{roomId ? `Room: ${roomId}` : t.solo_mode}</span>
+          <span className="text-[8px] font-black tracking-widest">{roomId ? `Room: ${roomId}` : t.solo_mode}</span>
         </div>
         
         {/* 🚪 離開房間按鈕 (僅在有房間時顯示) */}
@@ -179,7 +179,7 @@ const BattleArenaView = ({
             ) : (
               <div onClick={handleStart1v1Duel} className="col-span-2 flex flex-col items-center justify-center h-full opacity-20 grayscale hover:opacity-40 cursor-pointer transition-all">
                 <div className="w-16 h-16 border-4 border-dashed border-stone-300 rounded-full flex items-center justify-center mb-2"><Users size={24} className="text-stone-400" /></div>
-                <span className="text-[8px] font-black text-stone-400 uppercase tracking-widest text-center">{roomId ? t.waiting_friend : t.tap_to_duel}</span>
+                <span className="text-[8px] font-black text-stone-400 tracking-widest text-center">{roomId ? t.waiting_friend : t.tap_to_duel}</span>
               </div>
             )}
           </div>
