@@ -59,7 +59,19 @@ export const LOCALES = {
     splash_asian_parent: "老媽：『水喝了沒？錢別亂花喔。』",
     splash_bestie: "閨蜜：『不管買什麼，我都挺你！』",
     splash_instructor: "教官：『全體集合！檢查你的皮夾支柱！』",
-    splash_partner: "另一半：『今天辛苦了，我幫你記著呢。』"
+    splash_partner: "另一半：『今天辛苦了，我幫你記著呢。』",
+    // Friends List
+    friends_title: '戰友名單',
+    is_newbie: '還是新兵喔',
+    no_last_week: '無上週資料',
+    vs_last_week: '較上週',
+    add_friend_title: '尋找新戰友',
+    add_friend_desc: '輸入好友 ID 進行連線',
+    placeholder_id: '輸入好友 6 碼 ID...',
+    send_request: '確認請求',
+    mock_friend_1: '阿明',
+    mock_friend_2: '小華',
+    mock_friend_3: '新人王'
   },
   en: {
     app_name: 'B-Battle: Willpower Finance',
@@ -113,6 +125,17 @@ export const LOCALES = {
     splash_bestie: "Bestie: 'Whatever you buy, I got you!'",
     splash_instructor: "Instructor: 'Attention! Check your wallet pillars!'",
     splash_partner: "Partner: 'Hard work today, I'll record it for you.'",
+    friends_title: 'Comrades',
+    is_newbie: 'Still a Rookie',
+    no_last_week: 'No data last week',
+    vs_last_week: 'vs last week',
+    add_friend_title: 'Find Comrades',
+    add_friend_desc: 'Enter User ID to connect',
+    placeholder_id: 'Enter 6-char ID...',
+    send_request: 'Send Request',
+    mock_friend_1: 'Ming',
+    mock_friend_2: 'Hwa',
+    mock_friend_3: 'Ace'
   },
   ja: {
     app_name: 'B-Battle: 意志力家計簿',
@@ -165,5 +188,16 @@ export const LOCALES = {
     splash_bestie: "親友：『何を買っても、私はあなたの味方よ！』",
     splash_instructor: "教官：『全員集合！財布の支柱を確認しろ！』",
     splash_partner: "パートナー：『今日もお疲れ様。私が記録しておくね。』",
+    friends_title: '戦友リスト',
+    is_newbie: 'まだ新兵です',
+    no_last_week: '先週のデータなし',
+    vs_last_week: '先週比',
+    add_friend_title: '戦友を探す',
+    add_friend_desc: 'IDを入力して連携する',
+    placeholder_id: '6桁のIDを入力...',
+    send_request: 'リクエスト送信',
+    mock_friend_1: 'アミン',
+    mock_friend_2: 'ハナ',
+    mock_friend_3: 'エース'
   }
 };

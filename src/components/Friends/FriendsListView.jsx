@@ -1,22 +1,24 @@
 import React, { useState } from 'react';
 import { User, TrendingUp, TrendingDown, Minus, ArrowLeft, UserPlus, Search, X } from 'lucide-react';
+import { LOCALES } from '../../utils/locales';
 
-const FriendsListView = ({ onClose, friends = [], userId }) => {
+const FriendsListView = ({ onClose, friends = [], userId, lang }) => {
   const [showAddFriend, setShowAddFriend] = useState(false);
   const [friendIdInput, setFriendIdInput] = useState("");
+  const t = LOCALES[lang] || LOCALES.zh;
 
   const handleAddFriend = () => {
     if (!friendIdInput.trim()) return;
-    alert(`已送出好友請求給: ${friendIdInput}\n(實作串接 Firebase 請求中)`);
+    alert(`Request sent to: ${friendIdInput}\n(Firebase integration in progress)`);
     setFriendIdInput("");
     setShowAddFriend(false);
   };
 
-  // Mock data if empty
+  // Localized Mock data if empty
   const displayFriends = friends.length > 0 ? friends : [
-    { id: '1', name: '阿明', userAvatar: '🥷', thisWeekSaved: 1200, lastWeekSaved: 1000, createdAt: Date.now() - 400000000 },
-    { id: '2', name: '小華', userAvatar: '😎', thisWeekSaved: 500, lastWeekSaved: 800, createdAt: Date.now() - 1000000000 },
-    { id: '3', name: '新人王', userAvatar: '👤', thisWeekSaved: 200, lastWeekSaved: 0, createdAt: Date.now() - 100000 }
+    { id: '1', name: t.mock_friend_1, userAvatar: '🥷', thisWeekSaved: 1200, lastWeekSaved: 1000, createdAt: Date.now() - 400000000 },
+    { id: '2', name: t.mock_friend_2, userAvatar: '😎', thisWeekSaved: 500, lastWeekSaved: 800, createdAt: Date.now() - 1000000000 },
+    { id: '3', name: t.mock_friend_3, userAvatar: '👤', thisWeekSaved: 200, lastWeekSaved: 0, createdAt: Date.now() - 100000 }
   ];
 
   const calculateRatio = (curr, prev) => {
@@ -26,12 +28,12 @@ const FriendsListView = ({ onClose, friends = [], userId }) => {
 
   return (
     <div className="fixed inset-0 z-[6000] bg-[#F7F4EF] flex flex-col animate-in slide-in-from-right duration-300">
-      <div className="w-full max-w-md mx-auto h-full flex flex-col p-6 relative">
-        <div className="flex items-center justify-between mb-8">
+      <div className="w-full max-w-md mx-auto h-screen flex flex-col p-6 relative overflow-hidden">
+        <div className="flex items-center justify-between mb-8 shrink-0">
           <div className="flex items-center gap-4">
             <button onClick={onClose} className="p-2 bg-white border border-stone-200 rounded-xl active:scale-90 transition-all"><ArrowLeft size={20}/></button>
             <div className="text-left">
-              <h2 className="text-2xl font-black text-stone-800 tracking-tighter italic uppercase leading-none">戰友名單</h2>
+              <h2 className="text-2xl font-black text-stone-800 tracking-tighter italic uppercase leading-none">{t.friends_title}</h2>
               <p className="text-[9px] font-black text-stone-400 mt-1 uppercase tracking-widest">My ID: {userId || "------"}</p>
             </div>
           </div>
@@ -47,49 +49,50 @@ const FriendsListView = ({ onClose, friends = [], userId }) => {
         {showAddFriend && (
           <div className="fixed inset-0 z-[6001] bg-stone-900/40 backdrop-blur-sm flex items-center justify-center p-6">
             <div className="bg-white w-full max-w-xs rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-200">
-              <h3 className="text-lg font-black text-stone-800 mb-2 text-center">尋找新戰友</h3>
-              <p className="text-[10px] text-stone-400 font-bold mb-6 text-center uppercase tracking-widest">輸入好友 ID 進行連線</p>
+              <h3 className="text-lg font-black text-stone-800 mb-2 text-center">{t.add_friend_title}</h3>
+              <p className="text-[10px] text-stone-400 font-bold mb-6 text-center uppercase tracking-widest">{t.add_friend_desc}</p>
               <div className="relative mb-6">
                 <input 
                   value={friendIdInput}
                   onChange={(e) => setFriendIdInput(e.target.value)}
-                  placeholder="輸入好友 6 碼 ID..." 
+                  placeholder={t.placeholder_id} 
                   className="w-full bg-stone-50 border-2 border-stone-100 p-4 rounded-2xl text-sm font-black focus:border-stone-800 outline-none transition-all"
                 />
               </div>
               <div className="flex gap-3">
-                <button onClick={() => setShowAddFriend(false)} className="flex-1 py-4 bg-stone-100 text-stone-500 rounded-2xl font-black text-xs">取消</button>
-                <button onClick={handleAddFriend} className="flex-1 py-4 bg-stone-800 text-white rounded-2xl font-black text-xs shadow-lg">確認請求</button>
+                <button onClick={() => setShowAddFriend(false)} className="flex-1 py-4 bg-stone-100 text-stone-500 rounded-2xl font-black text-xs">Cancel</button>
+                <button onClick={handleAddFriend} className="flex-1 py-4 bg-stone-800 text-white rounded-2xl font-black text-xs shadow-lg">{t.send_request}</button>
               </div>
             </div>
           </div>
         )}
 
-        <div className="space-y-4 overflow-y-auto no-scrollbar pb-24">
+        {/* 📜 Scrollable List Area */}
+        <div className="flex-1 overflow-y-auto no-scrollbar space-y-4 pb-32">
           {displayFriends.map(friend => {
             const ratio = calculateRatio(friend.thisWeekSaved, friend.lastWeekSaved);
             const isNewbie = (Date.now() - friend.createdAt) < 7 * 24 * 3600000;
             
             return (
-              <div key={friend.id} className="bg-white border border-stone-100 p-5 rounded-3xl flex items-center gap-4 shadow-sm">
+              <div key={friend.id} className="bg-white border border-stone-100 p-5 rounded-3xl flex items-center gap-4 shadow-sm active:scale-[0.98] transition-all">
                 <div className="w-14 h-14 bg-stone-50 rounded-2xl flex items-center justify-center text-3xl shrink-0 shadow-inner">
                   {friend.userAvatar || '👤'}
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 text-left">
                   <h4 className="font-black text-stone-800 mb-0.5">{friend.name}</h4>
                   <div className="flex items-center gap-2">
                     {isNewbie ? (
-                      <span className="text-[8px] font-black bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full uppercase">還是新兵喔</span>
+                      <span className="text-[8px] font-black bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full uppercase">{t.is_newbie}</span>
                     ) : ratio !== null ? (
                       <div className="flex items-center gap-1">
-                        {ratio > 0 ? <TrendingUp size={10} className="text-emerald-500" /> : <TrendingDown size={10} className="text-rose-500" />}
-                        <span className={`text-[9px] font-black ${ratio > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                          {ratio > 0 ? '+' : ''}{ratio}%
+                        {parseFloat(ratio) > 0 ? <TrendingUp size={10} className="text-emerald-500" /> : <TrendingDown size={10} className="text-rose-500" />}
+                        <span className={`text-[9px] font-black ${parseFloat(ratio) > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {parseFloat(ratio) > 0 ? '+' : ''}{ratio}%
                         </span>
-                        <span className="text-[8px] font-bold text-stone-400 uppercase ml-1">vs Last Week</span>
+                        <span className="text-[8px] font-bold text-stone-400 uppercase ml-1">{t.vs_last_week}</span>
                       </div>
                     ) : (
-                      <span className="text-[8px] font-bold text-stone-300 uppercase">無上週資料</span>
+                      <span className="text-[8px] font-bold text-stone-300 uppercase">{t.no_last_week}</span>
                     )}
                   </div>
                 </div>
