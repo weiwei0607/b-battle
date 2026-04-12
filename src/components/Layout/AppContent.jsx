@@ -67,7 +67,7 @@ const AppContent = ({
           )}
         </main>
 
-        {!isSevered && (
+        {!isSevered && !showShop && !showAchievements && !showEvolutionPath && (
           <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-[150]">
             <div className={`bg-white/80 backdrop-blur-md border border-stone-200 rounded-2xl p-2 shadow-xl flex items-center gap-2 ${isSevered ? 'opacity-100 scale-105 border-red-500 shadow-red-900/20' : ''}`}>
               <button onClick={simulateInvoice} className="w-10 h-10 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center active:scale-90 transition-all shrink-0"><Receipt size={16} /></button>
