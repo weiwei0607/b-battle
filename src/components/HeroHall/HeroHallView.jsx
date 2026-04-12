@@ -25,7 +25,7 @@ const HeroHallView = ({
   };
 
   const checkAndSetPersona = (id) => {
-    const isLocked = currentTier === 'free' && !['peer', 'asian_parent'].includes(id);
+    const isLocked = currentTier === 'free' && !['peer'].includes(id);
     if (isLocked) { alert("此人格為高級版專屬，請升級意志力會員！"); return; }
     const now = Date.now();
     if (lastPersonaSwitch && now - lastPersonaSwitch < 3600000) {
