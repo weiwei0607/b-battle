@@ -3,17 +3,97 @@ import { Swords, Users, MessageSquare, Loader2, Hash, Heart, Zap, Flame, Globe, 
 import FriendsListView from '../Friends/FriendsListView';
 import { LOCALES } from '../../utils/locales';
 
+const SHAKE_STYLE = `
+  @keyframes pillar-shake {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    20%  { transform: translateX(-2px) rotate(-0.6deg); }
+    40%  { transform: translateX(2px)  rotate(0.6deg); }
+    60%  { transform: translateX(-1.5px) rotate(0.3deg); }
+    80%  { transform: translateX(1.5px)  rotate(-0.3deg); }
+  }
+  .pillar-shake { animation: pillar-shake 0.45s ease-in-out infinite; }
+`;
+
+const PillarCracks = ({ isCollapsing }) => (
+  <svg
+    viewBox="0 0 24 128"
+    className="absolute inset-0 w-full h-full"
+    style={{ pointerEvents: 'none' }}
+    aria-hidden="true"
+  >
+    {/* 主裂縫：從上往下貫穿 */}
+    <path
+      d="M 4 10 L 9 24 L 5 38 L 13 54"
+      stroke="rgba(60,40,20,0.55)"
+      strokeWidth={isCollapsing ? 1.6 : 0.9}
+      fill="none" strokeLinecap="round"
+    />
+    {/* 主裂縫分支 */}
+    <path
+      d="M 9 24 L 13 19"
+      stroke="rgba(60,40,20,0.35)"
+      strokeWidth={isCollapsing ? 1 : 0.5}
+      fill="none" strokeLinecap="round"
+    />
+    {/* 中段裂縫 */}
+    <path
+      d="M 17 60 L 10 74 L 19 88"
+      stroke="rgba(60,40,20,0.45)"
+      strokeWidth={isCollapsing ? 1.4 : 0.7}
+      fill="none" strokeLinecap="round"
+    />
+    <path
+      d="M 10 74 L 6 70"
+      stroke="rgba(60,40,20,0.3)"
+      strokeWidth="0.5"
+      fill="none" strokeLinecap="round"
+    />
+    {/* 崩塌時才出現的下段裂縫 */}
+    {isCollapsing && (
+      <>
+        <path
+          d="M 2 96 L 11 110 L 6 126"
+          stroke="rgba(60,40,20,0.65)"
+          strokeWidth="1.8"
+          fill="none" strokeLinecap="round"
+        />
+        <path
+          d="M 11 110 L 17 106"
+          stroke="rgba(60,40,20,0.4)"
+          strokeWidth="1"
+          fill="none" strokeLinecap="round"
+        />
+        {/* 崩塌碎屑點 */}
+        <circle cx="3"  cy="45" r="1" fill="rgba(60,40,20,0.3)" />
+        <circle cx="20" cy="82" r="1" fill="rgba(60,40,20,0.3)" />
+        <circle cx="7"  cy="118" r="1.2" fill="rgba(60,40,20,0.4)" />
+      </>
+    )}
+  </svg>
+);
+
 const VerticalPillar = ({ label, percent, colorClass, icon: Icon, isEnemy = false }) => {
+  const isCracked    = percent < 30;
+  const isCollapsing = percent < 15;
+
   return (
-    <div className={`flex flex-col items-center gap-2 ${isEnemy ? 'scale-90 opacity-80' : ''}`}>
-      <div className="w-10 h-1 bg-stone-300 rounded-full shadow-sm" />
+    <div className={`flex flex-col items-center gap-2 ${isEnemy ? 'scale-90 opacity-80' : ''} ${isCollapsing ? 'pillar-shake' : ''}`}>
+      <div className={`w-10 h-1 rounded-full shadow-sm ${isCollapsing ? 'bg-red-300' : 'bg-stone-300'}`} />
       <div className="w-6 h-32 bg-stone-100 border-x border-stone-200 relative flex justify-center shadow-inner overflow-hidden rounded-sm">
         <div className={`absolute bottom-0 w-full transition-all duration-1000 ease-out ${colorClass} opacity-70`} style={{ height: `${percent}%` }} />
-        <div className="absolute inset-0 flex justify-evenly opacity-20"><div className="w-px h-full bg-white" /><div className="w-px h-full bg-white" /></div>
+        <div className="absolute inset-0 flex justify-evenly opacity-20">
+          <div className="w-px h-full bg-white" />
+          <div className="w-px h-full bg-white" />
+        </div>
+        {isCracked && <PillarCracks isCollapsing={isCollapsing} />}
       </div>
-      <div className={`w-12 h-2 ${isEnemy ? 'bg-red-400' : 'bg-stone-400'} rounded-b-sm shadow-md flex items-center justify-center`}><Icon size={8} className="text-white/50" /></div>
+      <div className={`w-12 h-2 ${isEnemy ? 'bg-red-400' : isCollapsing ? 'bg-red-500' : 'bg-stone-400'} rounded-b-sm shadow-md flex items-center justify-center`}>
+        <Icon size={8} className="text-white/50" />
+      </div>
       <span className="text-[7px] font-black text-stone-400 uppercase tracking-tighter text-center leading-none mt-1">{label}</span>
-      <span className={`text-[9px] font-black ${percent < 30 ? 'text-red-500 animate-pulse' : 'text-stone-600'}`}>{percent.toFixed(0)}%</span>
+      <span className={`text-[9px] font-black ${isCollapsing ? 'text-red-600 animate-pulse' : isCracked ? 'text-red-400 animate-pulse' : 'text-stone-600'}`}>
+        {percent.toFixed(0)}%
+      </span>
     </div>
   );
 };
@@ -73,6 +153,7 @@ const BattleArenaView = ({
 
   return (
     <div className="space-y-6 pb-48 animate-in fade-in slide-in-from-left duration-700 text-left">
+      <style>{SHAKE_STYLE}</style>
       <div className="flex justify-between items-center px-2">
         <div>
           <h2 className="text-3xl font-black text-stone-800 tracking-tighter italic leading-none uppercase">{t.battle}</h2>
@@ -198,11 +279,25 @@ const BattleArenaView = ({
       <div className="px-2 space-y-4">
         <h3 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] px-1 text-left">Battle Log</h3>
         <div className="bg-white/50 backdrop-blur-sm border border-stone-100 rounded-[2.5rem] p-6 h-48 overflow-y-auto no-scrollbar space-y-3 shadow-inner">
-          {battleLog.map((log, i) => (
-            <div key={i} className={`text-[10px] font-black leading-relaxed flex gap-2 animate-in slide-in-from-left duration-300 ${log.includes('🏆') ? 'text-amber-600' : log.includes('⚔️') ? 'text-red-500' : 'text-stone-500'}`}>
-              <span className="opacity-30">{battleLog.length - i}</span><span className="tracking-tight text-left">{log}</span>
-            </div>
-          ))}
+          {battleLog.map((log, i) => {
+            const pctMatch = log.match(/(\d+\.?\d*)%/);
+            const pct = pctMatch ? parseFloat(pctMatch[1]) : null;
+            const dmgLabel = pct === null ? null
+              : pct < 1   ? { text: '[擦傷]',   cls: 'text-stone-400' }
+              : pct <= 10  ? { text: '[受損]',   cls: 'text-amber-500' }
+              :               { text: '[致命!!]', cls: 'text-red-600 animate-pulse' };
+            const rowCls = log.includes('🏆') ? 'text-amber-600'
+              : dmgLabel?.cls ?? (log.includes('⚔️') || log.includes('🧾') ? 'text-stone-600' : 'text-stone-400');
+            return (
+              <div key={i} className={`text-[10px] font-black leading-relaxed flex gap-2 animate-in slide-in-from-left duration-300 ${rowCls}`}>
+                <span className="opacity-30">{battleLog.length - i}</span>
+                <span className="tracking-tight text-left">
+                  {dmgLabel && <span className={`mr-1 ${dmgLabel.cls}`}>{dmgLabel.text}</span>}
+                  {log}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 

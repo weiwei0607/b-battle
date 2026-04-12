@@ -152,7 +152,12 @@ export const useBattleCore = (
   const cooldownThreshold = 2000;
 
   const getDmgPercent = (amount, pillar) => {
-    const limits = { survival: 10000, progress: 5000, desire: 3000, expedition: 15000 };
+    const limits = {
+      survival: (weeklyPools.food?.limit || 1000) + (weeklyPools.transport?.limit || 0) + (monthlyPools.housing?.limit || 0),
+      progress: (monthlyPools.education?.limit || 0),
+      desire: (weeklyPools.social?.limit || 0),
+      expedition: (weeklyPools.shopping?.limit || 0)
+    };
     const limit = limits[pillar] || 10000;
     return ((amount / limit) * 100).toFixed(1);
   };
