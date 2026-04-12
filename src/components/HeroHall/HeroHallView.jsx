@@ -187,15 +187,45 @@ const HeroHallView = ({
             </div>
 
             <div className="mt-12 pt-6 border-t border-stone-200/50">
-              <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-4 text-center">皮夾等級</h4>
-              <div className="flex justify-between gap-2 overflow-x-auto no-scrollbar">
-                {WALLET_LEVELS.map(lvl => (
-                  <div key={lvl.id} className={`flex flex-col items-center gap-1 shrink-0 ${willpowerExp >= lvl.minExp ? 'opacity-100' : 'opacity-20'}`}>
-                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-xl border border-stone-100 shadow-sm">{lvl.icon}</div>
-                    <p className="text-[7px] font-black text-stone-500 uppercase whitespace-nowrap">{lvl.title.split('')[0]}...</p>
-                  </div>
-                ))}
+              <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-4 text-center text-left">意志皮夾等級</h4>
+              <div className="space-y-6">
+                {WALLET_LEVELS.map(lvl => {
+                  const isReached = willpowerExp >= lvl.minExp;
+                  const isCurrent = getWalletStatus(willpowerExp).id === lvl.id;
+                  return (
+                    <div key={lvl.id} className={`flex items-start gap-4 transition-opacity ${isReached ? 'opacity-100' : 'opacity-30'}`}>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 ${isCurrent ? 'bg-stone-800 text-white shadow-lg' : 'bg-white border border-stone-100'}`}>
+                        {lvl.icon}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <h5 className={`text-[11px] font-black ${isCurrent ? 'text-stone-800' : 'text-stone-500'}`}>{lvl.name}</h5>
+                          {isCurrent && <span className="text-[7px] font-black text-stone-400 uppercase">Current</span>}
+                        </div>
+                        <p className="text-[8px] font-bold text-stone-400 uppercase tracking-widest">{lvl.title}</p>
+                        {isCurrent && (
+                          <div className="mt-2">
+                            <div className="flex justify-between text-[7px] font-black text-stone-400 mb-1 uppercase">
+                              <span>Points</span>
+                              <span>{willpowerExp} / {lvl.next}</span>
+                            </div>
+                            <div className="w-full h-1 bg-stone-200 rounded-full overflow-hidden">
+                              <div className="h-full bg-stone-800" style={{ width: `${Math.min(100, (willpowerExp / lvl.next) * 100)}%` }} />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
+            </div>
+
+            <div className="mt-8 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+              <p className="text-[9px] font-black text-amber-700 leading-relaxed text-left">
+                💡 <span className="uppercase tracking-widest">系統提醒：</span><br/>
+                生存預算將在 <span className="underline decoration-2">每週一凌晨 00:00</span> 自動重置並發放當週金幣。請確保在重置前完成所有重建儀式。
+              </p>
             </div>
 
             <button onClick={() => setShowEvolutionPath(false)} className="w-full mt-8 py-4 bg-stone-800 text-white rounded-2xl font-black text-xs active:scale-95 transition-all shadow-lg">返回意志殿堂</button>

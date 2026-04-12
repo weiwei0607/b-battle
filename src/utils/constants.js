@@ -121,10 +121,10 @@ export const AVATAR_OPTIONS = [
 ];
 
 export const WALLET_LEVELS = [
-  { id: 0, minExp: 0, name: "破掉的塑膠袋", icon: "🛍️", title: "街頭生存者", color: "text-stone-400", bg: "bg-stone-100" },
-  { id: 1, minExp: 500, name: "魔鬼氈錢包", icon: "👛", title: "都市遊牧民", color: "text-blue-500", bg: "bg-blue-100" },
-  { id: 2, minExp: 1500, name: "質感長皮夾", icon: "💼", title: "中產奮鬥者", color: "text-orange-500", bg: "bg-orange-100" },
-  { id: 3, minExp: 3500, name: "巔峰金庫", icon: "🏦", title: "財富自由軍", color: "text-amber-500", bg: "bg-amber-100" }
+  { id: 0, minExp: 0, name: "破掉的塑膠袋", icon: "🛍️", title: "街頭生存者", color: "text-stone-400", bg: "bg-stone-100", next: 500 },
+  { id: 1, minExp: 500, name: "魔鬼氈錢包", icon: "👛", title: "都市遊牧民", color: "text-blue-500", bg: "bg-blue-100", next: 1500 },
+  { id: 2, minExp: 1500, name: "質感長皮夾", icon: "💼", title: "中產奮鬥者", color: "text-orange-500", bg: "bg-orange-100", next: 3500 },
+  { id: 3, minExp: 3500, name: "巔峰金庫", icon: "🏦", title: "財富自由軍", color: "text-amber-500", bg: "bg-amber-100", next: 10000 }
 ];
 
 export const HOME_LEVELS = [
