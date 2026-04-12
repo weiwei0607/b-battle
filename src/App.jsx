@@ -129,8 +129,20 @@ const App = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isCloudLoading, setIsCloudLoading] = useState(true);
   const [isSplashDone, setIsSplashDone] = useState(false);
+  const [hasCompletedTutorial, setHasCompletedTutorial] = useState(() => load('has_tutorial', false));
+  const [showTutorial, setShowTutorial] = useState(false);
 
-  const t = LOCALES[lang] || LOCALES.zh;
+  // 🚀 [新手教學觸發邏輯]
+  useEffect(() => {
+    if (!hasCompletedTutorial && isSplashDone && view === 'battle') {
+      setShowTutorial(true);
+    }
+  }, [hasCompletedTutorial, isSplashDone, view]);
+
+  const handleSkipTutorial = () => {
+    setHasCompletedTutorial(true);
+    setShowTutorial(false);
+  };
 
   // 🚀 [玩家代號與房號]
   const [userName, setUserName] = useState(() => load('user_name', "title_rookie"));
