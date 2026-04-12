@@ -182,6 +182,9 @@ const App = () => {
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showEvolutionPath, setShowEvolutionPath] = useState(false);
+  const [showFriends, setShowFriends] = useState(false);
+  const [showRoomInput, setShowRoomInput] = useState(false);
+  const [showInviteQR, setShowInviteQR] = useState(false);
   const [achievementNotification, setAchievementNotification] = useState(null);
   const [nlpInput, setNlpInput] = useState("");
   const [now, setNow] = useState(() => Date.now());
@@ -354,6 +357,7 @@ const App = () => {
             pendingTx, setPendingTx, isAiProcessing, aiComment, reflectionText, setReflectionText, 
             coldWarEndTime, now, nlpInput, setNlpInput, showBudgetSetup, setShowBudgetSetup, showShop, setShowShop, 
             showCustomModal, setShowCustomModal, showAchievements, setShowAchievements, achievements,
+            showEvolutionPath, setShowEvolutionPath, showFriends, setShowFriends, showRoomInput, setShowRoomInput, showInviteQR, setShowInviteQR,
             hpData, enemyHpData, executeTransaction, processTransaction, 
             executeRitual, handleClaimChallenge, handleGiveUpChallenge, simulateInvoice, handleAutoCalculate, 
             handleSavePersona, getSeveredReason, getHellPlaceholder, currentTier, lastPersonaSwitch, setLastPersonaSwitch,

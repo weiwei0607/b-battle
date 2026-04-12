@@ -25,8 +25,9 @@ const FriendsListView = ({ onClose, friends = [], userId }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[6000] bg-[#F7F4EF] flex flex-col p-6 animate-in slide-in-from-right duration-300">
-      <div className="flex items-center justify-between mb-8">
+    <div className="fixed inset-0 z-[6000] bg-[#F7F4EF] flex flex-col animate-in slide-in-from-right duration-300">
+      <div className="w-full max-w-md mx-auto h-full flex flex-col p-6 relative">
+        <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <button onClick={onClose} className="p-2 bg-white border border-stone-200 rounded-xl active:scale-90 transition-all"><ArrowLeft size={20}/></button>
           <div className="text-left">

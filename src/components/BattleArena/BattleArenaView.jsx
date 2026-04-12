@@ -20,11 +20,8 @@ const VerticalPillar = ({ label, percent, colorClass, icon: Icon, isEnemy = fals
 
 const BattleArenaView = ({ 
   stats, hpData, enemyHpData, isAiProcessing, aiComment, activeMode, setActiveMode, battleLog, activeChallenges, handleClaimChallenge, handleGiveUpChallenge,
-  roomId, setRoomId, userId, lang
+  roomId, setRoomId, userId, lang, showFriends, setShowFriends, showRoomInput, setShowRoomInput, showInviteQR, setShowInviteQR
 }) => {
-  const [showRoomInput, setShowRoomInput] = useState(false);
-  const [showInviteQR, setShowInviteQR] = useState(false);
-  const [showFriends, setShowFriends] = useState(false);
   const [isMatchmaking, setIsMatchmaking] = useState(false);
   const [tempRoom, setTempRoom] = useState("");
   const t = LOCALES[lang] || LOCALES.zh;
@@ -33,6 +30,7 @@ const BattleArenaView = ({
     const finalRoom = id || tempRoom;
     setRoomId(finalRoom);
     setShowRoomInput(false);
+    setShowInviteQR(false);
     if (finalRoom.length === 4) setActiveMode('1v1');
     else setActiveMode('team5v5');
   };
@@ -79,7 +77,7 @@ const BattleArenaView = ({
             <h3 className="text-xl font-black text-stone-800 mb-1">加入戰場</h3>
             <p className="text-[9px] text-stone-400 font-bold mb-6 uppercase tracking-widest">同步好友的意志力支柱</p>
             <div className="space-y-3">
-              <input value={tempRoom} onChange={(e)=>setTempRoom(e.target.value)} placeholder="輸入房號 (例: 8888)" className="w-full bg-white border-2 border-stone-100 p-4 rounded-2xl text-lg font-black text-center focus:border-amber-400 transition-all outline-none" />
+              <input value={tempRoom} onChange={(e)=>setTempRoom(e.target.value)} placeholder="房號 (例: 8888)" className="w-full bg-white border-2 border-stone-100 p-4 rounded-2xl text-lg font-black text-center focus:border-amber-400 transition-all outline-none" />
               <button onClick={() => handleJoinRoom()} className="w-full py-4 bg-stone-800 text-white rounded-2xl font-black text-xs shadow-lg active:scale-95 transition-all">進入指定戰區</button>
               <div className="flex items-center gap-3 py-2 opacity-30"><div className="flex-1 h-px bg-stone-400" /><span className="text-[8px] font-bold">OR</span><div className="flex-1 h-px bg-stone-400" /></div>
               <button onClick={startRandomMatchmaking} className="w-full py-4 bg-white border border-stone-200 text-amber-600 rounded-2xl font-black text-xs flex items-center justify-center gap-2 active:scale-95 transition-all hover:bg-amber-50">
@@ -154,7 +152,7 @@ const BattleArenaView = ({
       <div className="bg-[#FAF7F2] border border-[#D7C9B1]/30 p-6 rounded-[3rem] flex items-start gap-4 shadow-sm">
         <div className="w-14 h-14 bg-white border border-stone-200 rounded-2xl flex items-center justify-center text-3xl shadow-sm shrink-0">{stats.icon}</div>
         <div className="flex-1 min-h-[60px] flex flex-col justify-center">
-          <p className="text-[9px] font-black text-[#BC8F8F] uppercase tracking-[0.2em] mb-1 flex items-center gap-1.5"><MessageSquare size={10} fill="#BC8F8F" fillOpacity={0.2} /> {t[stats.titleKey] || stats.titleKey} 戰報</p>
+          <p className="text-[9px] font-black text-[#BC8F8F] uppercase tracking-[0.2em] mb-1 flex items-center gap-1.5"><MessageSquare size={10} fill="#BC8F8F" fillOpacity={0.2} /> {t[stats.titleKey] || stats.titleKey} {t.report_suffix}</p>
           {isAiProcessing ? <div className="flex items-center gap-2 text-stone-400 text-[10px] italic font-medium"><Loader2 size={12} className="animate-spin text-stone-300" />...</div> : <p className="text-xs text-stone-600 leading-relaxed font-bold tracking-tight text-left">「{aiComment}」</p>}
         </div>
       </div>

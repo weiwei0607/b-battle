@@ -19,7 +19,7 @@ const AppContent = ({
   pendingTx, setPendingTx, isAiProcessing, aiComment, reflectionText, setReflectionText, 
   coldWarEndTime, now, nlpInput, setNlpInput, showBudgetSetup, setShowBudgetSetup, showShop, setShowShop, 
   showCustomModal, setShowCustomModal, showAchievements, setShowAchievements, achievements,
-  showEvolutionPath, setShowEvolutionPath,
+  showEvolutionPath, setShowEvolutionPath, showFriends, setShowFriends, showRoomInput, setShowRoomInput, showInviteQR, setShowInviteQR,
   hpData, enemyHpData, executeTransaction, processTransaction, 
   executeRitual, handleClaimChallenge, handleGiveUpChallenge, simulateInvoice, handleAutoCalculate, 
   handleSavePersona, getSeveredReason, getHellPlaceholder, currentTier, lastPersonaSwitch, setLastPersonaSwitch,
@@ -31,6 +31,8 @@ const AppContent = ({
   userName, setUserName, userId, userAvatar, setUserAvatar, roomId, setRoomId
 }) => {
   const t = LOCALES[lang] || LOCALES.zh;
+
+  const isModalOpen = showShop || showAchievements || showEvolutionPath || showFriends || showRoomInput || showInviteQR || showBudgetSetup || showCustomModal;
 
   return (
     <div className={`min-h-screen transition-all duration-1000 ${isSevered ? 'bg-[#450a0a]' : 'bg-[#F7F4EF]'} text-stone-800 font-sans text-left`}>
@@ -60,14 +62,14 @@ const AppContent = ({
             </div>
           ) : (
             <>
-              {view === 'battle' && <BattleArenaView stats={personaStats[persona]} hpData={hpData} enemyHpData={enemyHpData} isAiProcessing={isAiProcessing} aiComment={aiComment} activeMode={activeMode} setActiveMode={setActiveMode} battleLog={battleLog} activeChallenges={activeChallenges} handleClaimChallenge={handleClaimChallenge} handleGiveUpChallenge={handleGiveUpChallenge} roomId={roomId} setRoomId={setRoomId} userId={userId} lang={lang} />}
+              {view === 'battle' && <BattleArenaView stats={personaStats[persona]} hpData={hpData} enemyHpData={enemyHpData} isAiProcessing={isAiProcessing} aiComment={aiComment} activeMode={activeMode} setActiveMode={setActiveMode} battleLog={battleLog} activeChallenges={activeChallenges} handleClaimChallenge={handleClaimChallenge} handleGiveUpChallenge={handleGiveUpChallenge} roomId={roomId} setRoomId={setRoomId} userId={userId} lang={lang} showFriends={showFriends} setShowFriends={setShowFriends} showRoomInput={showRoomInput} setShowRoomInput={setShowRoomInput} showInviteQR={showInviteQR} setShowInviteQR={setShowInviteQR} />}
               {view === 'history' && <HistoryView history={history} aiComment={aiComment} deleteTransaction={deleteTransaction} updateTransaction={updateTransaction} potions={potions} healTransaction={healTransaction} unlockAchievement={unlockAchievement} generateMonthlyReview={generateMonthlyReview} personaStats={personaStats} persona={persona} isAiProcessing={isAiProcessing} achievements={achievements} lang={lang} />}
               {view === 'heroHall' && <HeroHallView userTitle={userTitle} persona={persona} personaStats={personaStats} setPersona={setPersona} setShowBudgetSetup={()=>setShowBudgetSetup(true)} currentTier={currentTier} lastPersonaSwitch={lastPersonaSwitch} setLastPersonaSwitch={setLastPersonaSwitch} wishlist={wishlist} setWishlist={setWishlist} debt={debt} userFrame={userFrame} homeMaterials={homeMaterials} user={user} setShowLogin={setShowLogin} setView={setView} lang={lang} userName={userName} setUserName={setUserName} userId={userId} userAvatar={userAvatar} setUserAvatar={setUserAvatar} showEvolutionPath={showEvolutionPath} setShowEvolutionPath={setShowEvolutionPath} willpowerExp={willpowerExp} />}
             </>
           )}
         </main>
 
-        {!isSevered && !showShop && !showAchievements && !showEvolutionPath && (
+        {!isSevered && !isModalOpen && (
           <div className="fixed bottom-32 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-[150]">
             <div className={`bg-white/80 backdrop-blur-md border border-stone-200 rounded-2xl p-2 shadow-xl flex items-center gap-2 ${isSevered ? 'opacity-100 scale-105 border-red-500 shadow-red-900/20' : ''}`}>
               <button onClick={simulateInvoice} className="w-10 h-10 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center active:scale-90 transition-all shrink-0"><Receipt size={16} /></button>
