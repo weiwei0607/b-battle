@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Swords, Users, MessageSquare, Loader2, Hash, Heart, Zap, Flame, Globe, Shuffle, Clock, QrCode, UserPlus, Cpu } from 'lucide-react';
+import React, { useState } from 'react';
+import { Swords, Users, MessageSquare, Loader2, Hash, Heart, Zap, Flame, Globe, Shuffle, Clock, QrCode, UserPlus, Cpu, LogOut } from 'lucide-react';
 import FriendsListView from '../Friends/FriendsListView';
 import { LOCALES } from '../../utils/locales';
 
@@ -56,13 +56,19 @@ const BattleArenaView = ({
     setShowRoomInput(false);
   };
 
+  const handleLeaveRoom = () => {
+    setRoomId("");
+    setActiveMode('selection');
+  };
+
   const getInviteUrl = () => {
     const base = window.location.origin + window.location.pathname;
     return `${base}?room=${roomId}&mode=${activeMode}`;
   };
 
   const isBotRoom = roomId?.startsWith("BOT_");
-  const hasOpponent = roomId && roomId !== "MATCHMAKING_QUEUE";
+  // 只有當有 roomId 且 enemy 有數據時才顯示（代表房間內有其他人或機器人）
+  const hasOpponent = roomId && roomId !== "MATCHMAKING_QUEUE" && enemyHpData.survival > 0;
 
   return (
     <div className="space-y-6 pb-48 animate-in fade-in slide-in-from-left duration-700 text-left">
@@ -136,6 +142,18 @@ const BattleArenaView = ({
           <Clock size={10} className="animate-spin-slow" />
           <span className="text-[8px] font-black uppercase tracking-widest">{roomId ? `Room: ${roomId}` : t.solo_mode}</span>
         </div>
+        
+        {/* 🚪 離開房間按鈕 (僅在有房間時顯示) */}
+        {roomId && (
+          <button 
+            onClick={handleLeaveRoom}
+            className="absolute top-4 right-6 text-stone-300 hover:text-red-400 transition-colors z-20"
+            title={t.leave_room}
+          >
+            <LogOut size={14} />
+          </button>
+        )}
+
         <div className="flex items-center justify-between gap-4 mt-4 relative">
           <div className="grid grid-cols-2 gap-x-4 gap-y-6 flex-1">
             <VerticalPillar label={t.cat_food.slice(0,2)} percent={hpData.survival} colorClass="bg-blue-400" icon={Heart} />
@@ -161,7 +179,7 @@ const BattleArenaView = ({
             ) : (
               <div onClick={handleStart1v1Duel} className="col-span-2 flex flex-col items-center justify-center h-full opacity-20 grayscale hover:opacity-40 cursor-pointer transition-all">
                 <div className="w-16 h-16 border-4 border-dashed border-stone-300 rounded-full flex items-center justify-center mb-2"><Users size={24} className="text-stone-400" /></div>
-                <span className="text-[8px] font-black text-stone-400 uppercase tracking-widest text-center">{t.tap_to_duel}</span>
+                <span className="text-[8px] font-black text-stone-400 uppercase tracking-widest text-center">{roomId ? t.waiting_friend : t.tap_to_duel}</span>
               </div>
             )}
           </div>

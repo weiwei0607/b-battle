@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { doc, setDoc, onSnapshot, getDoc } from "firebase/firestore";
 import { db } from '../firebase';
 import { CATEGORY_MAP, ACHIEVEMENTS } from '../utils/constants';
+import { LOCALES } from '../utils/locales';
 
 export const useBattleCore = (
   user, isCloudLoading,
@@ -35,30 +36,43 @@ export const useBattleCore = (
 
   // 🚀 [即時連線邏輯] 監聽戰區數據 (限時 5 分鐘)
   useEffect(() => {
-    if ((activeMode === 'team5v5' || activeMode === '1v1') && roomId) {
+    if (!roomId || roomId === "MATCHMAKING_QUEUE") {
+      setTeamSpentStates.setEnemySpentDaily(0);
+      setTeamSpentStates.setEnemySpentWeekly(0);
+      setTeamSpentStates.setEnemySpentMonthly(0);
+      return;
+    }
+    
+    if ((activeMode === 'team5v5' || activeMode === '1v1')) {
       const roomRef = doc(db, "rooms", roomId);
       const unsubscribe = onSnapshot(roomRef, (snapshot) => {
         if (snapshot.exists()) {
           const data = snapshot.data();
           const nowTime = Date.now();
           if (data.createdAt && nowTime - data.createdAt > 300000) {
-            addLog(`⌛ [系統] 戰區 ${roomId} 已過期。`);
+            const t = LOCALES[lang] || LOCALES.zh;
+            addLog(`⌛ [System] Room ${roomId} expired.`);
             setRoomId("");
             setActiveMode('selection');
             return;
           }
           const allPlayers = data.players || {};
-          const othersDaily = Object.values(allPlayers)
-            .filter(p => p.uid !== user?.uid)
-            .reduce((s, p) => s + (p.daily || 0), 0);
-          setTeamSpentStates.setEnemySpentDaily(othersDaily);
+          const others = Object.values(allPlayers).filter(p => p.uid !== user?.uid);
+          
+          if (others.length > 0) {
+            const othersDaily = others.reduce((s, p) => s + (p.daily || 0), 0);
+            setTeamSpentStates.setEnemySpentDaily(othersDaily);
+          } else {
+            // 如果房間沒別人了，重置對手數據
+            setTeamSpentStates.setEnemySpentDaily(0);
+          }
         } else {
           setDoc(roomRef, { createdAt: Date.now(), players: {} }, { merge: true });
         }
       });
       return () => unsubscribe();
     }
-  }, [activeMode, roomId, user, setRoomId, setActiveMode, addLog, setTeamSpentStates]);
+  }, [activeMode, roomId, user, setRoomId, setActiveMode, addLog, setTeamSpentStates, lang]);
 
   // 🚀 [數據上傳邏輯]
   useEffect(() => {
@@ -75,12 +89,12 @@ export const useBattleCore = (
   useEffect(() => {
     if (roomId === "MATCHMAKING_QUEUE" && user) {
       const t = LOCALES[lang] || LOCALES.zh;
-      addLog(`🔍 [System] ${lang === 'zh' ? '正在搜尋全球戰友...' : 'Searching for warriors...'}`);
+      addLog(`🔍 [System] ${t.searching_warriors}`);
       
       const matchmakingTimer = setTimeout(() => {
         // 超時處理：自動補 Bot
         const botRoomId = "BOT_" + Math.floor(1000 + Math.random() * 9000);
-        addLog(`🤖 [System] ${lang === 'zh' ? '真人玩家不足，已加入虛擬戰友進入戰場！' : 'Not enough players, bots joined the battle!'}`);
+        addLog(`🤖 [System] ${t.bot_joined}`);
         
         const bots = {};
         for (let i = 1; i <= 9; i++) {
@@ -103,7 +117,7 @@ export const useBattleCore = (
 
       return () => clearTimeout(matchmakingTimer);
     }
-  }, [roomId, user, userName, setRoomId, setActiveMode, addLog]);
+  }, [roomId, user, userName, setRoomId, setActiveMode, addLog, lang]);
 
   const cooldownThreshold = 2000;
 
@@ -118,7 +132,7 @@ export const useBattleCore = (
     if (isPenalty) {
       const leftover = amount - coins;
       setCoins(0); setDebt(d => d + leftover);
-      addLog(`🧨 [債務產生] 餘額不足，新增 ${leftover} 債務。`);
+      addLog(`🧨 [Debt] No coins, added ${leftover} debt.`);
       return true;
     }
     return false;
@@ -129,10 +143,10 @@ export const useBattleCore = (
       if (gain >= debt) {
         const remaining = gain - debt;
         setDebt(0); setCoins(c => c + remaining);
-        addLog(`💰 還清債務！`);
+        addLog(`💰 Debt Cleared!`);
       } else {
         setDebt(d => d - gain);
-        addLog(`💰 收入優先償債。`);
+        addLog(`💰 Income used for debt.`);
       }
     } else { setCoins(c => c + gain); }
   }, [debt, setDebt, setCoins, addLog]);
@@ -143,7 +157,7 @@ export const useBattleCore = (
     if (!medal) return;
     setAchievements(prev => ({ ...prev, [id]: { unlocked: true, claimed: false, date: new Date().toLocaleDateString() } }));
     setAchievementNotification({ id, name: medal.name, icon: medal.icon });
-    addLog(`🏆 [成就達成] ${medal.name}！`);
+    addLog(`🏆 [Achievement] ${medal.name}!`);
   }, [achievements, setAchievements, addLog, setAchievementNotification]);
 
   const handleClaimAchievement = useCallback((id) => {
@@ -151,11 +165,12 @@ export const useBattleCore = (
     if (!medal || !achievements || achievements[id]?.claimed) return;
     setAchievements(prev => ({ ...prev, [id]: { ...prev[id], claimed: true } }));
     addCoinsWithDebtCheck(medal.reward || 100);
-    addLog(`✨ [領取獎勵] 獲得金幣！`);
+    addLog(`✨ [Claimed] Reward received!`);
   }, [achievements, setAchievements, addCoinsWithDebtCheck, addLog]);
 
   const executeTransaction = async (amount, desc, category, source = "manual") => {
     if (isAiProcessing) return;
+    const t = LOCALES[lang] || LOCALES.zh;
     
     // 檢查成就
     unlockAchievement('FIRST_BLOOD');
@@ -173,10 +188,10 @@ export const useBattleCore = (
       if (isUnnecessary && (persona === 'partner' || persona === 'bestie')) {
         penaltyHp += amount * 2.0;
         setColdWarEndTime(prev => (prev || Date.now()) + 24 * 3600000);
-        addLog("💔 [情感背叛] 冷戰期還買享樂品！");
+        addLog("💔 [Betrayal] Spending during cold war!");
       } else {
         penaltyHp += amount * 0.5;
-        addLog("🧨 [帶罪記帳] 斷絕期強行記帳。");
+        addLog("🧨 [Punished] Logging during severance.");
       }
     }
 
@@ -193,20 +208,20 @@ export const useBattleCore = (
       spendCoins(500, true);
       setPersonaStats(p => ({...p, [persona]: {...p[persona], intimacy: 0}}));
       penaltyHp += amount * 2;
-      addLog("🤬 [說謊] 重罰 500 金幣！");
+      addLog("🤬 [Lying] Fined 500 coins!");
     } else {
       for (let i = 0; i < activeChallenges.length; i++) {
         if (desc.includes(activeChallenges[i].item)) {
           isPreReported = true;
           setActiveChallenges(p => p.filter((_, idx) => idx !== i));
-          addLog(`🚩 [報備通過] 買了 ${desc}。`);
+          addLog(`🚩 [Approved] Bought ${desc}.`);
           break;
         }
       }
       if (amount >= cooldownThreshold && !isPreReported) {
         spendCoins(200, true);
         penaltyHp += amount * 0.2;
-        addLog("🧨 [衝動懲罰] 未報備大額消費！");
+        addLog("🧨 [Impulsive] Large expense without notice!");
       }
     }
 
@@ -220,7 +235,6 @@ export const useBattleCore = (
 
     const newEntry = { id: Date.now(), amount, desc, category, pillar, damage: totalDamage, isCrit: penaltyHp > 0, source, time: new Date().toLocaleTimeString(), date: new Date().toLocaleDateString(), shielded: shield > 0 };
     setHistory(prev => [newEntry, ...prev]);
-    const t = LOCALES[lang] || LOCALES.zh;
     addLog(`${source === 'invoice' ? '🧾' : '⚔️'} ${t.log_damage} ${getDmgPercent(totalDamage, pillar)}%`);
     
     if (totalDamage > 5000) unlockAchievement('SURVIVOR');
@@ -246,8 +260,8 @@ export const useBattleCore = (
           body: JSON.stringify({ contents: [{ parts: [{ text: `Spent ${amount} on ${desc}` }] }], systemInstruction: { parts: [{ text: prompt }] } })
         });
         const result = await res.json();
-        setAiComment(result.candidates?.[0]?.content?.parts?.[0]?.text || "紀錄完成。");
-      } catch { setAiComment("Done."); }
+        setAiComment(result.candidates?.[0]?.content?.parts?.[0]?.text || "...");
+      } catch { setAiComment("..."); }
       setIsAiProcessing(false);
     }
   };
@@ -256,15 +270,16 @@ export const useBattleCore = (
     if (!apiKey || isAiProcessing || filteredHistory.length === 0) return;
     setIsAiProcessing(true);
     try {
+      const personaData = personaStats[persona];
+      const systemBase = (personaData.prompts && personaData.prompts[lang]) || personaData.prompt;
       const summary = filteredHistory.reduce((acc, h) => { acc[h.pillar] = (acc[h.pillar] || 0) + h.damage; return acc; }, {});
-      const total = Object.values(summary).reduce((a, b) => a + b, 0);
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: `月報：${JSON.stringify(summary)}` }] }], systemInstruction: { parts: [{ text: `角色：${personaStats[persona].prompt}。回覆限30字。` }] } })
+        body: JSON.stringify({ contents: [{ parts: [{ text: `Monthly Report: ${JSON.stringify(summary)}` }] }], systemInstruction: { parts: [{ text: `${systemBase}. Reply in 30 words using ${lang}.` }] } })
       });
       const result = await res.json();
-      setAiComment(result.candidates?.[0]?.content?.parts?.[0]?.text || "分析完畢。");
-    } catch { setAiComment("Done."); }
+      setAiComment(result.candidates?.[0]?.content?.parts?.[0]?.text || "...");
+    } catch { setAiComment("..."); }
     setIsAiProcessing(false);
   };
 
@@ -272,9 +287,9 @@ export const useBattleCore = (
     setHistory(prev => {
       const target = prev.find(h => h.id === id);
       if (!target) return prev;
-      if (target.source === 'invoice') { alert("🛡️ 禁止抹除！"); return prev; }
+      if (target.source === 'invoice') { alert("🛡️ Lock!"); return prev; }
       spendCoins(20, true);
-      addLog(`🗑️ [業力] 移除紀錄，扣回獎勵 20。`);
+      addLog(`🗑️ [Karma] Record removed, fine 20.`);
       const deleteCount = (parseInt(localStorage.getItem('bb_v3_delete_count')) || 0) + 1;
       localStorage.setItem('bb_v3_delete_count', deleteCount.toString());
       if (deleteCount >= 5) unlockAchievement('KARMA_MASTER');
@@ -285,26 +300,26 @@ export const useBattleCore = (
   const updateTransaction = useCallback((id, newCategory) => {
     const newPillar = CATEGORY_MAP[newCategory] || 'expedition';
     setHistory(prev => prev.map(h => h.id === id ? { ...h, category: newCategory, pillar: newPillar } : h));
-    addLog(`🔧 [修正] 調整分類。`);
+    addLog(`🔧 [Fixed] Category updated.`);
   }, [setHistory, addLog]);
 
   const processTransaction = async (input, source = "manual") => {
     if (input.trim() === "" || isAiProcessing) return;
-    if (input.includes("我想買") || input.includes("挑戰")) {
-      const item = input.replace(/我想買|挑戰/g, '').trim() || "奢侈品";
-      if (spendCoins(500)) { setActiveChallenges(p => [...p, { item, startTime: now }]); addLog(`🛡️ [挑戰] 暫扣 500：${item}`); }
-      else { alert("金幣不足！"); }
+    if (input.includes("我想買") || input.includes("挑戰") || input.includes("buy")) {
+      const item = input.replace(/我想買|挑戰|buy/g, '').trim() || "Item";
+      if (spendCoins(500)) { setActiveChallenges(p => [...p, { item, startTime: now }]); addLog(`🛡️ [Bet] 500 locked for: ${item}`); }
+      else { alert("No coins!"); }
       setNlpInput(""); return;
     }
     setIsAiProcessing(true);
     let amount = parseInt(input.match(/\d+/)?.[0] || 100);
-    let desc = input.replace(/\d+/g, '').replace(/買了|花了|塊|元/g, '').trim() || "消費";
+    let desc = input.replace(/\d+/g, '').replace(/買了|花了|塊|元|bought|spent/g, '').trim() || "Expense";
     let category = "cat_food";
     if (apiKey) {
       try {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: `提取品項、金額、Key化分類: ${input}` }] }] })
+          body: JSON.stringify({ contents: [{ parts: [{ text: `Extract amount, item, category_key: ${input}` }] }] })
         });
         const result = await response.json();
         const match = result.candidates?.[0]?.content?.parts?.[0]?.text?.match(/\{[\s\S]*\}/);
@@ -320,7 +335,7 @@ export const useBattleCore = (
     if (persona === 'asian_parent' && reflectionText.length < 50) return;
     if ((persona === 'peer' || persona === 'instructor') && !spendCoins(500, true)) return;
     if ((persona === 'partner' || persona === 'bestie') && coldWarEndTime && now < coldWarEndTime) return;
-    setIsSevered(false); setColdWarEndTime(null); addLog("🛡️ [重生] 關係修復。"); setHistory([]);
+    setIsSevered(false); setColdWarEndTime(null); addLog("🛡️ [Ritual] Relation restored."); setHistory([]);
     const { setTeamSpentDaily, setTeamSpentWeekly, setTeamSpentMonthly } = setTeamSpentStates;
     setTeamSpentDaily(0); setTeamSpentWeekly(0); setTeamSpentMonthly(0);
     unlockAchievement('RITUAL_MASTER');
@@ -332,21 +347,21 @@ export const useBattleCore = (
     setWillpowerExp(e => e + 200);
     setClaimedAvoidedItems(p => [...p, { item: challenge.item, expiry: now + 86400000 }]);
     setActiveChallenges(p => p.filter((_, i) => i !== idx));
-    setAiComment("💰 押金退還。");
-    addLog(`🕵️ AI 偵探監控：${challenge.item}`);
+    setAiComment("💰 Deposit refunded.");
+    addLog(`🕵️ AI Monitor: ${challenge.item}`);
   }, [activeChallenges, addCoinsWithDebtCheck, setWillpowerExp, setClaimedAvoidedItems, setActiveChallenges, setAiComment, addLog, now]);
 
   const handleGiveUpChallenge = useCallback((idx) => {
     const challenge = activeChallenges[idx];
     setActiveChallenges(p => p.filter((_, i) => i !== idx));
-    executeTransaction(100, `認輸: ${challenge.item}`, "cat_other");
+    executeTransaction(100, `Give up: ${challenge.item}`, "cat_other");
   }, [activeChallenges, setActiveChallenges, executeTransaction]);
 
   const simulateInvoice = useCallback(() => {
     const items = [{ desc: "御飯糰", amount: 35, category: "cat_food" }, { desc: "拿鐵", amount: 55, category: "cat_drink" }, { desc: "網購", amount: 850, category: "cat_shop" }];
     const item = items[Math.floor(Math.random() * items.length)];
     setPendingTx({ ...item, source: "invoice" });
-    addLog(`🧾 偵測到消費：${item.desc}`);
+    addLog(`🧾 Invoice: ${item.desc}`);
   }, [setPendingTx, addLog]);
 
   // 🤖 鏡像機器人 (僅在單機時啟動)
@@ -362,10 +377,10 @@ export const useBattleCore = (
         const { setTeamSpentDaily, setTeamSpentMonthly, setEnemySpentDaily, setEnemySpentMonthly } = setTeamSpentStates;
         if (isTeammate) {
           if (CATEGORY_MAP[favCat] === 'survival') setTeamSpentDaily(p => p + dmg); else setTeamSpentMonthly(p => p + dmg);
-          addLog(`👥 [鏡像] 『${botName}』模仿你的習慣買了「${favCat}」！`);
+          addLog(`👥 [Shadow] Bot bought ${favCat}!`);
         } else {
           if (CATEGORY_MAP[favCat] === 'survival') setEnemySpentDaily(p => p + dmg); else setEnemySpentMonthly(p => p + dmg);
-          addLog(`⚔️ [對抗] 『${botName}』也買了「${favCat}」，對方支柱受損！`);
+          addLog(`⚔️ [Shadow] Bot attack with ${favCat}!`);
         }
       }, 40000); 
       return () => clearInterval(timer);
@@ -393,29 +408,29 @@ export const useBattleCore = (
       const seasonKey = `${nowTime.getFullYear()}-${Math.ceil(currentMonth / 3)}`;
 
       if (isNewSeason && lastResetSeason !== seasonKey) {
-        addLog("🌪️ [季度重置] 意志力賽季結算！");
+        addLog("🌪️ [Season Reset] Willpower season settlement!");
         let bonus = 0;
-        if (debt >= 500) { addLog("🕊️ [債務特赦] 重置為 2000 金幣，努力重新開始！"); setDebt(0); }
+        if (debt >= 500) { addLog("🕊️ [Amnesty] Reset to 2000 coins, start over!"); setDebt(0); }
         else if (coins > 5000) { 
           bonus = Math.floor((coins - 2000) * 0.1); 
           setHomeMaterials(prev => prev + bonus * 10);
-          addLog(`🏰 [財富轉換] 結餘轉換為 ${bonus * 10} 建材，起始金幣 2000+${bonus}！`);
+          addLog(`🏰 [Wealth] Converted to ${bonus * 10} materials!`);
         }
         setCoins(2000 + bonus);
         localStorage.setItem('bb_v3_last_reset_season', seasonKey);
       }
 
       if (nowTime.getDate() !== last.getDate()) { 
-        addLog("📅 每日重置。"); setTeamSpentStates.setTeamSpentDaily(0); 
+        addLog("📅 Daily reset."); setTeamSpentStates.setTeamSpentDaily(0); 
         const lastDaySpent = history.filter(h => h.date === last.toLocaleDateString() && h.pillar === 'survival').reduce((s, h) => s + h.amount, 0);
         if (lastDaySpent > 0 && lastDaySpent < 200) unlockAchievement('SAVING_EXPERT');
       }
-      if (nowTime.getDay() === 1 && nowTime.getDate() !== last.getDate()) { addLog("📅 週重置。"); setTeamSpentStates.setTeamSpentWeekly(0); }
+      if (nowTime.getDay() === 1 && nowTime.getDate() !== last.getDate()) { addLog("📅 Weekly reset."); setTeamSpentStates.setTeamSpentWeekly(0); }
       if (nowTime.getDate() === 1 && nowTime.getMonth() !== last.getMonth()) {
-        addLog("📅 月重置！"); setTeamSpentStates.setTeamSpentMonthly(0);
+        addLog("📅 Monthly reset!"); setTeamSpentStates.setTeamSpentMonthly(0);
         const monthlySpent = history.filter(h => h.date && h.date.startsWith(lastTrackDate.slice(0, 7))).reduce((s, h) => s + h.damage, 0);
         const gain = monthlySpent < 20000 ? 5000 : 2000;
-        if (gain > 0) { setHomeMaterials(prev => prev + gain); addLog(`🏛️ 月結獲得 ${gain} 建材！`); }
+        if (gain > 0) { setHomeMaterials(prev => prev + gain); addLog(`🏛️ Settlement: +${gain} materials!`); }
       }
     }
     setLastTrackDate(todayStr);
