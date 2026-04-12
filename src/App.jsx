@@ -30,7 +30,7 @@ const DEFAULT_PERSONA_STATS = {
     prompts: {
       zh: `你是一個酸言酸語的同學/同事，個性嫉妒又愛嘴砲。看到對方花錢你就忍不住要酸。規則：買衣服酸走秀；咖啡酸燒錢；吃大餐酸請客；3C酸敗家；交通酸腳不能用。口吻：酸、嫉妒、嘴賤，但幽默，限20字。`,
       en: `You're a sarcastic classmate/colleague, jealous and trash-talking. Rule: criticize every expense sarcastically. Tone: mean, jealous, but funny. Max 20 words.`,
-      ja: `あなたは皮肉屋の同級生/同僚です。相手がお金を使うのを見ると皮肉を言わずにはいられません。口調：毒舌、嫉妬、でもユーモラス。20字以内。`
+      ja: `あなたは皮肉屋の同級生/同僚です。相手がお金を使うのを見ると皮肉を言わずにはいられません。口調：毒舌、嫉妬、進ユーモラス。20字以内。`
     }
   }, 
   asian_parent: { 
@@ -129,22 +129,12 @@ const App = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isCloudLoading, setIsCloudLoading] = useState(true);
   const [isSplashDone, setIsSplashDone] = useState(false);
+
+  // 🚀 [新手教學狀態] - 預留給 Claude 實裝 UI
   const [hasCompletedTutorial, setHasCompletedTutorial] = useState(() => load('has_tutorial', false));
   const [showTutorial, setShowTutorial] = useState(false);
 
-  /*
-  // 🚀 [新手教學觸發邏輯]
-  useEffect(() => {
-    if (!hasCompletedTutorial && isSplashDone && view === 'battle') {
-      setShowTutorial(true);
-    }
-  }, [hasCompletedTutorial, isSplashDone, view]);
-
-  const handleSkipTutorial = () => {
-    setHasCompletedTutorial(true);
-    setShowTutorial(false);
-  };
-  */
+  const t = LOCALES[lang] || LOCALES.zh;
 
   // 🚀 [玩家代號與房號]
   const [userName, setUserName] = useState(() => load('user_name', "title_rookie"));
@@ -152,7 +142,6 @@ const App = () => {
   const [userAvatar, setUserAvatar] = useState(() => load('user_avatar', '👤'));
   const [roomId, setRoomId] = useState(() => load('room_id', ""));
 
-  // 🚀 [網址連線機制] 移到狀態宣告之後
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const r = params.get('room');
@@ -168,7 +157,7 @@ const App = () => {
   const [teamSpentDaily, setTeamSpentDaily] = useState(() => load('t_daily', 0));
   const [teamSpentWeekly, setTeamSpentWeekly] = useState(() => load('t_weekly', 0));
   const [teamSpentMonthly, setTeamSpentMonthly] = useState(() => load('t_monthly', 0));
-  const [enemySpentDaily, setEnemySpentDaily] = useState(-1);   // -1 = 尚無對手
+  const [enemySpentDaily, setEnemySpentDaily] = useState(-1);
   const [enemySpentWeekly, setEnemySpentWeekly] = useState(-1);
   const [enemySpentMonthly, setEnemySpentMonthly] = useState(-1);
   const [activeChallenges, setActiveChallenges] = useState(() => load('challenges', []) || []);
@@ -214,7 +203,6 @@ const App = () => {
   
   const [personaStats, setPersonaStats] = useState(() => {
     const saved = load('persona_stats', DEFAULT_PERSONA_STATS);
-    // 🔍 結構檢查：如果舊資料缺少新欄位，強制使用預設值升級
     if (!saved.peer || !saved.peer.prompts) return DEFAULT_PERSONA_STATS;
     return saved;
   });
@@ -258,14 +246,12 @@ const App = () => {
             if (d.userId !== undefined) setUserId(d.userId);
             if (d.userAvatar !== undefined) setUserAvatar(d.userAvatar);
             if (d.roomId !== undefined) setRoomId(d.roomId);
+            if (d.hasTutorial !== undefined) setHasCompletedTutorial(d.hasTutorial);
           }
         } catch (err) { console.error("Sync Error:", err); }
       } else { 
         setUser(null); 
-        if (!userId) {
-          const newId = Math.random().toString(36).substring(2, 8).toUpperCase();
-          setUserId(newId);
-        }
+        if (!userId) { setUserId(Math.random().toString(36).substring(2, 8).toUpperCase()); }
       }
       setIsCloudLoading(false);
     });
@@ -276,10 +262,10 @@ const App = () => {
   
   useEffect(() => {
     if (!user && !isCloudLoading) {
-      const data = { lang, coins, debt, history, persona, exp: willpowerExp, achievements, userTitle, userFrame, potions, shield, personaStats, userName, userId, userAvatar, roomId };
+      const data = { lang, coins, debt, history, persona, exp: willpowerExp, achievements, userTitle, userFrame, potions, shield, personaStats, userName, userId, userAvatar, roomId, has_tutorial: hasCompletedTutorial };
       Object.entries(data).forEach(([k, v]) => save(k, v));
     }
-  }, [user, isCloudLoading, lang, coins, debt, history, persona, willpowerExp, achievements, userTitle, userFrame, potions, shield, personaStats, userName, userId, userAvatar, roomId]);
+  }, [user, isCloudLoading, lang, coins, debt, history, persona, willpowerExp, achievements, userTitle, userFrame, potions, shield, personaStats, userName, userId, userAvatar, roomId, hasCompletedTutorial]);
 
   const hpData = useMemo(() => {
     const getHp = (p) => {
@@ -299,7 +285,6 @@ const App = () => {
     return { survival: getHp('survival'), progress: getHp('progress'), desire: getHp('desire'), expedition: getHp('expedition') };
   }, [history, activeMode, teamSpentDaily, teamSpentWeekly, teamSpentMonthly, weeklyPools, monthlyPools]);
 
-  // enemySpent* 現在直接存 HP 百分比 (0-100)，-1 代表無對手
   const enemyHpData = useMemo(() => ({
     survival:   enemySpentDaily   < 0 ? 100 : enemySpentDaily,
     progress:   enemySpentWeekly  < 0 ? 100 : enemySpentWeekly,
@@ -367,7 +352,8 @@ const App = () => {
             shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles, handleClaimAchievement,
             user, setShowLogin, unlockAchievement, generateMonthlyReview, isOnline, lang, setLang,
             userName, setUserName, userId, userAvatar, setUserAvatar, roomId, setRoomId,
-            enemyConnected: enemySpentDaily >= 0 }} 
+            enemyConnected: enemySpentDaily >= 0,
+            hasCompletedTutorial, setHasCompletedTutorial, showTutorial, setShowTutorial }} 
         />
       </div>
       {showLogin && <div className="fixed inset-0 z-[6000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"><div className="relative w-full max-w-md animate-in slide-in-from-bottom-10 duration-300"><button onClick={() => setShowLogin(false)} className="absolute top-4 right-4 z-[6001] p-2 bg-stone-100 rounded-full text-stone-500 hover:bg-stone-200 transition-colors"><X size={16}/></button><LoginScreen isModal={true} onClose={() => setShowLogin(false)} /></div></div>}
