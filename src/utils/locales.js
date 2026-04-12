@@ -71,7 +71,21 @@ export const LOCALES = {
     send_request: '確認請求',
     mock_friend_1: '阿明',
     mock_friend_2: '小華',
-    mock_friend_3: '新人王'
+    mock_friend_3: '新人王',
+    // 對決相關
+    tap_to_duel: '點擊與好友對決',
+    duel_center: '對決中心',
+    invite_or_join: '邀請戰友或加入戰場',
+    my_room_id: '我的房號',
+    friend_room_id: '好友房號',
+    enter_room_id: '輸入好友房號',
+    join_btn: '加入',
+    back_to_war: '返回戰線',
+    solo_mode: '個人模式',
+    bot_mode: '機器人對決',
+    random_match: '隨機匹配戰場',
+    searching_warriors: '正在搜尋全球戰友...',
+    bot_joined: '已加入虛擬戰友進入戰場！'
   },
   en: {
     app_name: 'B-Battle: Willpower Finance',
@@ -135,7 +149,20 @@ export const LOCALES = {
     send_request: 'Send Request',
     mock_friend_1: 'Ming',
     mock_friend_2: 'Hwa',
-    mock_friend_3: 'Ace'
+    mock_friend_3: 'Ace',
+    tap_to_duel: 'Tap to Duel Friend',
+    duel_center: 'Duel Center',
+    invite_or_join: 'Invite friends or Join War',
+    my_room_id: 'My Room ID',
+    friend_room_id: 'Friend Room ID',
+    enter_room_id: 'Enter friend room ID',
+    join_btn: 'Join',
+    back_to_war: 'Back to Frontline',
+    solo_mode: 'Solo Mode',
+    bot_mode: 'VS Bot Mode',
+    random_match: 'Random Matchmaking',
+    searching_warriors: 'Searching for warriors...',
+    bot_joined: 'Bot joined the battle!'
   },
   ja: {
     app_name: 'B-Battle: 意志力家計簿',
@@ -198,6 +225,19 @@ export const LOCALES = {
     send_request: 'リクエスト送信',
     mock_friend_1: 'アミン',
     mock_friend_2: 'ハナ',
-    mock_friend_3: 'エース'
+    mock_friend_3: 'エース',
+    tap_to_duel: 'クリックして対決',
+    duel_center: '対決センター',
+    invite_or_join: '戦友を招待または戦場に参加',
+    my_room_id: '自分の部屋番号',
+    friend_room_id: '相手の部屋番号',
+    enter_room_id: '相手の部屋番号を入力',
+    join_btn: '参加',
+    back_to_war: '戦線に戻る',
+    solo_mode: '個人モード',
+    bot_mode: 'ボット対決',
+    random_match: 'ランダムマッチ',
+    searching_warriors: '戦友を探しています...',
+    bot_joined: 'ボットが戦場に参加しました！'
   }
 };

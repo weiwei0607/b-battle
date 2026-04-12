@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Swords, Users, MessageSquare, Loader2, Hash, Heart, Zap, Flame, Globe, Shuffle, Clock, QrCode, UserPlus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Swords, Users, MessageSquare, Loader2, Hash, Heart, Zap, Flame, Globe, Shuffle, Clock, QrCode, UserPlus, Cpu } from 'lucide-react';
 import FriendsListView from '../Friends/FriendsListView';
 import { LOCALES } from '../../utils/locales';
 
@@ -28,16 +28,17 @@ const BattleArenaView = ({
 
   const handleJoinRoom = (id) => {
     const finalRoom = id || tempRoom;
+    if (!finalRoom) return;
     setRoomId(finalRoom);
     setShowRoomInput(false);
     setShowInviteQR(false);
     if (finalRoom.length === 4) setActiveMode('1v1');
+    else if (finalRoom.startsWith("BOT_")) setActiveMode('1v1');
     else setActiveMode('team5v5');
   };
 
   const startRandomMatchmaking = () => {
     setIsMatchmaking(true);
-    // 這裡會觸發 useBattleCore 的配對邏輯
     handleJoinRoom("MATCHMAKING_QUEUE"); 
   };
 
@@ -48,10 +49,20 @@ const BattleArenaView = ({
     setShowInviteQR(true);
   };
 
+  const handleStartBotPK = () => {
+    const botRoomId = "BOT_" + Math.floor(1000 + Math.random() * 9000);
+    setRoomId(botRoomId);
+    setActiveMode('1v1');
+    setShowRoomInput(false);
+  };
+
   const getInviteUrl = () => {
     const base = window.location.origin + window.location.pathname;
     return `${base}?room=${roomId}&mode=${activeMode}`;
   };
+
+  const isBotRoom = roomId?.startsWith("BOT_");
+  const hasOpponent = roomId && roomId !== "MATCHMAKING_QUEUE";
 
   return (
     <div className="space-y-6 pb-48 animate-in fade-in slide-in-from-left duration-700 text-left">
@@ -63,51 +74,59 @@ const BattleArenaView = ({
         <div className="flex gap-2">
           <button onClick={() => setShowFriends(true)} className="p-2 bg-white border border-stone-100 rounded-xl text-stone-400 hover:text-stone-800 transition-colors shadow-sm active:scale-90"><UserPlus size={18} /></button>
           <div className="flex bg-white border border-stone-100 rounded-xl overflow-hidden shadow-sm">
-            <button onClick={() => setActiveMode('selection')} className={`px-4 py-2 text-[9px] font-black transition-all ${activeMode === 'selection' || activeMode === '1v1' ? 'bg-stone-800 text-white' : 'text-stone-400'}`}>1v1</button>
-            <button onClick={() => setShowRoomInput(true)} className={`px-4 py-2 text-[9px] font-black transition-all ${activeMode === 'team5v5' ? 'bg-amber-500 text-white' : 'text-stone-400'}`}>5v5</button>
+            <button onClick={() => setActiveMode('selection')} className={`px-4 py-2 text-[9px] font-black transition-all ${activeMode === 'selection' || (activeMode === '1v1' && !isBotRoom) ? 'bg-stone-800 text-white' : 'text-stone-400'}`}>1v1</button>
+            <button onClick={() => setShowRoomInput(true)} className={`px-4 py-2 text-[9px] font-black transition-all ${activeMode === 'team5v5' || isBotRoom ? 'bg-amber-500 text-white' : 'text-stone-400'}`}>5v5 / BOT</button>
           </div>
         </div>
       </div>
 
-      {/* 🚀 戰區連線彈窗 (5v5) */}
+      {/* 🚀 戰區連線彈窗 (5v5 / Bot) */}
       {showRoomInput && (
         <div className="fixed inset-0 z-[6000] bg-stone-900/60 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
           <div className="bg-[#F7F4EF] w-full max-w-xs rounded-[3rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300 text-center">
             <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600 mb-4 mx-auto shadow-inner"><Hash size={24} /></div>
-            <h3 className="text-xl font-black text-stone-800 mb-1">加入戰場</h3>
-            <p className="text-[9px] text-stone-400 font-bold mb-6 uppercase tracking-widest">同步好友的意志力支柱</p>
+            <h3 className="text-xl font-black text-stone-800 mb-1">{t.duel_center}</h3>
+            <p className="text-[9px] text-stone-400 font-bold mb-6 uppercase tracking-widest">{t.invite_or_join}</p>
             <div className="space-y-3">
-              <input value={tempRoom} onChange={(e)=>setTempRoom(e.target.value)} placeholder="房號 (例: 8888)" className="w-full bg-white border-2 border-stone-100 p-4 rounded-2xl text-lg font-black text-center focus:border-amber-400 transition-all outline-none" />
-              <button onClick={() => handleJoinRoom()} className="w-full py-4 bg-stone-800 text-white rounded-2xl font-black text-xs shadow-lg active:scale-95 transition-all">進入指定戰區</button>
+              <input value={tempRoom} onChange={(e)=>setTempRoom(e.target.value)} placeholder={t.enter_room_id} className="w-full bg-white border-2 border-stone-100 p-4 rounded-2xl text-lg font-black text-center focus:border-amber-400 transition-all outline-none" />
+              <button onClick={() => handleJoinRoom()} className="w-full py-4 bg-stone-800 text-white rounded-2xl font-black text-xs shadow-lg active:scale-95 transition-all">{t.join_btn}</button>
+              
               <div className="flex items-center gap-3 py-2 opacity-30"><div className="flex-1 h-px bg-stone-400" /><span className="text-[8px] font-bold">OR</span><div className="flex-1 h-px bg-stone-400" /></div>
-              <button onClick={startRandomMatchmaking} className="w-full py-4 bg-white border border-stone-200 text-amber-600 rounded-2xl font-black text-xs flex items-center justify-center gap-2 active:scale-95 transition-all hover:bg-amber-50">
-                {isMatchmaking ? <Loader2 size={14} className="animate-spin" /> : <Shuffle size={14}/>} 
-                {isMatchmaking ? '尋找對手中...' : '隨機匹配戰場'}
-              </button>
-              <button onClick={()=>setShowRoomInput(false)} className="w-full py-3 text-stone-400 font-bold text-[10px] uppercase tracking-widest">取消</button>
+              
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={handleStartBotPK} className="py-4 bg-white border-2 border-stone-200 text-stone-600 rounded-2xl font-black text-xs flex items-center justify-center gap-2 active:scale-95 transition-all hover:bg-stone-50">
+                  <Cpu size={14}/> {t.bot_mode}
+                </button>
+                <button onClick={startRandomMatchmaking} className="py-4 bg-white border-2 border-amber-200 text-amber-600 rounded-2xl font-black text-xs flex items-center justify-center gap-2 active:scale-95 transition-all hover:bg-amber-50">
+                  {isMatchmaking ? <Loader2 size={14} className="animate-spin" /> : <Shuffle size={14}/>} 
+                  {isMatchmaking ? '...' : t.random_match}
+                </button>
+              </div>
+              
+              <button onClick={()=>setShowRoomInput(false)} className="w-full py-3 text-stone-400 font-bold text-[10px] uppercase tracking-widest">{t.back_to_war}</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 📱 對決中心 (QR Code + 手動輸入融合版) */}
+      {/* 📱 對決中心 (1v1 邀請) */}
       {showInviteQR && (
         <div className="fixed inset-0 z-[6000] bg-stone-900/60 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
           <div className="bg-[#F7F4EF] w-full max-w-xs rounded-[3rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300 text-center">
-            <h3 className="text-xl font-black text-stone-800 mb-1">對決中心</h3>
-            <p className="text-[9px] text-stone-400 font-bold mb-6 uppercase tracking-widest">邀請戰友或加入戰場</p>
+            <h3 className="text-xl font-black text-stone-800 mb-1">{t.duel_center}</h3>
+            <p className="text-[9px] text-stone-400 font-bold mb-6 uppercase tracking-widest">{t.invite_or_join}</p>
             <div className="bg-white p-4 rounded-3xl border border-stone-100 mb-6 shadow-inner">
               <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(getInviteUrl())}&bgcolor=F7F4EF`} alt="Invite QR" className="w-32 h-32 mx-auto rounded-xl mb-3" />
-              <p className="text-[10px] font-black text-stone-400 uppercase">我的房號</p>
+              <p className="text-[10px] font-black text-stone-400 uppercase">{t.my_room_id}</p>
               <p className="text-2xl font-black text-stone-800 tracking-widest">{roomId || "----"}</p>
             </div>
             <div className="space-y-3 mb-6">
               <div className="flex items-center gap-2">
-                <input value={tempRoom} onChange={(e)=>setTempRoom(e.target.value)} placeholder="輸入好友房號" className="flex-1 bg-white border border-stone-200 p-3 rounded-xl text-sm font-black text-center focus:border-amber-400 outline-none" />
-                <button onClick={() => handleJoinRoom(tempRoom)} className="bg-stone-800 text-white p-3 rounded-xl active:scale-90 transition-all shadow-md">加入</button>
+                <input value={tempRoom} onChange={(e)=>setTempRoom(e.target.value)} placeholder={t.enter_room_id} className="flex-1 bg-white border border-stone-200 p-3 rounded-xl text-sm font-black text-center focus:border-amber-400 outline-none" />
+                <button onClick={() => handleJoinRoom(tempRoom)} className="bg-stone-800 text-white p-3 rounded-xl active:scale-90 transition-all shadow-md">{t.join_btn}</button>
               </div>
             </div>
-            <button onClick={() => setShowInviteQR(false)} className="w-full py-4 bg-stone-200 text-stone-600 rounded-2xl font-black text-xs active:scale-95 transition-all">返回戰線</button>
+            <button onClick={() => setShowInviteQR(false)} className="w-full py-4 bg-stone-200 text-stone-600 rounded-2xl font-black text-xs active:scale-95 transition-all">{t.back_to_war}</button>
           </div>
         </div>
       )}
@@ -115,14 +134,14 @@ const BattleArenaView = ({
       <div className="bg-white border border-stone-100 p-8 rounded-[3.5rem] shadow-sm relative overflow-hidden text-left">
         <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1 bg-amber-50 text-amber-600 rounded-full border border-amber-100 z-20">
           <Clock size={10} className="animate-spin-slow" />
-          <span className="text-[8px] font-black uppercase tracking-widest">{roomId ? `Room: ${roomId}` : 'Solo Mode'}</span>
+          <span className="text-[8px] font-black uppercase tracking-widest">{roomId ? `Room: ${roomId}` : t.solo_mode}</span>
         </div>
         <div className="flex items-center justify-between gap-4 mt-4 relative">
           <div className="grid grid-cols-2 gap-x-4 gap-y-6 flex-1">
-            <VerticalPillar label={t.pillar_survival} percent={hpData.survival} colorClass="bg-blue-400" icon={Heart} />
-            <VerticalPillar label={t.pillar_progress} percent={hpData.progress} colorClass="bg-emerald-400" icon={Zap} />
-            <VerticalPillar label={t.pillar_desire} percent={hpData.desire} colorClass="bg-orange-400" icon={Flame} />
-            <VerticalPillar label={t.pillar_expedition} percent={hpData.expedition} colorClass="bg-purple-500" icon={Globe} />
+            <VerticalPillar label={t.cat_food.slice(0,2)} percent={hpData.survival} colorClass="bg-blue-400" icon={Heart} />
+            <VerticalPillar label={t.cat_study.slice(0,2)} percent={hpData.progress} colorClass="bg-emerald-400" icon={Zap} />
+            <VerticalPillar label={t.cat_ent.slice(0,2)} percent={hpData.desire} colorClass="bg-orange-400" icon={Flame} />
+            <VerticalPillar label={t.cat_shop.slice(0,2)} percent={hpData.expedition} colorClass="bg-purple-500" icon={Globe} />
           </div>
           <div className="flex flex-col items-center gap-4">
             <div className="w-px h-20 bg-gradient-to-b from-transparent via-stone-200 to-transparent" />
@@ -132,17 +151,17 @@ const BattleArenaView = ({
             <div className="w-px h-20 bg-gradient-to-b from-transparent via-stone-200 to-transparent" />
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-6 flex-1">
-            {roomId ? (
+            {hasOpponent ? (
               <>
-                <VerticalPillar label={t.pillar_survival} percent={enemyHpData.survival} colorClass="bg-red-400" icon={Heart} isEnemy />
-                <VerticalPillar label={t.pillar_progress} percent={enemyHpData.progress} colorClass="bg-red-400" icon={Zap} isEnemy />
-                <VerticalPillar label={t.pillar_desire} percent={enemyHpData.desire} colorClass="bg-red-400" icon={Flame} isEnemy />
-                <VerticalPillar label={t.pillar_expedition} percent={enemyHpData.expedition} colorClass="bg-red-400" icon={Globe} isEnemy />
+                <VerticalPillar label={t.cat_food.slice(0,2)} percent={enemyHpData.survival} colorClass="bg-red-400" icon={Heart} isEnemy />
+                <VerticalPillar label={t.cat_study.slice(0,2)} percent={enemyHpData.progress} colorClass="bg-red-400" icon={Zap} isEnemy />
+                <VerticalPillar label={t.cat_ent.slice(0,2)} percent={enemyHpData.desire} colorClass="bg-red-400" icon={Flame} isEnemy />
+                <VerticalPillar label={t.cat_shop.slice(0,2)} percent={enemyHpData.expedition} colorClass="bg-red-400" icon={Globe} isEnemy />
               </>
             ) : (
               <div onClick={handleStart1v1Duel} className="col-span-2 flex flex-col items-center justify-center h-full opacity-20 grayscale hover:opacity-40 cursor-pointer transition-all">
                 <div className="w-16 h-16 border-4 border-dashed border-stone-300 rounded-full flex items-center justify-center mb-2"><Users size={24} className="text-stone-400" /></div>
-                <span className="text-[8px] font-black text-stone-400 uppercase tracking-widest text-center">Tap to Duel Friend</span>
+                <span className="text-[8px] font-black text-stone-400 uppercase tracking-widest text-center">{t.tap_to_duel}</span>
               </div>
             )}
           </div>
@@ -186,7 +205,7 @@ const BattleArenaView = ({
         </div>
       )}
 
-      {showFriends && <FriendsListView onClose={() => setShowFriends(false)} userId={userId} />}
+      {showFriends && <FriendsListView onClose={() => setShowFriends(false)} userId={userId} lang={lang} />}
     </div>
   );
 };
