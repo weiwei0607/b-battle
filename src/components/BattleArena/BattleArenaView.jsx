@@ -19,7 +19,7 @@ const VerticalPillar = ({ label, percent, colorClass, icon: Icon, isEnemy = fals
 
 const BattleArenaView = ({ 
   stats, hpData, enemyHpData, isAiProcessing, aiComment, activeMode, setActiveMode, battleLog, activeChallenges, handleClaimChallenge, handleGiveUpChallenge,
-  roomId, setRoomId
+  roomId, setRoomId, userId
 }) => {
   const [showRoomInput, setShowRoomInput] = useState(false);
   const [showInviteQR, setShowInviteQR] = useState(false);
@@ -186,7 +186,7 @@ const BattleArenaView = ({
         </div>
       )}
 
-      {showFriends && <FriendsListView onClose={() => setShowFriends(false)} />}
+      {showFriends && <FriendsListView onClose={() => setShowFriends(false)} userId={userId} />}
     </div>
   );
 };

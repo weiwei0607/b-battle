@@ -7,7 +7,7 @@ const HeroHallView = ({
   userTitle, persona, personaStats, setPersona, setShowBudgetSetup, 
   currentTier, lastPersonaSwitch, setLastPersonaSwitch, wishlist, setWishlist,
   debt, userFrame, homeMaterials, user, setShowLogin, setView, lang,
-  userName, setUserName 
+  userName, setUserName, userAvatar, setUserAvatar, showEvolutionPath, setShowEvolutionPath, willpowerExp
 }) => {
   const t = LOCALES[lang] || LOCALES.zh;
   const currentPersona = personaStats[persona];
@@ -61,7 +61,10 @@ const HeroHallView = ({
                 </>
               )}
             </div>
-            <p className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full inline-block uppercase tracking-widest">{userTitle}</p>
+            <div className="flex flex-col gap-1">
+              <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">ID: {userId || "------"}</p>
+              <p className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full inline-block uppercase tracking-widest w-fit">{userTitle}</p>
+            </div>
             <div className="mt-3 flex items-center gap-2">
               <span className={`text-[10px] font-black ${bond.color}`}>{t[bond.key]}</span>
               <div className="flex-1 h-1 w-20 bg-stone-100 rounded-full overflow-hidden">

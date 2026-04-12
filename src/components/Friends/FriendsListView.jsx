@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { User, TrendingUp, TrendingDown, Minus, ArrowLeft, UserPlus, Search, X } from 'lucide-react';
 
-const FriendsListView = ({ onClose, friends = [] }) => {
+const FriendsListView = ({ onClose, friends = [], userId }) => {
   const [showAddFriend, setShowAddFriend] = useState(false);
   const [friendIdInput, setFriendIdInput] = useState("");
 
@@ -29,7 +29,10 @@ const FriendsListView = ({ onClose, friends = [] }) => {
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <button onClick={onClose} className="p-2 bg-white border border-stone-200 rounded-xl active:scale-90 transition-all"><ArrowLeft size={20}/></button>
-          <h2 className="text-2xl font-black text-stone-800 tracking-tighter italic uppercase">戰友名單</h2>
+          <div className="text-left">
+            <h2 className="text-2xl font-black text-stone-800 tracking-tighter italic uppercase leading-none">戰友名單</h2>
+            <p className="text-[9px] font-black text-stone-400 mt-1 uppercase tracking-widest">My ID: {userId || "------"}</p>
+          </div>
         </div>
         <button 
           onClick={() => setShowAddFriend(true)}

@@ -86,6 +86,7 @@ const App = () => {
 
   // 🚀 [玩家代號與房號]
   const [userName, setUserName] = useState(() => load('user_name', "省錢新兵"));
+  const [userId, setUserId] = useState(() => load('user_id', ""));
   const [userAvatar, setUserAvatar] = useState(() => load('user_avatar', '👤'));
   const [roomId, setRoomId] = useState(() => load('room_id', ""));
 
@@ -176,6 +177,7 @@ const App = () => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       if (u) {
         setUser(u);
+        setUserId(u.uid.slice(0, 6).toUpperCase());
         try {
           const s = await getDoc(doc(db, "users", u.uid));
           if (s.exists()) {
@@ -189,23 +191,31 @@ const App = () => {
             if (d.achievements !== undefined) setAchievements(d.achievements || {});
             if (d.lang !== undefined) setLang(d.lang || 'zh');
             if (d.userName !== undefined) setUserName(d.userName);
+            if (d.userId !== undefined) setUserId(d.userId);
+            if (d.userAvatar !== undefined) setUserAvatar(d.userAvatar);
             if (d.roomId !== undefined) setRoomId(d.roomId);
           }
         } catch (err) { console.error("Sync Error:", err); }
-      } else { setUser(null); }
+      } else { 
+        setUser(null); 
+        if (!userId) {
+          const newId = Math.random().toString(36).substring(2, 8).toUpperCase();
+          setUserId(newId);
+        }
+      }
       setIsCloudLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [userId]);
 
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
   
   useEffect(() => {
     if (!user && !isCloudLoading) {
-      const data = { lang, coins, debt, history, persona, exp: willpowerExp, achievements, userTitle, userFrame, potions, shield, personaStats, userName, userAvatar, roomId };
+      const data = { lang, coins, debt, history, persona, exp: willpowerExp, achievements, userTitle, userFrame, potions, shield, personaStats, userName, userId, userAvatar, roomId };
       Object.entries(data).forEach(([k, v]) => save(k, v));
     }
-  }, [user, isCloudLoading, lang, coins, debt, history, persona, willpowerExp, achievements, userTitle, userFrame, potions, shield, personaStats, userName, userAvatar, roomId]);
+  }, [user, isCloudLoading, lang, coins, debt, history, persona, willpowerExp, achievements, userTitle, userFrame, potions, shield, personaStats, userName, userId, userAvatar, roomId]);
 
   const hpData = useMemo(() => {
     const getHp = (p) => {
@@ -291,6 +301,7 @@ const App = () => {
             pendingTx, setPendingTx, isAiProcessing, aiComment, reflectionText, setReflectionText, 
             coldWarEndTime, now, nlpInput, setNlpInput, showBudgetSetup, setShowBudgetSetup, showShop, setShowShop, 
             showCustomModal, setShowCustomModal, showAchievements, setShowAchievements, achievements,
+            showEvolutionPath, setShowEvolutionPath,
             hpData, enemyHpData, executeTransaction, processTransaction, 
             executeRitual, handleClaimChallenge, handleGiveUpChallenge, simulateInvoice, handleAutoCalculate, 
             handleSavePersona, getSeveredReason, getHellPlaceholder, currentTier, lastPersonaSwitch, setLastPersonaSwitch,
@@ -299,7 +310,7 @@ const App = () => {
             getBondLevel, getFrameStyle, potions, setPotions, healTransaction,
             shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles, handleClaimAchievement,
             user, setShowLogin, unlockAchievement, generateMonthlyReview, isOnline, lang, setLang,
-            userName, setUserName, userAvatar, setUserAvatar, roomId, setRoomId }} 
+            userName, setUserName, userId, userAvatar, setUserAvatar, roomId, setRoomId }} 
         />
       </div>
       {showLogin && <div className="fixed inset-0 z-[6000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"><div className="relative w-full max-w-md animate-in slide-in-from-bottom-10 duration-300"><button onClick={() => setShowLogin(false)} className="absolute top-4 right-4 z-[6001] p-2 bg-stone-100 rounded-full text-stone-500 hover:bg-stone-200 transition-colors"><X size={16}/></button><LoginScreen isModal={true} onClose={() => setShowLogin(false)} /></div></div>}

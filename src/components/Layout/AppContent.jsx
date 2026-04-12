@@ -28,7 +28,7 @@ const AppContent = ({
   getBondLevel, getFrameStyle, potions, setPotions, healTransaction,
   shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles, handleClaimAchievement,
   user, setShowLogin, unlockAchievement, generateMonthlyReview, isOnline, lang, setLang,
-  userName, setUserName, userAvatar, setUserAvatar, roomId, setRoomId
+  userName, setUserName, userId, userAvatar, setUserAvatar, roomId, setRoomId
 }) => {
   const t = LOCALES[lang] || LOCALES.zh;
 
@@ -60,9 +60,9 @@ const AppContent = ({
             </div>
           ) : (
             <>
-              {view === 'battle' && <BattleArenaView stats={personaStats[persona]} hpData={hpData} enemyHpData={enemyHpData} isAiProcessing={isAiProcessing} aiComment={aiComment} activeMode={activeMode} setActiveMode={setActiveMode} battleLog={battleLog} activeChallenges={activeChallenges} handleClaimChallenge={handleClaimChallenge} handleGiveUpChallenge={handleGiveUpChallenge} roomId={roomId} setRoomId={setRoomId} />}
+              {view === 'battle' && <BattleArenaView stats={personaStats[persona]} hpData={hpData} enemyHpData={enemyHpData} isAiProcessing={isAiProcessing} aiComment={aiComment} activeMode={activeMode} setActiveMode={setActiveMode} battleLog={battleLog} activeChallenges={activeChallenges} handleClaimChallenge={handleClaimChallenge} handleGiveUpChallenge={handleGiveUpChallenge} roomId={roomId} setRoomId={setRoomId} userId={userId} />}
               {view === 'history' && <HistoryView history={history} aiComment={aiComment} deleteTransaction={deleteTransaction} updateTransaction={updateTransaction} potions={potions} healTransaction={healTransaction} unlockAchievement={unlockAchievement} generateMonthlyReview={generateMonthlyReview} personaStats={personaStats} persona={persona} isAiProcessing={isAiProcessing} achievements={achievements} lang={lang} />}
-              {view === 'heroHall' && <HeroHallView userTitle={userTitle} persona={persona} personaStats={personaStats} setPersona={setPersona} setShowBudgetSetup={()=>setShowBudgetSetup(true)} currentTier={currentTier} lastPersonaSwitch={lastPersonaSwitch} setLastPersonaSwitch={setLastPersonaSwitch} wishlist={wishlist} setWishlist={setWishlist} debt={debt} userFrame={userFrame} homeMaterials={homeMaterials} user={user} setShowLogin={setShowLogin} setView={setView} lang={lang} userName={userName} setUserName={setUserName} userAvatar={userAvatar} setUserAvatar={setUserAvatar} showEvolutionPath={showEvolutionPath} setShowEvolutionPath={setShowEvolutionPath} />}
+              {view === 'heroHall' && <HeroHallView userTitle={userTitle} persona={persona} personaStats={personaStats} setPersona={setPersona} setShowBudgetSetup={()=>setShowBudgetSetup(true)} currentTier={currentTier} lastPersonaSwitch={lastPersonaSwitch} setLastPersonaSwitch={setLastPersonaSwitch} wishlist={wishlist} setWishlist={setWishlist} debt={debt} userFrame={userFrame} homeMaterials={homeMaterials} user={user} setShowLogin={setShowLogin} setView={setView} lang={lang} userName={userName} setUserName={setUserName} userId={userId} userAvatar={userAvatar} setUserAvatar={setUserAvatar} showEvolutionPath={showEvolutionPath} setShowEvolutionPath={setShowEvolutionPath} willpowerExp={willpowerExp} />}
             </>
           )}
         </main>
