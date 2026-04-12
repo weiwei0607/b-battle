@@ -74,17 +74,19 @@ export const useBattleCore = (
   // 🚀 [5v5 隨機匹配與 Bot 補位邏輯]
   useEffect(() => {
     if (roomId === "MATCHMAKING_QUEUE" && user) {
-      addLog("🔍 [系統] 正在搜尋全球戰友...");
+      const t = LOCALES[lang] || LOCALES.zh;
+      addLog(`🔍 [System] ${lang === 'zh' ? '正在搜尋全球戰友...' : 'Searching for warriors...'}`);
       
       const matchmakingTimer = setTimeout(() => {
         // 超時處理：自動補 Bot
         const botRoomId = "BOT_" + Math.floor(1000 + Math.random() * 9000);
-        addLog(`🤖 [系統] 真人玩家不足，已加入虛擬戰友進入戰場！`);
+        addLog(`🤖 [System] ${lang === 'zh' ? '真人玩家不足，已加入虛擬戰友進入戰場！' : 'Not enough players, bots joined the battle!'}`);
         
         const bots = {};
         for (let i = 1; i <= 9; i++) {
           const botId = `bot_${i}`;
-          bots[botId] = { uid: botId, name: `省錢機器人 #${i}`, daily: Math.floor(Math.random() * 500), lastUpdate: Date.now() };
+          const botName = lang === 'zh' ? `省錢機器人 #${i}` : (lang === 'ja' ? `節約ロボット #${i}` : `Saving Bot #${i}`);
+          bots[botId] = { uid: botId, name: botName, daily: Math.floor(Math.random() * 500), lastUpdate: Date.now() };
         }
         
         setDoc(doc(db, "rooms", botRoomId), {

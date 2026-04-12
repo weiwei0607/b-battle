@@ -57,8 +57,8 @@ const BattleArenaView = ({
     <div className="space-y-6 pb-48 animate-in fade-in slide-in-from-left duration-700 text-left">
       <div className="flex justify-between items-center px-2">
         <div>
-          <h2 className="text-3xl font-black text-stone-800 tracking-tighter italic leading-none">WAR ZONE</h2>
-          <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mt-2">意志力戰略防線</p>
+          <h2 className="text-3xl font-black text-stone-800 tracking-tighter italic leading-none uppercase">{t.battle} ZONE</h2>
+          <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mt-2">{t.war_zone_subtitle}</p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => setShowFriends(true)} className="p-2 bg-white border border-stone-100 rounded-xl text-stone-400 hover:text-stone-800 transition-colors shadow-sm active:scale-90"><UserPlus size={18} /></button>
@@ -153,7 +153,7 @@ const BattleArenaView = ({
         <div className="w-14 h-14 bg-white border border-stone-200 rounded-2xl flex items-center justify-center text-3xl shadow-sm shrink-0">{stats.icon}</div>
         <div className="flex-1 min-h-[60px] flex flex-col justify-center">
           <p className="text-[9px] font-black text-[#BC8F8F] uppercase tracking-[0.2em] mb-1 flex items-center gap-1.5"><MessageSquare size={10} fill="#BC8F8F" fillOpacity={0.2} /> {t[stats.titleKey] || stats.titleKey} {t.report_suffix}</p>
-          {isAiProcessing ? <div className="flex items-center gap-2 text-stone-400 text-[10px] italic font-medium"><Loader2 size={12} className="animate-spin text-stone-300" />...</div> : <p className="text-xs text-stone-600 leading-relaxed font-bold tracking-tight text-left">「{aiComment}」</p>}
+          {isAiProcessing ? <div className="flex items-center gap-2 text-stone-400 text-[10px] italic font-medium"><Loader2 size={12} className="animate-spin text-stone-300" />...</div> : <p className="text-xs text-stone-600 leading-relaxed font-bold tracking-tight text-left">「{aiComment === "..." ? t.ai_ready : aiComment}」</p>}
         </div>
       </div>
 
