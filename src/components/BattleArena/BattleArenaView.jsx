@@ -20,7 +20,8 @@ const VerticalPillar = ({ label, percent, colorClass, icon: Icon, isEnemy = fals
 
 const BattleArenaView = ({ 
   stats, hpData, enemyHpData, isAiProcessing, aiComment, activeMode, setActiveMode, battleLog, activeChallenges, handleClaimChallenge, handleGiveUpChallenge,
-  roomId, setRoomId, userId, lang, showFriends, setShowFriends, showRoomInput, setShowRoomInput, showInviteQR, setShowInviteQR
+  roomId, setRoomId, userId, lang, showFriends, setShowFriends, showRoomInput, setShowRoomInput, showInviteQR, setShowInviteQR,
+  enemyConnected
 }) => {
   const [isMatchmaking, setIsMatchmaking] = useState(false);
   const [tempRoom, setTempRoom] = useState("");
@@ -67,8 +68,8 @@ const BattleArenaView = ({
   };
 
   const isBotRoom = roomId?.startsWith("BOT_");
-  // 只有當有 roomId 且 enemy 有數據時才顯示（代表房間內有其他人或機器人）
-  const hasOpponent = roomId && roomId !== "MATCHMAKING_QUEUE" && enemyHpData.survival > 0;
+  // 用 enemyConnected 判斷是否有對手，不再依賴 HP 值（幣別無關，比例制）
+  const hasOpponent = enemyConnected;
 
   return (
     <div className="space-y-6 pb-48 animate-in fade-in slide-in-from-left duration-700 text-left">

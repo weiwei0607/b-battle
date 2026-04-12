@@ -154,9 +154,9 @@ const App = () => {
   const [teamSpentDaily, setTeamSpentDaily] = useState(() => load('t_daily', 0));
   const [teamSpentWeekly, setTeamSpentWeekly] = useState(() => load('t_weekly', 0));
   const [teamSpentMonthly, setTeamSpentMonthly] = useState(() => load('t_monthly', 0));
-  const [enemySpentDaily, setEnemySpentDaily] = useState(0);
-  const [enemySpentWeekly, setEnemySpentWeekly] = useState(0);
-  const [enemySpentMonthly, setEnemySpentMonthly] = useState(0);
+  const [enemySpentDaily, setEnemySpentDaily] = useState(-1);   // -1 = 尚無對手
+  const [enemySpentWeekly, setEnemySpentWeekly] = useState(-1);
+  const [enemySpentMonthly, setEnemySpentMonthly] = useState(-1);
   const [activeChallenges, setActiveChallenges] = useState(() => load('challenges', []) || []);
   const [claimedAvoidedItems, setClaimedAvoidedItems] = useState(() => load('claimed', []) || []);
   const [isSevered, setIsSevered] = useState(() => load('severed', false));
@@ -285,20 +285,13 @@ const App = () => {
     return { survival: getHp('survival'), progress: getHp('progress'), desire: getHp('desire'), expedition: getHp('expedition') };
   }, [history, activeMode, teamSpentDaily, teamSpentWeekly, teamSpentMonthly, weeklyPools, monthlyPools]);
 
-  const enemyHpData = useMemo(() => {
-    const limits = {
-      survival: (weeklyPools.food?.limit || 1000) + (weeklyPools.transport?.limit || 0) + (monthlyPools.housing?.limit || 0),
-      progress: (monthlyPools.education?.limit || 0),
-      desire: (weeklyPools.social?.limit || 0),
-      expedition: (weeklyPools.shopping?.limit || 0)
-    };
-    return {
-      survival: Math.max(0, 100 - (enemySpentDaily / (limits.survival * 5 || 1) * 100)),
-      progress: Math.max(0, 100 - (enemySpentWeekly / (limits.progress * 5 || 1) * 100)),
-      desire: Math.max(0, 100 - (enemySpentMonthly / (limits.desire * 5 || 1) * 100)),
-      expedition: Math.max(0, 100 - (enemySpentMonthly / (limits.expedition * 5 || 1) * 100))
-    };
-  }, [enemySpentDaily, enemySpentWeekly, enemySpentMonthly, weeklyPools, monthlyPools]);
+  // enemySpent* 現在直接存 HP 百分比 (0-100)，-1 代表無對手
+  const enemyHpData = useMemo(() => ({
+    survival:   enemySpentDaily   < 0 ? 100 : enemySpentDaily,
+    progress:   enemySpentWeekly  < 0 ? 100 : enemySpentWeekly,
+    desire:     enemySpentMonthly < 0 ? 100 : enemySpentMonthly,
+    expedition: enemySpentMonthly < 0 ? 100 : enemySpentMonthly,
+  }), [enemySpentDaily, enemySpentWeekly, enemySpentMonthly]);
 
   const handleAutoCalculate = () => {
     const total = parseInt(salaryInput) || 0;
@@ -359,7 +352,8 @@ const App = () => {
             getBondLevel, getFrameStyle, potions, setPotions, healTransaction,
             shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles, handleClaimAchievement,
             user, setShowLogin, unlockAchievement, generateMonthlyReview, isOnline, lang, setLang,
-            userName, setUserName, userId, userAvatar, setUserAvatar, roomId, setRoomId }} 
+            userName, setUserName, userId, userAvatar, setUserAvatar, roomId, setRoomId,
+            enemyConnected: enemySpentDaily >= 0 }} 
         />
       </div>
       {showLogin && <div className="fixed inset-0 z-[6000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"><div className="relative w-full max-w-md animate-in slide-in-from-bottom-10 duration-300"><button onClick={() => setShowLogin(false)} className="absolute top-4 right-4 z-[6001] p-2 bg-stone-100 rounded-full text-stone-500 hover:bg-stone-200 transition-colors"><X size={16}/></button><LoginScreen isModal={true} onClose={() => setShowLogin(false)} /></div></div>}

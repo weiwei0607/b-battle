@@ -35,14 +35,15 @@ export const useBattleCore = (
 ) => {
 
   // 🚀 [即時連線邏輯] 監聽戰區數據 (限時 5 分鐘)
+  // 📐 對戰比的是「預算使用比例」，與幣別無關
   useEffect(() => {
     if (!roomId || roomId === "MATCHMAKING_QUEUE") {
-      setTeamSpentStates.setEnemySpentDaily(0);
-      setTeamSpentStates.setEnemySpentWeekly(0);
-      setTeamSpentStates.setEnemySpentMonthly(0);
+      setTeamSpentStates.setEnemySpentDaily(-1);
+      setTeamSpentStates.setEnemySpentWeekly(-1);
+      setTeamSpentStates.setEnemySpentMonthly(-1);
       return;
     }
-    
+
     if ((activeMode === 'team5v5' || activeMode === '1v1')) {
       const roomRef = doc(db, "rooms", roomId);
       const unsubscribe = onSnapshot(roomRef, (snapshot) => {
@@ -50,7 +51,6 @@ export const useBattleCore = (
           const data = snapshot.data();
           const nowTime = Date.now();
           if (data.createdAt && nowTime - data.createdAt > 300000) {
-            const t = LOCALES[lang] || LOCALES.zh;
             addLog(`⌛ [System] Room ${roomId} expired.`);
             setRoomId("");
             setActiveMode('selection');
@@ -58,19 +58,18 @@ export const useBattleCore = (
           }
           const allPlayers = data.players || {};
           const others = Object.values(allPlayers).filter(p => p.uid !== user?.uid);
-          
+
           if (others.length > 0) {
-            const othersDaily = others.reduce((s, p) => s + (p.daily || 0), 0);
-            const othersWeekly = others.reduce((s, p) => s + (p.weekly || 0), 0);
-            const othersMonthly = others.reduce((s, p) => s + (p.monthly || 0), 0);
-            setTeamSpentStates.setEnemySpentDaily(othersDaily);
-            setTeamSpentStates.setEnemySpentWeekly(othersWeekly);
-            setTeamSpentStates.setEnemySpentMonthly(othersMonthly);
+            // 直接讀對手上傳的 HP 百分比，不再用本地預算換算
+            const avg = (key) => others.reduce((s, p) => s + (p[key] ?? 100), 0) / others.length;
+            setTeamSpentStates.setEnemySpentDaily(avg('hpSurvival'));
+            setTeamSpentStates.setEnemySpentWeekly(avg('hpProgress'));
+            setTeamSpentStates.setEnemySpentMonthly((avg('hpDesire') + avg('hpExpedition')) / 2);
           } else {
-            // 如果房間沒別人了，重置對手數據
-            setTeamSpentStates.setEnemySpentDaily(0);
-            setTeamSpentStates.setEnemySpentWeekly(0);
-            setTeamSpentStates.setEnemySpentMonthly(0);
+            // 房間沒別人：-1 代表「尚無對手」
+            setTeamSpentStates.setEnemySpentDaily(-1);
+            setTeamSpentStates.setEnemySpentWeekly(-1);
+            setTeamSpentStates.setEnemySpentMonthly(-1);
           }
         } else {
           setDoc(roomRef, { createdAt: Date.now(), players: {} }, { merge: true });
@@ -91,15 +90,27 @@ export const useBattleCore = (
       const weekStart = new Date(nowDate);
       weekStart.setDate(nowDate.getDate() - daysFromMonday);
       weekStart.setHours(0, 0, 0, 0);
-
       const monthStart = new Date(nowDate.getFullYear(), nowDate.getMonth(), 1);
+
+      const limits = {
+        survival: (weeklyPools.food?.limit || 1000) + (weeklyPools.transport?.limit || 0) + (monthlyPools.housing?.limit || 0),
+        progress: (monthlyPools.education?.limit || 0),
+        desire: (weeklyPools.social?.limit || 0),
+        expedition: (weeklyPools.shopping?.limit || 0)
+      };
 
       const myDaily = history.filter(h => h.date === todayStr).reduce((s, h) => s + h.amount, 0);
       const myWeekly = history.filter(h => new Date(h.date) >= weekStart).reduce((s, h) => s + h.amount, 0);
       const myMonthly = history.filter(h => new Date(h.date) >= monthStart).reduce((s, h) => s + h.amount, 0);
 
+      // 上傳 HP 百分比，讓對手直接讀比例，幣別不同也能公平對比
+      const hpSurvival = Math.max(0, 100 - (myDaily / ((limits.survival * 5) || 1) * 100));
+      const hpProgress = Math.max(0, 100 - (myWeekly / ((limits.progress * 5) || 1) * 100));
+      const hpDesire   = Math.max(0, 100 - (myMonthly / ((limits.desire * 5) || 1) * 100));
+      const hpExpedition = Math.max(0, 100 - (myMonthly / ((limits.expedition * 5) || 1) * 100));
+
       setDoc(doc(db, "rooms", roomId), {
-        [`players.${user.uid}`]: { uid: user.uid, name: userName, daily: myDaily, weekly: myWeekly, monthly: myMonthly, lastUpdate: Date.now() }
+        [`players.${user.uid}`]: { uid: user.uid, name: userName, hpSurvival, hpProgress, hpDesire, hpExpedition, lastUpdate: Date.now() }
       }, { merge: true });
     }
   }, [history, activeMode, roomId, user, userName]);
@@ -119,14 +130,14 @@ export const useBattleCore = (
         for (let i = 1; i <= 9; i++) {
           const botId = `bot_${i}`;
           const botName = lang === 'zh' ? `省錢機器人 #${i}` : (lang === 'ja' ? `節約ロボット #${i}` : `Saving Bot #${i}`);
-          bots[botId] = { uid: botId, name: botName, daily: Math.floor(Math.random() * 500), lastUpdate: Date.now() };
+          bots[botId] = { uid: botId, name: botName, hpSurvival: Math.floor(40 + Math.random() * 60), hpProgress: Math.floor(40 + Math.random() * 60), hpDesire: Math.floor(40 + Math.random() * 60), hpExpedition: Math.floor(40 + Math.random() * 60), lastUpdate: Date.now() };
         }
         
         setDoc(doc(db, "rooms", botRoomId), {
           createdAt: Date.now(),
           players: {
             ...bots,
-            [user.uid]: { uid: user.uid, name: userName, daily: 0, lastUpdate: Date.now() }
+            [user.uid]: { uid: user.uid, name: userName, hpSurvival: 100, hpProgress: 100, hpDesire: 100, hpExpedition: 100, lastUpdate: Date.now() }
           }
         });
         

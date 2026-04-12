@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { User, ShieldCheck, Settings2, LogOut, LogIn, Target, Edit2, Check } from 'lucide-react';
+import { User, ShieldCheck, Settings2, LogOut, LogIn, Target, Edit2, Check, Sparkles } from 'lucide-react';
 import { getBondLevel, getFrameStyle, getHomeStatus, getWalletStatus, AVATAR_OPTIONS, WALLET_LEVELS, HOME_LEVELS } from '../../utils/constants';
 import { LOCALES } from '../../utils/locales';
 import { auth } from '../../firebase';
 
-const HeroHallView = ({ 
-  userTitle, persona, personaStats, setPersona, setShowBudgetSetup, 
+const HeroHallView = ({
+  userTitle, persona, personaStats, setPersona, setShowBudgetSetup,
   currentTier, lastPersonaSwitch, setLastPersonaSwitch, wishlist, setWishlist,
   debt, userFrame, homeMaterials, user, setShowLogin, setView, lang,
-  userName, setUserName, userId, userAvatar, setUserAvatar, showEvolutionPath, setShowEvolutionPath, willpowerExp
+  userName, setUserName, userId, userAvatar, setUserAvatar, showEvolutionPath, setShowEvolutionPath, willpowerExp,
+  setShowCustomModal
 }) => {
   const t = LOCALES[lang] || LOCALES.zh;
   const currentPersona = personaStats[persona];
@@ -113,6 +114,15 @@ const HeroHallView = ({
           <h3 className="text-[10px] font-black text-stone-400 uppercase tracking-widest flex items-center gap-2 mb-4"><Target size={14} className="text-[#D7C9B1]"/> {t.current_goal}</h3>
           <input value={wishlist} onChange={(e) => setWishlist(e.target.value)} className="w-full bg-stone-50 border border-stone-100 p-4 rounded-2xl text-sm font-black text-stone-800 focus:bg-white transition-colors outline-none" placeholder="..." />
         </div>
+
+        {currentTier === 'prime' && (
+          <button
+            onClick={() => setShowCustomModal(true)}
+            className="w-full py-5 bg-gradient-to-r from-amber-400 to-orange-400 text-white rounded-[2rem] font-black flex items-center justify-center gap-3 shadow-xl text-[11px] tracking-[0.2em] active:scale-95 transition-all"
+          >
+            <Sparkles size={18} /> Prime 自定義靈魂
+          </button>
+        )}
 
         <button onClick={setShowBudgetSetup} className="w-full py-5 bg-stone-800 text-white rounded-[2rem] font-black flex items-center justify-center gap-3 shadow-xl text-[11px] tracking-[0.2em] active:scale-95 transition-all"><Settings2 size={18} /> {t.budget_setup}</button>
 
