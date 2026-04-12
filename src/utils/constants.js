@@ -109,17 +109,38 @@ export const ACHIEVEMENTS = {
   OPEN_SHOP: { id: 'OPEN_SHOP', name: '只是逛逛', desc: '第一次打開道具屋', icon: '🛒', reward: 20, cat: 'journey' }
 };
 
+export const AVATAR_OPTIONS = [
+  { id: 'default', icon: '👤', label: '預設兵員' },
+  { id: 'soldier', icon: '🎖️', label: '意志戰士' },
+  { id: 'ninja', icon: '🥷', label: '省錢忍者' },
+  { id: 'king', icon: '👑', label: '理財國王' },
+  { id: 'ghost', icon: '👻', label: '記帳幽靈' },
+  { id: 'cool', icon: '😎', label: '酷帥型男' },
+  { id: 'cat', icon: '😼', label: '精明貓' },
+  { id: 'clown', icon: '🤡', label: '白目同學' }
+];
+
+export const WALLET_LEVELS = [
+  { id: 0, minExp: 0, name: "破掉的塑膠袋", icon: "🛍️", title: "街頭生存者", color: "text-stone-400", bg: "bg-stone-100" },
+  { id: 1, minExp: 500, name: "魔鬼氈錢包", icon: "👛", title: "都市遊牧民", color: "text-blue-500", bg: "bg-blue-100" },
+  { id: 2, minExp: 1500, name: "質感長皮夾", icon: "💼", title: "中產奮鬥者", color: "text-orange-500", bg: "bg-orange-100" },
+  { id: 3, minExp: 3500, name: "巔峰金庫", icon: "🏦", title: "財富自由軍", color: "text-amber-500", bg: "bg-amber-100" }
+];
+
+export const HOME_LEVELS = [
+  { id: 0, minMaterials: 0, nameKey: 'home_tent', icon: "⛺", title: "荒野開拓者", next: 10000 },
+  { id: 1, minMaterials: 10000, nameKey: 'home_apt', icon: "🏢", title: "城市定居者", next: 50000 },
+  { id: 2, minMaterials: 50000, nameKey: 'home_villa', icon: "🏡", title: "豪宅之主", next: 150000 },
+  { id: 3, minMaterials: 150000, nameKey: 'home_castle', icon: "🏛️", title: "王國領主", next: 500000 },
+  { id: 4, minMaterials: 500000, nameKey: 'home_sky', icon: "🏛️", title: "天際主宰", next: 1000000 }
+];
+
 export const getWalletStatus = (exp) => {
-  if (exp >= 3500) return { name: "巔峰金庫", icon: "🏦", color: "text-amber-500", bg: "bg-amber-100" };
-  if (exp >= 1500) return { name: "質感長皮夾", icon: "💼", color: "text-orange-500", bg: "bg-orange-100" };
-  if (exp >= 500) return { name: "魔鬼氈錢包", icon: "👛", color: "text-blue-500", bg: "bg-blue-100" };
-  return { name: "破掉的塑膠袋", icon: "🛍️", color: "text-stone-400", bg: "bg-stone-100" };
+  const level = [...WALLET_LEVELS].reverse().find(l => exp >= l.minExp) || WALLET_LEVELS[0];
+  return level;
 };
 
 export const getHomeStatus = (m) => {
-  if (m >= 500000) return { nameKey: 'home_sky', icon: "🏛️", next: 1000000 };
-  if (m >= 150000) return { nameKey: 'home_castle', icon: "🏛️", next: 500000 };
-  if (m >= 50000) return { nameKey: 'home_villa', icon: "🏡", next: 150000 };
-  if (m >= 10000) return { nameKey: 'home_apt', icon: "🏢", next: 50000 };
-  return { nameKey: 'home_tent', icon: "⛺", next: 10000 };
+  const level = [...HOME_LEVELS].reverse().find(l => m >= l.minMaterials) || HOME_LEVELS[0];
+  return level;
 };

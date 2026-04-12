@@ -62,7 +62,7 @@ export const useBattleCore = (
 
   // 🚀 [數據上傳邏輯]
   useEffect(() => {
-    if ((activeMode === 'team5v5' || activeMode === '1v1') && roomId && user) {
+    if ((activeMode === 'team5v5' || activeMode === '1v1') && roomId && roomId !== "MATCHMAKING_QUEUE" && user) {
       const todayStr = new Date().toLocaleDateString();
       const myDaily = history.filter(h => h.date === todayStr).reduce((s, h) => s + h.amount, 0);
       setDoc(doc(db, "rooms", roomId), { 
@@ -70,6 +70,38 @@ export const useBattleCore = (
       }, { merge: true });
     }
   }, [history, activeMode, roomId, user, userName]);
+
+  // 🚀 [5v5 隨機匹配與 Bot 補位邏輯]
+  useEffect(() => {
+    if (roomId === "MATCHMAKING_QUEUE" && user) {
+      addLog("🔍 [系統] 正在搜尋全球戰友...");
+      
+      const matchmakingTimer = setTimeout(() => {
+        // 超時處理：自動補 Bot
+        const botRoomId = "BOT_" + Math.floor(1000 + Math.random() * 9000);
+        addLog(`🤖 [系統] 真人玩家不足，已加入虛擬戰友進入戰場！`);
+        
+        const bots = {};
+        for (let i = 1; i <= 9; i++) {
+          const botId = `bot_${i}`;
+          bots[botId] = { uid: botId, name: `省錢機器人 #${i}`, daily: Math.floor(Math.random() * 500), lastUpdate: Date.now() };
+        }
+        
+        setDoc(doc(db, "rooms", botRoomId), {
+          createdAt: Date.now(),
+          players: {
+            ...bots,
+            [user.uid]: { uid: user.uid, name: userName, daily: 0, lastUpdate: Date.now() }
+          }
+        });
+        
+        setRoomId(botRoomId);
+        setActiveMode('team5v5');
+      }, 8000); // 8秒超時
+
+      return () => clearTimeout(matchmakingTimer);
+    }
+  }, [roomId, user, userName, setRoomId, setActiveMode, addLog]);
 
   const cooldownThreshold = 2000;
 

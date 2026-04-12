@@ -26,7 +26,7 @@ const Header = ({ currentTier, coins, debt, onShopClick, setView, willpowerExp, 
           <span className={`font-black text-base leading-none tracking-tighter truncate ${isInDebt ? 'text-red-600' : 'text-stone-800'}`}>
             B-BATTLE
           </span>
-          <div className="flex items-center gap-1.5 mt-1 overflow-hidden">
+          <div onClick={(e) => { e.stopPropagation(); onWalletClick(); }} className="flex items-center gap-1.5 mt-1 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity">
             <span className="text-[12px] leading-none shrink-0">{isInDebt ? '💸' : wallet.icon}</span>
             <span className={`text-[8px] font-black uppercase tracking-widest truncate ${isInDebt ? 'text-red-400' : wallet.color}`}>
               {isInDebt ? `負債超人 (-${debt})` : wallet.name}

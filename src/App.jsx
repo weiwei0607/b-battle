@@ -84,7 +84,12 @@ const App = () => {
   const [isCloudLoading, setIsCloudLoading] = useState(true);
   const [isSplashDone, setIsSplashDone] = useState(false);
 
-  // 🚀 [網址連線機制] 啟動時自動辨識房號與模式
+  // 🚀 [玩家代號與房號]
+  const [userName, setUserName] = useState(() => load('user_name', "省錢新兵"));
+  const [userAvatar, setUserAvatar] = useState(() => load('user_avatar', '👤'));
+  const [roomId, setRoomId] = useState(() => load('room_id', ""));
+
+  // 🚀 [網址連線機制] 移到狀態宣告之後
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const r = params.get('room');
@@ -93,14 +98,9 @@ const App = () => {
       setRoomId(r);
       if (m === '1v1' || m === 'team5v5') setActiveMode(m);
       else setActiveMode('team5v5');
-      // 清除網址參數，保持乾淨
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
-
-  // 🚀 [玩家代號與房號]
-  const [userName, setUserName] = useState(() => load('user_name', "省錢新兵"));
-  const [roomId, setRoomId] = useState(() => load('room_id', ""));
 
   const [teamSpentDaily, setTeamSpentDaily] = useState(() => load('t_daily', 0));
   const [teamSpentWeekly, setTeamSpentWeekly] = useState(() => load('t_weekly', 0));
@@ -125,6 +125,7 @@ const App = () => {
   const [showShop, setShowShop] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [showEvolutionPath, setShowEvolutionPath] = useState(false);
   const [achievementNotification, setAchievementNotification] = useState(null);
   const [nlpInput, setNlpInput] = useState("");
   const [now, setNow] = useState(() => Date.now());
@@ -146,7 +147,7 @@ const App = () => {
   const [monthlyPools, setMonthlyPools] = useState(() => load('monthly_pools', { housing: { limit: 8000, label: "房租" }, education: { limit: 3000, label: "學習" } }));
   
   const [personaStats, setPersonaStats] = useState(() => load('persona_stats', { 
-    peer: { intimacy: 50, title: "愛酸同學", icon: "🙄", prompt: `你是一個酸言酸語的同學/同事，個性嫉妒又愛嘴砲。看到對方花錢你就忍不住要酸。規則：買衣服酸走秀；咖啡酸燒錢；吃大餐酸請客；3C酸敗家；交通酸腳不能用。口吻：酸、嫉妒、嘴賤，但幽默，限20字。` }, 
+    peer: { intimacy: 50, title: "愛酸同學", icon: "🤡", prompt: `你是一個酸言酸語的同學/同事，個性嫉妒又愛嘴砲。看到對方花錢你就忍不住要酸。規則：買衣服酸走秀；咖啡酸燒錢；吃大餐酸請客；3C酸敗家；交通酸腳不能用。口吻：酸、嫉妒、嘴賤，但幽默，限20字。` }, 
     asian_parent: { intimacy: 30, title: "亞洲家長", icon: "🧧", prompt: `你是典型的台灣亞洲家長，永遠在擔心跟碎念。規則：買衣服酸阿珠不亂買；咖啡酸顧身體；外食酸媽媽煮更好；3C酸沒壞幹嘛換；交通酸走路健康。口吻：擔心、碎念、告誡孩子，限20字。` },
     bestie: { intimacy: 60, title: "好閨蜜", icon: "💅", prompt: `你是超級好閨蜜，支持朋友但幫忙把關荷包。規則：買衣服求拍照但提醒這個月買多了；咖啡提議辦月卡；大餐提議下次一起但要存旅遊基金。口吻：開心、支持、帶到旅遊基金，限20字。` },
     instructor: { intimacy: 10, title: "毒舌教官", icon: "👺", prompt: `你是軍事化教官，理財是紀律。規則：買衣服酸制服就夠；咖啡酸意志力不足；大餐酸超出口糧預算；超支就酸違反紀律。口吻：嚴厲命令式，軍事感，限20字。` },
@@ -166,7 +167,7 @@ const App = () => {
     setNlpInput, now, homeMaterials, setHomeMaterials, weeklyPools, monthlyPools, currentTier,
     shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles,
     potions, setPotions, achievements, setAchievements, setAchievementNotification, lang,
-    userName, roomId, setRoomId, setActiveMode 
+    userName, userAvatar, roomId, setRoomId, setActiveMode 
   );
 
   useEffect(() => {
@@ -201,15 +202,14 @@ const App = () => {
   
   useEffect(() => {
     if (!user && !isCloudLoading) {
-      const data = { lang, coins, debt, history, persona, exp: willpowerExp, achievements, userTitle, userFrame, potions, shield, personaStats, userName, roomId };
+      const data = { lang, coins, debt, history, persona, exp: willpowerExp, achievements, userTitle, userFrame, potions, shield, personaStats, userName, userAvatar, roomId };
       Object.entries(data).forEach(([k, v]) => save(k, v));
     }
-  }, [user, isCloudLoading, lang, coins, debt, history, persona, willpowerExp, achievements, userTitle, userFrame, potions, shield, personaStats, userName, roomId]);
+  }, [user, isCloudLoading, lang, coins, debt, history, persona, willpowerExp, achievements, userTitle, userFrame, potions, shield, personaStats, userName, userAvatar, roomId]);
 
-  // 🛡️ [還原靈魂] 基於真實預算的 HP 計算
   const hpData = useMemo(() => {
     const getHp = (p) => {
-      const isTeam = activeMode === 'team5v5';
+      const isTeam = activeMode === 'team5v5' || activeMode === '1v1';
       const todayStr = new Date().toLocaleDateString();
       const limits = {
         survival: (weeklyPools.food?.limit || 1000) + (weeklyPools.transport?.limit || 0) + (monthlyPools.housing?.limit || 0),
@@ -265,7 +265,7 @@ const App = () => {
 
   const getHellPlaceholder = () => {
     if (isSevered) {
-      const map = { asian_parent: "又是買這些垃圾？", partner: "哼，誰管你有沒有錢...", bestie: "反正我們已經完了...", instructor: "報上你的遺言，戰犯。", peer: "破產了還買？笑死。" };
+      const map = { asian_parent: "又是買這些垃圾？", partner: "哼，誰管你有錢...", bestie: "反正我們已經完了...", instructor: "報上你的遺言，戰犯。", peer: "破產了還買？笑死。" };
       return map[persona] || "在恥辱中記錄你的罪行...";
     }
     return "記帳或『我想買...』發起豪賭";
@@ -299,7 +299,7 @@ const App = () => {
             getBondLevel, getFrameStyle, potions, setPotions, healTransaction,
             shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles, handleClaimAchievement,
             user, setShowLogin, unlockAchievement, generateMonthlyReview, isOnline, lang, setLang,
-            userName, setUserName, roomId, setRoomId }} 
+            userName, setUserName, userAvatar, setUserAvatar, roomId, setRoomId }} 
         />
       </div>
       {showLogin && <div className="fixed inset-0 z-[6000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"><div className="relative w-full max-w-md animate-in slide-in-from-bottom-10 duration-300"><button onClick={() => setShowLogin(false)} className="absolute top-4 right-4 z-[6001] p-2 bg-stone-100 rounded-full text-stone-500 hover:bg-stone-200 transition-colors"><X size={16}/></button><LoginScreen isModal={true} onClose={() => setShowLogin(false)} /></div></div>}
