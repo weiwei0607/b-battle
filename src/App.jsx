@@ -132,6 +132,7 @@ const App = () => {
   const [hasCompletedTutorial, setHasCompletedTutorial] = useState(() => load('has_tutorial', false));
   const [showTutorial, setShowTutorial] = useState(false);
 
+  /*
   // 🚀 [新手教學觸發邏輯]
   useEffect(() => {
     if (!hasCompletedTutorial && isSplashDone && view === 'battle') {
@@ -143,6 +144,7 @@ const App = () => {
     setHasCompletedTutorial(true);
     setShowTutorial(false);
   };
+  */
 
   // 🚀 [玩家代號與房號]
   const [userName, setUserName] = useState(() => load('user_name', "title_rookie"));
