@@ -67,7 +67,7 @@ const FriendsListView = ({ onClose, friends = [], userId, lang }) => {
           </div>
         )}
 
-        {/* 📜 Scrollable List Area */}
+        {/* 📜 滾動區域 */}
         <div className="flex-1 overflow-y-auto no-scrollbar space-y-4 pb-32">
           {displayFriends.map(friend => {
             const ratio = calculateRatio(friend.thisWeekSaved, friend.lastWeekSaved);

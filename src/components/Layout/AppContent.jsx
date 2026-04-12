@@ -38,9 +38,9 @@ const AppContent = ({
     <div className={`min-h-screen transition-all duration-1000 ${isSevered ? 'bg-[#450a0a]' : 'bg-[#F7F4EF]'} text-stone-800 font-sans text-left`}>
       <div className="max-w-md mx-auto p-6 h-screen flex flex-col relative overflow-hidden">
         
-        {/* 🏆 [還原] 獎盃移回右上角 Header 旁邊 */}
-        {!isSevered && (
-          <div className="flex justify-between items-center z-20 mb-2 gap-2">
+        {/* 🏆 當好友名單、商店、成就、進化之路等開啟時，完全隱藏 Header 以免擠在一起 */}
+        {!isSevered && !isModalOpen && (
+          <div className="flex justify-between items-center z-20 mb-2 gap-2 animate-in fade-in duration-300">
             <div className="flex-1">
               <Header currentTier={currentTier} coins={coins} debt={debt} willpowerExp={willpowerExp} setView={setView} onShopClick={() => setShowShop(true)} lang={lang} setLang={setLang} onWalletClick={() => setShowEvolutionPath(true)} />
             </div>
@@ -70,7 +70,7 @@ const AppContent = ({
         </main>
 
         {!isSevered && !isModalOpen && (
-          <div className="fixed bottom-32 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-[150]">
+          <div className="fixed bottom-32 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-[150] animate-in slide-in-from-bottom-4 duration-300">
             <div className={`bg-white/80 backdrop-blur-md border border-stone-200 rounded-2xl p-2 shadow-xl flex items-center gap-2 ${isSevered ? 'opacity-100 scale-105 border-red-500 shadow-red-900/20' : ''}`}>
               <button onClick={simulateInvoice} className="w-10 h-10 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center active:scale-90 transition-all shrink-0"><Receipt size={16} /></button>
               <input value={nlpInput} onChange={(e)=>setNlpInput(e.target.value)} placeholder={getHellPlaceholder()} className={`bg-stone-50/50 flex-1 text-xs px-4 py-3.5 rounded-xl outline-none focus:bg-white transition-all shadow-inner ${isSevered ? 'text-red-600 placeholder:text-red-300 font-bold' : 'text-stone-800'}`} onKeyDown={(e) => e.key === 'Enter' && processTransaction(nlpInput)} />
@@ -78,7 +78,7 @@ const AppContent = ({
             </div>
           </div>
         )}
-        {!isSevered && <BottomNav view={view} setView={setView} lang={lang} />}
+        {!isSevered && !showFriends && <BottomNav view={view} setView={setView} lang={lang} />}
 
         <PendingTxModal pendingTx={pendingTx} setPendingTx={setPendingTx} executeTransaction={executeTransaction} />
         <BudgetSetupModal show={showBudgetSetup} onClose={() => setShowBudgetSetup(false)} salaryInput={salaryInput} setSalaryInput={setSalaryInput} handleAutoCalculate={handleAutoCalculate} weeklyPools={weeklyPools} setWeeklyPools={setWeeklyPools} monthlyPools={monthlyPools} setMonthlyPools={setMonthlyPools} isStudent={isStudent} setIsStudent={setIsStudent} currency={currency} setCurrency={setCurrency} CURRENCIES={CURRENCIES} currentTier={currentTier} setCurrentTier={setCurrentTier} />
