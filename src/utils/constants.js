@@ -110,29 +110,29 @@ export const ACHIEVEMENTS = {
 };
 
 export const AVATAR_OPTIONS = [
-  { id: 'default', icon: '👤', label: '預設兵員' },
-  { id: 'soldier', icon: '🎖️', label: '意志戰士' },
-  { id: 'ninja', icon: '🥷', label: '省錢忍者' },
-  { id: 'king', icon: '👑', label: '理財國王' },
-  { id: 'ghost', icon: '👻', label: '記帳幽靈' },
-  { id: 'cool', icon: '😎', label: '酷帥型男' },
-  { id: 'cat', icon: '😼', label: '精明貓' },
-  { id: 'clown', icon: '🤡', label: '白目同學' }
+  { id: 'default', icon: '👤', nameKey: 'avatar_default' },
+  { id: 'soldier', icon: '🎖️', nameKey: 'avatar_soldier' },
+  { id: 'ninja', icon: '🥷', nameKey: 'avatar_ninja' },
+  { id: 'king', icon: '👑', nameKey: 'avatar_king' },
+  { id: 'ghost', icon: '👻', nameKey: 'avatar_ghost' },
+  { id: 'cool', icon: '😎', nameKey: 'avatar_cool' },
+  { id: 'cat', icon: '😼', nameKey: 'avatar_精明貓' }, // Fixed key later if needed
+  { id: 'clown', icon: '🤡', nameKey: 'persona_peer' }
 ];
 
 export const WALLET_LEVELS = [
-  { id: 0, minExp: 0, name: "破掉的塑膠袋", icon: "🛍️", title: "街頭生存者", color: "text-stone-400", bg: "bg-stone-100", next: 500 },
-  { id: 1, minExp: 500, name: "魔鬼氈錢包", icon: "👛", title: "都市遊牧民", color: "text-blue-500", bg: "bg-blue-100", next: 1500 },
-  { id: 2, minExp: 1500, name: "質感長皮夾", icon: "💼", title: "中產奮鬥者", color: "text-orange-500", bg: "bg-orange-100", next: 3500 },
-  { id: 3, minExp: 3500, name: "巔峰金庫", icon: "🏦", title: "財富自由軍", color: "text-amber-500", bg: "bg-amber-100", next: 10000 }
+  { id: 0, minExp: 0, nameKey: "wallet_bag", icon: "🛍️", titleKey: "survival_survivor", color: "text-stone-400", bg: "bg-stone-100", next: 500 },
+  { id: 1, minExp: 500, nameKey: "wallet_velcro", icon: "👛", titleKey: "urban_nomad", color: "text-blue-500", bg: "bg-blue-100", next: 1500 },
+  { id: 2, minExp: 1500, nameKey: "wallet_long", icon: "💼", titleKey: "middle_class", color: "text-orange-500", bg: "bg-orange-100", next: 3500 },
+  { id: 3, minExp: 3500, nameKey: "wallet_vault", icon: "🏦", titleKey: "wealth_army", color: "text-amber-500", bg: "bg-amber-100", next: 10000 }
 ];
 
 export const HOME_LEVELS = [
-  { id: 0, minMaterials: 0, nameKey: 'home_tent', icon: "⛺", title: "荒野開拓者", next: 10000 },
-  { id: 1, minMaterials: 10000, nameKey: 'home_apt', icon: "🏢", title: "城市定居者", next: 50000 },
-  { id: 2, minMaterials: 50000, nameKey: 'home_villa', icon: "🏡", title: "豪宅之主", next: 150000 },
-  { id: 3, minMaterials: 150000, nameKey: 'home_castle', icon: "🏛️", title: "王國領主", next: 500000 },
-  { id: 4, minMaterials: 500000, nameKey: 'home_sky', icon: "🏛️", title: "天際主宰", next: 1000000 }
+  { id: 0, minMaterials: 0, nameKey: 'home_tent', icon: "⛺", titleKey: "wilderness_pioneer", next: 10000 },
+  { id: 1, minMaterials: 10000, nameKey: 'home_apt', icon: "🏢", titleKey: "city_settler", next: 50000 },
+  { id: 2, minMaterials: 50000, nameKey: 'home_villa', icon: "🏡", titleKey: "mansion_owner", next: 150000 },
+  { id: 3, minMaterials: 150000, nameKey: 'home_castle', icon: "🏛️", titleKey: "kingdom_lord", next: 500000 },
+  { id: 4, minMaterials: 500000, nameKey: 'home_sky', icon: "🏛️", titleKey: "sky_master", next: 1000000 }
 ];
 
 export const getWalletStatus = (exp) => {

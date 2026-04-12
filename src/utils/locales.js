@@ -24,7 +24,18 @@ export const LOCALES = {
     has_potions: '持有忘憂聖水', no_data: '本月份戰線完好無損...',
     denial_text: '真的不是你買的嗎？', denial_unlocked: '🛡️ 電子發票受誠信保護，禁止抹除。',
     confirm_heal: '使用『忘憂聖水』修復這筆戰損？', confirm_delete: '確定要抹除紀錄嗎？（將扣回獎勵金）',
-    year_unit: '年', month_unit: '月', damage_label: 'Damage'
+    year_unit: '年', month_unit: '月', damage_label: 'Damage',
+    // 人格
+    persona_peer: '愛酸同學', persona_asian_parent: '亞洲家長', persona_bestie: '好閨蜜', persona_instructor: '毒舌教官', persona_partner: '溫柔另一半',
+    // 稱號
+    title_rookie: '省錢新兵', title_warrior: '省錢戰士', title_elite: '意志精銳', title_master: '理財大師', title_legend: '不朽傳傳奇',
+    // 基地/皮夾等級
+    home_tent: '簡陋帳篷', home_apt: '都市公寓', home_villa: '郊區別墅', home_castle: '宏偉城堡', home_sky: '天際宮殿',
+    wallet_bag: '破掉的塑膠袋', wallet_velcro: '魔鬼氈錢包', wallet_long: '質感長皮夾', wallet_vault: '巔峰金庫',
+    survival_survivor: '街頭生存者', urban_nomad: '都市遊牧民', middle_class: '中產奮鬥者', wealth_army: '財富自由軍',
+    wilderness_pioneer: '荒野開拓者', city_settler: '城市定居者', mansion_owner: '豪宅之主', kingdom_lord: '王國領主', sky_master: '天際主宰',
+    // 頭像
+    avatar_default: '預設兵員', avatar_soldier: '意志戰士', avatar_ninja: '省錢忍者', avatar_king: '理財國王', avatar_ghost: '記帳幽靈', avatar_cool: '酷帥型男', avatar_cat: '精明貓'
   },
   en: {
     app_name: 'B-Battle: Willpower Finance',
@@ -48,12 +59,19 @@ export const LOCALES = {
     has_potions: 'Potions Owned', no_data: 'No combat records this month...',
     denial_text: 'Did you really buy this?', denial_unlocked: '🛡️ Sync data locked by Integrity System.',
     confirm_heal: 'Use Potion to heal this damage?', confirm_delete: 'Delete record? (Reward will be deducted)',
-    year_unit: '', month_unit: '', damage_label: 'Damage'
+    year_unit: '', month_unit: '', damage_label: 'Damage',
+    persona_peer: 'Sarcastic Peer', persona_asian_parent: 'Asian Parent', persona_bestie: 'Bestie', persona_instructor: 'Instructor', persona_partner: 'Partner',
+    title_rookie: 'Thrifty Recruit', title_warrior: 'Saving Warrior', title_elite: 'Willpower Elite', title_master: 'Finance Master', title_legend: 'Immortal Legend',
+    home_tent: 'Rusty Tent', home_apt: 'City Apartment', home_villa: 'Suburban Villa', home_castle: 'Grand Castle', home_sky: 'Sky Palace',
+    wallet_bag: 'Broken Plastic Bag', wallet_velcro: 'Velcro Wallet', wallet_long: 'Leather Wallet', wallet_vault: 'Ultimate Vault',
+    survival_survivor: 'Street Survivor', urban_nomad: 'Urban Nomad', middle_class: 'Middle-class Striver', wealth_army: 'Wealthy General',
+    wilderness_pioneer: 'Wilderness Pioneer', city_settler: 'City Settler', mansion_owner: 'Mansion Owner', kingdom_lord: 'Kingdom Lord', sky_master: 'Sky Master',
+    avatar_default: 'Recruit', avatar_soldier: 'Will Warrior', avatar_ninja: 'Money Ninja', avatar_king: 'Finance King', avatar_ghost: 'Ghost Logger', avatar_cool: 'Cool Guy', avatar_cat: 'Smart Cat'
   },
   ja: {
     app_name: 'B-Battle: 意志力家計簿',
     battle: '戰場', history: '分析', hall: '殿堂',
-    loading_report: '戦報整理中...', loading_sync: '同期中...', loading_ai: 'AI待機中...', loading_ready: '戦線復帰...',
+    loading_report: '戦報整理中...', loading_sync: '同期中...', loading_ai: 'AI待機中...', loading_ready: '戰線復歸...',
     offline_mode: 'オフライン', logout: 'ログアウト', login_sync: 'ログインして同期',
     current_goal: '究極の願い', territory: '領地資材', next_level: '次へ', budget_setup: '予算戦略の展開',
     shop_title: '道具屋', shop_supply: '戦闘物資', shop_achievements: '称号', shop_effects: '外見',
@@ -71,6 +89,13 @@ export const LOCALES = {
     has_potions: '忘憂聖水所持', no_data: '今月の記録はありません...',
     denial_text: '本当に買ったのですか？', denial_unlocked: '🛡️ 同期データは誠信システムで保護されています。',
     confirm_heal: '聖水を使って修復しますか？', confirm_delete: '記録を削除しますか？（報酬は回収されます）',
-    year_unit: '年', month_unit: '月', damage_label: 'Damage'
+    year_unit: '年', month_unit: '月', damage_label: 'Damage',
+    persona_peer: '皮肉な同級生', persona_asian_parent: 'アジアの親', persona_bestie: '親友', persona_instructor: '教官', persona_partner: 'パートナー',
+    title_rookie: '節約新兵', title_warrior: '節約戦士', title_elite: '意志の精鋭', title_master: '財務マスター', title_legend: '不朽の伝説',
+    home_tent: 'テント', home_apt: 'アパート', home_villa: '別荘', home_castle: '城', home_sky: 'スカイパレス',
+    wallet_bag: '破れたポリ袋', wallet_velcro: 'マジックテープ財布', wallet_long: '長財布', wallet_vault: '金庫',
+    survival_survivor: 'サバイバー', urban_nomad: 'ノマド', middle_class: 'ミドルクラス', wealth_army: 'ウェルスアーミー',
+    wilderness_pioneer: '開拓者', city_settler: '定住者', mansion_owner: '邸宅の主', kingdom_lord: '領主', sky_master: '天際の主宰',
+    avatar_default: '新兵', avatar_soldier: '意志の戦士', avatar_ninja: '節約忍者', avatar_king: '理財国王', avatar_ghost: '幽霊', avatar_cool: 'クールガイ', avatar_cat: '賢い猫'
   }
 };

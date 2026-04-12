@@ -58,14 +58,14 @@ const HeroHallView = ({
                 </div>
               ) : (
                 <>
-                  <h2 className="text-xl font-black text-stone-800 tracking-tight">{userName}</h2>
+                  <h2 className="text-xl font-black text-stone-800 tracking-tight">{t[userName] || userName}</h2>
                   <button onClick={()=>setIsEditingName(true)} className="text-stone-300 hover:text-stone-500"><Edit2 size={12}/></button>
                 </>
               )}
             </div>
             <div className="flex flex-col gap-1">
               <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">ID: {userId || "------"}</p>
-              <p className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full inline-block uppercase tracking-widest w-fit">{userTitle}</p>
+              <p className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full inline-block uppercase tracking-widest w-fit">{t[userTitle] || userTitle}</p>
             </div>
             <div className="mt-3 flex items-center gap-2">
               <span className={`text-[10px] font-black ${bond.color}`}>{t[bond.key]}</span>
@@ -87,7 +87,7 @@ const HeroHallView = ({
               <span className="text-lg">{home.icon}</span>
               <div className="flex-1">
                 <span className="text-[10px] font-black text-stone-600 leading-tight block">{t[home.nameKey]}</span>
-                <p className="text-[8px] font-bold text-stone-400 uppercase">{home.title}</p>
+                <p className="text-[8px] font-bold text-stone-400 uppercase">{t[home.titleKey] || home.titleKey}</p>
               </div>
             </div>
           </div>
@@ -98,12 +98,12 @@ const HeroHallView = ({
         <h3 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-4">意志力夥伴選擇</h3>
         <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 px-2">
           {Object.entries(personaStats).map(([pId, stats]) => {
-            const isLocked = currentTier === 'free' && !['peer', 'asian_parent'].includes(pId);
+            const isLocked = currentTier === 'free' && !['peer'].includes(pId);
             return (
               <button key={pId} onClick={() => checkAndSetPersona(pId)} className={`min-w-[110px] p-6 rounded-[2.5rem] border transition-all flex flex-col items-center gap-3 relative ${persona === pId ? 'border-[#D7C9B1] bg-[#FAF7F2] shadow-md scale-105' : 'border-stone-100 bg-white opacity-60'}`}>
                 {isLocked && <div className="absolute inset-0 bg-white/20 backdrop-blur-[1px] z-10 rounded-[2.5rem] flex items-center justify-center text-stone-400"><ShieldCheck size={20} /></div>}
                 <span className="text-4xl">{stats.icon}</span>
-                <span className="text-[10px] font-black text-stone-800 whitespace-nowrap">{stats.title}</span>
+                <span className="text-[10px] font-black text-stone-800 whitespace-nowrap">{t[stats.titleKey] || stats.titleKey}</span>
               </button>
             );
           })}
@@ -133,6 +133,7 @@ const HeroHallView = ({
               {AVATAR_OPTIONS.map(opt => (
                 <button 
                   key={opt.id} 
+                  title={t[opt.nameKey] || opt.nameKey}
                   onClick={() => { setUserAvatar(opt.icon); setShowAvatarPicker(false); }}
                   className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl transition-all active:scale-90 ${userAvatar === opt.icon ? 'bg-stone-800 text-white shadow-lg' : 'bg-stone-50 hover:bg-stone-100'}`}
                 >
@@ -165,10 +166,10 @@ const HeroHallView = ({
                     </div>
                     <div className="flex-1 pt-1">
                       <div className="flex items-center justify-between mb-1">
-                        <h4 className={`text-sm font-black ${isCurrent ? 'text-stone-800' : 'text-stone-500'}`}>{t[lvl.nameKey]}</h4>
+                        <h4 className={`text-sm font-black ${isCurrent ? 'text-stone-800' : 'text-stone-500'}`}>{t[lvl.nameKey] || lvl.nameKey}</h4>
                         {isCurrent && <span className="text-[8px] font-black bg-stone-800 text-white px-2 py-0.5 rounded-full uppercase">Current</span>}
                       </div>
-                      <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">{lvl.title}</p>
+                      <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">{t[lvl.titleKey] || lvl.titleKey}</p>
                       {isCurrent && lvl.next && (
                         <div className="mt-3">
                           <div className="flex justify-between text-[8px] font-black text-stone-400 mb-1 uppercase">
@@ -199,10 +200,10 @@ const HeroHallView = ({
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
-                          <h5 className={`text-[11px] font-black ${isCurrent ? 'text-stone-800' : 'text-stone-500'}`}>{lvl.name}</h5>
+                          <h5 className={`text-[11px] font-black ${isCurrent ? 'text-stone-800' : 'text-stone-500'}`}>{t[lvl.nameKey] || lvl.nameKey}</h5>
                           {isCurrent && <span className="text-[7px] font-black text-stone-400 uppercase">Current</span>}
                         </div>
-                        <p className="text-[8px] font-bold text-stone-400 uppercase tracking-widest">{lvl.title}</p>
+                        <p className="text-[8px] font-bold text-stone-400 uppercase tracking-widest">{t[lvl.titleKey] || lvl.titleKey}</p>
                         {isCurrent && (
                           <div className="mt-2">
                             <div className="flex justify-between text-[7px] font-black text-stone-400 mb-1 uppercase">

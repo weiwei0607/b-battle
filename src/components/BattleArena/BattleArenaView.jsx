@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Swords, Users, MessageSquare, Loader2, Hash, Heart, Zap, Flame, Globe, Shuffle, Clock, QrCode, UserPlus } from 'lucide-react';
 import FriendsListView from '../Friends/FriendsListView';
+import { LOCALES } from '../../utils/locales';
 
 const VerticalPillar = ({ label, percent, colorClass, icon: Icon, isEnemy = false }) => {
   return (
@@ -19,13 +20,14 @@ const VerticalPillar = ({ label, percent, colorClass, icon: Icon, isEnemy = fals
 
 const BattleArenaView = ({ 
   stats, hpData, enemyHpData, isAiProcessing, aiComment, activeMode, setActiveMode, battleLog, activeChallenges, handleClaimChallenge, handleGiveUpChallenge,
-  roomId, setRoomId, userId
+  roomId, setRoomId, userId, lang
 }) => {
   const [showRoomInput, setShowRoomInput] = useState(false);
   const [showInviteQR, setShowInviteQR] = useState(false);
   const [showFriends, setShowFriends] = useState(false);
   const [isMatchmaking, setIsMatchmaking] = useState(false);
   const [tempRoom, setTempRoom] = useState("");
+  const t = LOCALES[lang] || LOCALES.zh;
 
   const handleJoinRoom = (id) => {
     const finalRoom = id || tempRoom;
@@ -119,10 +121,10 @@ const BattleArenaView = ({
         </div>
         <div className="flex items-center justify-between gap-4 mt-4 relative">
           <div className="grid grid-cols-2 gap-x-4 gap-y-6 flex-1">
-            <VerticalPillar label="生存" percent={hpData.survival} colorClass="bg-blue-400" icon={Heart} />
-            <VerticalPillar label="進化" percent={hpData.progress} colorClass="bg-emerald-400" icon={Zap} />
-            <VerticalPillar label="慾望" percent={hpData.desire} colorClass="bg-orange-400" icon={Flame} />
-            <VerticalPillar label="遠征" percent={hpData.expedition} colorClass="bg-purple-500" icon={Globe} />
+            <VerticalPillar label={t.pillar_survival} percent={hpData.survival} colorClass="bg-blue-400" icon={Heart} />
+            <VerticalPillar label={t.pillar_progress} percent={hpData.progress} colorClass="bg-emerald-400" icon={Zap} />
+            <VerticalPillar label={t.pillar_desire} percent={hpData.desire} colorClass="bg-orange-400" icon={Flame} />
+            <VerticalPillar label={t.pillar_expedition} percent={hpData.expedition} colorClass="bg-purple-500" icon={Globe} />
           </div>
           <div className="flex flex-col items-center gap-4">
             <div className="w-px h-20 bg-gradient-to-b from-transparent via-stone-200 to-transparent" />
@@ -134,10 +136,10 @@ const BattleArenaView = ({
           <div className="grid grid-cols-2 gap-x-4 gap-y-6 flex-1">
             {roomId ? (
               <>
-                <VerticalPillar label="生存" percent={enemyHpData.survival} colorClass="bg-red-400" icon={Heart} isEnemy />
-                <VerticalPillar label="進化" percent={enemyHpData.progress} colorClass="bg-red-400" icon={Zap} isEnemy />
-                <VerticalPillar label="慾望" percent={enemyHpData.desire} colorClass="bg-red-400" icon={Flame} isEnemy />
-                <VerticalPillar label="遠征" percent={enemyHpData.expedition} colorClass="bg-red-400" icon={Globe} isEnemy />
+                <VerticalPillar label={t.pillar_survival} percent={enemyHpData.survival} colorClass="bg-red-400" icon={Heart} isEnemy />
+                <VerticalPillar label={t.pillar_progress} percent={enemyHpData.progress} colorClass="bg-red-400" icon={Zap} isEnemy />
+                <VerticalPillar label={t.pillar_desire} percent={enemyHpData.desire} colorClass="bg-red-400" icon={Flame} isEnemy />
+                <VerticalPillar label={t.pillar_expedition} percent={enemyHpData.expedition} colorClass="bg-red-400" icon={Globe} isEnemy />
               </>
             ) : (
               <div onClick={handleStart1v1Duel} className="col-span-2 flex flex-col items-center justify-center h-full opacity-20 grayscale hover:opacity-40 cursor-pointer transition-all">
@@ -152,7 +154,7 @@ const BattleArenaView = ({
       <div className="bg-[#FAF7F2] border border-[#D7C9B1]/30 p-6 rounded-[3rem] flex items-start gap-4 shadow-sm">
         <div className="w-14 h-14 bg-white border border-stone-200 rounded-2xl flex items-center justify-center text-3xl shadow-sm shrink-0">{stats.icon}</div>
         <div className="flex-1 min-h-[60px] flex flex-col justify-center">
-          <p className="text-[9px] font-black text-[#BC8F8F] uppercase tracking-[0.2em] mb-1 flex items-center gap-1.5"><MessageSquare size={10} fill="#BC8F8F" fillOpacity={0.2} /> {stats.title} 戰報</p>
+          <p className="text-[9px] font-black text-[#BC8F8F] uppercase tracking-[0.2em] mb-1 flex items-center gap-1.5"><MessageSquare size={10} fill="#BC8F8F" fillOpacity={0.2} /> {t[stats.titleKey] || stats.titleKey} 戰報</p>
           {isAiProcessing ? <div className="flex items-center gap-2 text-stone-400 text-[10px] italic font-medium"><Loader2 size={12} className="animate-spin text-stone-300" />...</div> : <p className="text-xs text-stone-600 leading-relaxed font-bold tracking-tight text-left">「{aiComment}」</p>}
         </div>
       </div>

@@ -234,10 +234,13 @@ export const useBattleCore = (
     if (apiKey) {
       setIsAiProcessing(true);
       try {
-        const prompt = `你是：${personaStats[persona].prompt}。願望：${wishlist}。消費：${amount}元買「${desc}」。規則：限20字內吐槽。`;
+        const personaData = personaStats[persona];
+        const systemBase = (personaData.prompts && personaData.prompts[lang]) || personaData.prompt;
+        const prompt = `System: ${systemBase}. Goal: ${wishlist}. Action: spent ${amount} on ${desc}. Rules: limit 20 words, must use language: ${lang}.`;
+        
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: `Bought ${desc}` }] }], systemInstruction: { parts: [{ text: prompt }] } })
+          body: JSON.stringify({ contents: [{ parts: [{ text: `Spent ${amount} on ${desc}` }] }], systemInstruction: { parts: [{ text: prompt }] } })
         });
         const result = await res.json();
         setAiComment(result.candidates?.[0]?.content?.parts?.[0]?.text || "紀錄完成。");

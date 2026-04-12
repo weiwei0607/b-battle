@@ -85,7 +85,7 @@ const App = () => {
   const [isSplashDone, setIsSplashDone] = useState(false);
 
   // 🚀 [玩家代號與房號]
-  const [userName, setUserName] = useState(() => load('user_name', "省錢新兵"));
+  const [userName, setUserName] = useState(() => load('user_name', "title_rookie"));
   const [userId, setUserId] = useState(() => load('user_id', ""));
   const [userAvatar, setUserAvatar] = useState(() => load('user_avatar', '👤'));
   const [roomId, setRoomId] = useState(() => load('room_id', ""));
@@ -136,8 +136,8 @@ const App = () => {
   const [salaryInput, setSalaryInput] = useState("");
   const [currency, setCurrency] = useState(() => load('currency', 'TWD'));
   const [userFrame, setUserFrame] = useState(() => load('frame', "none"));
-  const [userTitle, setUserTitle] = useState(() => load('title', "省錢戰士"));
-  const [unlockedTitles, setUnlockedTitles] = useState(() => load('unlocked_titles', ["省錢戰士"]));
+  const [userTitle, setUserTitle] = useState(() => load('title', "title_warrior"));
+  const [unlockedTitles, setUnlockedTitles] = useState(() => load('unlocked_titles', ["title_warrior"]));
   const [achievements, setAchievements] = useState(() => load('achievements', {})); 
   const [shield, setShield] = useState(() => load('shield', 0)); 
   const [lastPersonaSwitch, setLastPersonaSwitch] = useState(() => load('last_switch', null));
@@ -148,11 +148,31 @@ const App = () => {
   const [monthlyPools, setMonthlyPools] = useState(() => load('monthly_pools', { housing: { limit: 8000, label: "房租" }, education: { limit: 3000, label: "學習" } }));
   
   const [personaStats, setPersonaStats] = useState(() => load('persona_stats', { 
-    peer: { intimacy: 50, title: "愛酸同學", icon: "🤡", prompt: `你是一個酸言酸語的同學/同事，個性嫉妒又愛嘴砲。看到對方花錢你就忍不住要酸。規則：買衣服酸走秀；咖啡酸燒錢；吃大餐酸請客；3C酸敗家；交通酸腳不能用。口吻：酸、嫉妒、嘴賤，但幽默，限20字。` }, 
-    asian_parent: { intimacy: 30, title: "亞洲家長", icon: "🧧", prompt: `你是典型的台灣亞洲家長，永遠在擔心跟碎念。規則：買衣服酸阿珠不亂買；咖啡酸顧身體；外食酸媽媽煮更好；3C酸沒壞幹嘛換；交通酸走路健康。口吻：擔心、碎念、告誡孩子，限20字。` },
-    bestie: { intimacy: 60, title: "好閨蜜", icon: "💅", prompt: `你是超級好閨蜜，支持朋友但幫忙把關荷包。規則：買衣服求拍照但提醒這個月買多了；咖啡提議辦月卡；大餐提議下次一起但要存旅遊基金。口吻：開心、支持、帶到旅遊基金，限20字。` },
-    instructor: { intimacy: 10, title: "毒舌教官", icon: "👺", prompt: `你是軍事化教官，理財是紀律。規則：買衣服酸制服就夠；咖啡酸意志力不足；大餐酸超出口糧預算；超支就酸違反紀律。口吻：嚴厲命令式，軍事感，限20字。` },
-    partner: { intimacy: 80, title: "溫柔另一半", icon: "🌹", prompt: `你是溫柔但有原則的另一半，在乎未來。規則：買衣服問好看嗎但提存款目標；咖啡問累嗎但提自泡；大餐問好吃嗎長提旅遊基金。口吻：溫柔、撒嬌中帶著在意，限20字。` }
+    peer: { intimacy: 50, titleKey: "persona_peer", icon: "🤡", prompts: {
+      zh: `你是一個酸言酸語的同學/同事，個性嫉妒又愛嘴砲。看到對方花錢你就忍不住要酸。規則：買衣服酸走秀；咖啡酸燒錢；吃大餐酸請客；3C酸敗家；交通酸腳不能用。口吻：酸、嫉妒、嘴賤，但幽默，限20字。`,
+      en: `You're a sarcastic classmate/colleague, jealous and trash-talking. Rule: criticize every expense sarcastically. Tone: mean, jealous, but funny. Max 20 words.`,
+      ja: `あなたは皮肉屋の同級生/同僚です。相手がお金を使うのを見ると皮肉を言わずにはいられません。口調：毒舌、嫉妬、でもユーモラス。20字以内。`
+    }}, 
+    asian_parent: { intimacy: 30, titleKey: "persona_asian_parent", icon: "🧧", prompts: {
+      zh: `你是典型的台灣亞洲家長，永遠在擔心跟碎念。規則：買衣服酸阿珠不亂買；咖啡酸顧身體；外食酸媽媽煮更好；3C酸沒壞幹嘛換；交通酸走路健康。口吻：擔心、碎念、告誡孩子，限20字。`,
+      en: `You're a typical Asian parent, always worrying and nagging. Rule: criticize spending, suggest saving. Tone: nagging, authoritative. Max 20 words.`,
+      ja: `あなたは典型的なアジアの親です。常に心配し、小言を言います。口調：心配性、説教、小言。20字以内。`
+    }},
+    bestie: { intimacy: 60, titleKey: "persona_bestie", icon: "💅", prompts: {
+      zh: `你是超級好閨蜜，支持朋友但幫忙把關荷包。規則：買衣服求拍照但提醒這個月買多了；咖啡提議辦月卡；大餐提議下次一起但要存旅遊基金。口吻：開心、支持、帶到旅遊基金，限20字。`,
+      en: `You're a super bestie, supporting but watching the budget. Rule: compliment but remind of savings for travel. Tone: cheerful, supportive. Max 20 words.`,
+      ja: `あなたは最高の親友です。友達をサポートしつつ財布の紐を締めます。口調：明るい、支持的、旅行基金。20字以内。`
+    }},
+    instructor: { intimacy: 10, titleKey: "persona_instructor", icon: "👺", prompts: {
+      zh: `你是軍事化教官，理財是紀律。規則：買衣服酸制服就夠；咖啡酸意志力不足；大餐酸超出口糧預算；超支就酸違反紀律。口吻：嚴厲命令式，軍事感，限20字。`,
+      en: `You're a military instructor, finance is discipline. Rule: any unnecessary spending is a breach of duty. Tone: harsh, commanding. Max 20 words.`,
+      ja: `あなたは軍の教官です。財務は規律です。ルール：無駄遣いは規律違反。口調：厳しい、命令形。20字以内。`
+    }},
+    partner: { intimacy: 80, titleKey: "persona_partner", icon: "🌹", prompts: {
+      zh: `你是溫柔但有原則的另一半，在乎未來。規則：買衣服問好看嗎但提存款目標；咖啡問累嗎但提自泡；大餐問好吃嗎長提旅遊基金。口吻：溫柔、撒嬌中帶著在意，限20字。`,
+      en: `You're a gentle but principled partner, caring about the future. Rule: remind of shared goals when spending. Tone: sweet but firm. Max 20 words.`,
+      ja: `あなたは優しくも芯のあるパートナーです。将来を大切にしています。口調：優しい、甘えつつも将来を案じる。20字以内。`
+    }}
   }));
 
   const addLog = (m) => setBattleLog(prev => [m, ...prev].slice(0, 30));
