@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Swords, Users, MessageSquare, Loader2, Hash, Heart, Zap, Flame, Globe, Shuffle, Clock, QrCode } from 'lucide-react';
+import { Swords, Users, MessageSquare, Loader2, Hash, Heart, Zap, Flame, Globe, Shuffle, Clock, QrCode, UserPlus } from 'lucide-react';
+import FriendsListView from '../Friends/FriendsListView';
 
 const VerticalPillar = ({ label, percent, colorClass, icon: Icon, isEnemy = false }) => {
   return (
@@ -34,6 +35,12 @@ const BattleArenaView = ({
     else setActiveMode('team5v5');
   };
 
+  const startRandomMatchmaking = () => {
+    setIsMatchmaking(true);
+    // 這裡會觸發 useBattleCore 的配對邏輯
+    handleJoinRoom("MATCHMAKING_QUEUE"); 
+  };
+
   const handleStart1v1Duel = () => {
     const newRoom = Math.floor(1000 + Math.random() * 9000).toString();
     setRoomId(newRoom);
@@ -54,6 +61,7 @@ const BattleArenaView = ({
           <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mt-2">意志力戰略防線</p>
         </div>
         <div className="flex gap-2">
+          <button onClick={() => setShowFriends(true)} className="p-2 bg-white border border-stone-100 rounded-xl text-stone-400 hover:text-stone-800 transition-colors shadow-sm active:scale-90"><UserPlus size={18} /></button>
           <div className="flex bg-white border border-stone-100 rounded-xl overflow-hidden shadow-sm">
             <button onClick={() => setActiveMode('selection')} className={`px-4 py-2 text-[9px] font-black transition-all ${activeMode === 'selection' || activeMode === '1v1' ? 'bg-stone-800 text-white' : 'text-stone-400'}`}>1v1</button>
             <button onClick={() => setShowRoomInput(true)} className={`px-4 py-2 text-[9px] font-black transition-all ${activeMode === 'team5v5' ? 'bg-amber-500 text-white' : 'text-stone-400'}`}>5v5</button>
@@ -72,7 +80,7 @@ const BattleArenaView = ({
               <input value={tempRoom} onChange={(e)=>setTempRoom(e.target.value)} placeholder="輸入房號 (例: 8888)" className="w-full bg-white border-2 border-stone-100 p-4 rounded-2xl text-lg font-black text-center focus:border-amber-400 transition-all outline-none" />
               <button onClick={() => handleJoinRoom()} className="w-full py-4 bg-stone-800 text-white rounded-2xl font-black text-xs shadow-lg active:scale-95 transition-all">進入指定戰區</button>
               <div className="flex items-center gap-3 py-2 opacity-30"><div className="flex-1 h-px bg-stone-400" /><span className="text-[8px] font-bold">OR</span><div className="flex-1 h-px bg-stone-400" /></div>
-              <button onClick={startRandomMatchmaking} className="w-full py-4 bg-white border-2 border-amber-200 text-amber-600 rounded-2xl font-black text-xs flex items-center justify-center gap-2 active:scale-95 transition-all hover:bg-amber-50">
+              <button onClick={startRandomMatchmaking} className="w-full py-4 bg-white border border-stone-200 text-amber-600 rounded-2xl font-black text-xs flex items-center justify-center gap-2 active:scale-95 transition-all hover:bg-amber-50">
                 {isMatchmaking ? <Loader2 size={14} className="animate-spin" /> : <Shuffle size={14}/>} 
                 {isMatchmaking ? '尋找對手中...' : '隨機匹配戰場'}
               </button>
@@ -177,23 +185,8 @@ const BattleArenaView = ({
           ))}
         </div>
       )}
-    </div>
-  );
-};
 
-export default BattleArenaView;
-    </div>
-  );
-};
-
-export default BattleArenaView;
-div>
-      )}
-    </div>
-  );
-};
-
-export default BattleArenaView;
+      {showFriends && <FriendsListView onClose={() => setShowFriends(false)} />}
     </div>
   );
 };
