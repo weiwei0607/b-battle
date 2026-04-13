@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 個人資料（coins, debt, persona...）— 只有本人可讀寫
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      // 消費紀錄 subcollection — 只有本人可讀寫，無上限
+      match /history/{docId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // 對戰房間 — 登入用戶皆可讀寫（PvP 需要）
+    match /rooms/{roomId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

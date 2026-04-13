@@ -498,8 +498,9 @@ export const useBattleCore = (
   useEffect(() => {
     if (!user || isCloudLoading) return;
     const timeout = setTimeout(() => {
+      // history 現在存在 subcollection，不再塞進主 document
       setDoc(doc(db, "users", user.uid), {
-        coins, debt, history, personaStats, persona, exp: willpowerExp, wishlist, lastTrackDate, homeMaterials, currentTier, potions, shield, userTitle, unlockedTitles, achievements, lang, userName, roomId, updatedAt: Date.now()
+        coins, debt, personaStats, persona, exp: willpowerExp, wishlist, lastTrackDate, homeMaterials, currentTier, potions, shield, userTitle, unlockedTitles, achievements, lang, userName, roomId, updatedAt: Date.now()
       }, { merge: true });
     }, 2000);
     return () => clearTimeout(timeout);

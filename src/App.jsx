@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { db, auth } from './firebase';
 import LoginScreen from './components/LoginScreen';
 import { onAuthStateChanged } from "firebase/auth";
-import { getDoc, doc, setDoc } from "firebase/firestore";
+import { getDoc, doc, setDoc, collection, getDocs, query, orderBy } from "firebase/firestore";
 import { CATEGORY_MAP, getBondLevel, getFrameStyle } from './utils/constants';
 import { LOCALES } from './utils/locales';
 import { useBattleCore } from './hooks/useBattleCore';
@@ -147,7 +147,15 @@ const App = () => {
   const [savingStreak, setSavingStreak] = useState(() => load('saving_streak', 0));
   const [streakBroken, setStreakBroken] = useState(false);
   const [wishlistGoal, setWishlistGoal] = useState(() => load('wishlist_goal', 0));
-  const [isSplashDone, setIsSplashDone] = useState(false);
+  const handleSetLang = async (newLang) => {
+    setLang(newLang);
+    save('lang', newLang);
+    if (user) {
+      try {
+        await setDoc(doc(db, "users", user.uid), { lang: newLang }, { merge: true });
+      } catch (err) { console.error("Update Lang Error:", err); }
+    }
+  };
 
   // 🚀 [新手教學狀態]
   const [hasCompletedTutorial, setHasCompletedTutorial] = useState(() => load('has_tutorial', false));
@@ -278,12 +286,16 @@ const App = () => {
             if (cloudUpdatedAt >= localUpdatedAt) {
               if (d.coins !== undefined) setCoins(d.coins);
               if (d.debt !== undefined) setDebt(d.debt);
-              if (d.history !== undefined) setHistory(d.history || []);
               if (d.exp !== undefined) setWillpowerExp(d.exp);
               if (d.persona !== undefined) setPersona(d.persona);
               if (d.personaStats !== undefined) setPersonaStats(prev => ({...prev, ...(d.personaStats || {})}));
               if (d.achievements !== undefined) setAchievements(d.achievements || {});
               if (d.wishlistGoal !== undefined) setWishlistGoal(d.wishlistGoal || 0);
+              // history 從 subcollection 讀取
+              try {
+                const hSnap = await getDocs(query(collection(db, "users", u.uid, "history"), orderBy("id", "desc")));
+                if (!hSnap.empty) setHistory(hSnap.docs.map(d => d.data()));
+              } catch { /* index 還沒建立時靜默失敗，沿用 localStorage */ }
             }
             // 這些欄位永遠以雲端為準（帳號身份資料）
             if (d.lang !== undefined) setLang(d.lang || 'zh');
@@ -395,7 +407,7 @@ const App = () => {
             deleteTransaction, updateTransaction, weeklyPools, setWeeklyPools, monthlyPools, setMonthlyPools,
             getBondLevel, getFrameStyle, potions, setPotions, healTransaction,
             shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles, handleClaimAchievement,
-            user, setShowLogin, unlockAchievement, generateMonthlyReview, isOnline, lang, setLang,
+            user, setShowLogin, unlockAchievement, generateMonthlyReview, isOnline, lang, setLang: handleSetLang,
             userName, setUserName, userId, userAvatar, setUserAvatar, roomId, setRoomId,
             enemyConnected: enemySpentDaily >= 0,
             savingStreak,

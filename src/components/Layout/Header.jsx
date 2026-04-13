@@ -50,27 +50,33 @@ const Header = ({ currentTier, coins, debt, onShopClick, onAchievementsClick, on
         <div className="relative shrink-0">
           <button 
             onClick={() => setShowLangMenu(!showLangMenu)}
-            className="bg-white border border-stone-200 h-8 px-2 rounded-xl flex items-center gap-1 transition-all active:scale-95 shadow-sm min-w-[50px] justify-center"
+            className="bg-white border border-stone-200 h-8 px-2 rounded-xl flex items-center gap-1 transition-all active:scale-95 shadow-sm min-w-[48px] justify-center"
           >
             <Globe size={10} className="text-stone-400" />
-            <span className="text-[8px] font-black text-stone-600">{currentLangLabel.slice(0,2)}</span>
+            <span className="text-[8px] font-black text-stone-600 uppercase">{lang}</span>
           </button>
 
           {showLangMenu && (
-            <>
-              <div className="fixed inset-0 z-[300]" onClick={() => setShowLangMenu(false)} />
-              <div className="absolute top-full mt-2 right-0 w-32 bg-white rounded-xl shadow-2xl border border-stone-100 py-1.5 z-[310] animate-in slide-in-from-top-2 duration-200">
-                {langOptions.map((opt) => (
-                  <button
-                    key={opt.id}
-                    onClick={() => { setLang(opt.id); setShowLangMenu(false); }}
-                    className={`w-full text-left px-4 py-2.5 text-[10px] font-black transition-colors ${lang === opt.id ? 'text-amber-600 bg-amber-50' : 'text-stone-500 hover:bg-stone-50'}`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </>
+            <div className="absolute top-full mt-2 right-0 w-32 bg-white rounded-xl shadow-2xl border border-stone-100 py-1 z-[500] animate-in slide-in-from-top-2 duration-200 overflow-hidden">
+              {langOptions.map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => { 
+                    setLang(opt.id); 
+                    setShowLangMenu(false); 
+                  }}
+                  className={`w-full text-left px-4 py-2.5 text-[10px] font-black transition-colors ${lang === opt.id ? 'text-amber-600 bg-amber-50' : 'text-stone-500 hover:bg-stone-50'}`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+              <button 
+                onClick={() => setShowLangMenu(false)}
+                className="w-full text-center py-2 text-[8px] font-bold text-stone-300 border-t border-stone-50 bg-stone-50/50"
+              >
+                CLOSE
+              </button>
+            </div>
           )}
         </div>
 
