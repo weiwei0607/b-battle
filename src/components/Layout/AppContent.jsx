@@ -95,7 +95,25 @@ const AppContent = ({
 
         <PendingTxModal pendingTx={pendingTx} setPendingTx={setPendingTx} executeTransaction={executeTransaction} />
         <BudgetSetupModal show={showBudgetSetup} onClose={() => setShowBudgetSetup(false)} salaryInput={salaryInput} setSalaryInput={setSalaryInput} handleAutoCalculate={handleAutoCalculate} weeklyPools={weeklyPools} setWeeklyPools={setWeeklyPools} monthlyPools={monthlyPools} setMonthlyPools={setMonthlyPools} isStudent={isStudent} setIsStudent={setIsStudent} currency={currency} setCurrency={setCurrency} CURRENCIES={CURRENCIES} currentTier={currentTier} setCurrentTier={setCurrentTier} />
-        <ShopModal show={showShop} onClose={() => setShowShop(false)} coins={coins} setCoins={setCoins} setUserFrame={setUserFrame} potions={potions} setPotions={setPotions} shield={shield} setShield={setShield} />
+        <ShopModal 
+          show={showShop} 
+          onClose={() => setShowShop(false)} 
+          coins={coins} 
+          setCoins={setCoins} 
+          setUserFrame={setUserFrame} 
+          potions={potions} 
+          setPotions={setPotions} 
+          shield={shield} 
+          setShield={setShield}
+          insuranceExpiry={insuranceExpiry}
+          setInsuranceExpiry={setInsuranceExpiry}
+          hasZenSofa={hasZenSofa}
+          setHasZenSofa={setHasZenSofa}
+          bannerText={bannerText}
+          setBannerText={setBannerText}
+          inventory={inventory}
+          setInventory={setInventory}
+        />
         <CustomPersonaModal show={showCustomModal} onClose={() => setShowCustomModal(false)} onSave={handleSavePersona} />
         <AchievementModal show={showAchievements} onClose={() => setShowAchievements(false)} achievements={achievements} onClaim={handleClaimAchievement} userTitle={userTitle} setUserTitle={setUserTitle} lang={lang} />
         <LeaderboardModal show={showLeaderboard} onClose={() => setShowLeaderboard(false)} currentUserId={user?.uid} />

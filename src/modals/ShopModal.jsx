@@ -3,7 +3,7 @@ import { Zap, X, Droplet, Shield } from 'lucide-react';
 
 const ShopModal = ({ 
   show, onClose, coins, setCoins, setUserFrame, potions, setPotions, 
-  shield, setShield
+  shield, setShield, setInsuranceExpiry, setHasZenSofa, setBannerText, setInventory, inventory
 }) => {
   if (!show) return null;
 
@@ -27,13 +27,35 @@ const ShopModal = ({
     } else if (type === 'potion') {
       setPotions(p => p + 1);
       alert("🧪 購買成功！可在歷史分析頁面修復一筆戰損。");
+    } else if (type === 'insurance') {
+      setInsuranceExpiry(Date.now() + 86400000);
+      alert("🛡️ 保險生效！未來 24 小時大額支出戰損減免 80%。");
+    } else if (type === 'sofa') {
+      setHasZenSofa(true);
+      alert("🪑 購買成功！沙發已放入領地，每日登入 Exp +5。");
+    } else if (type === 'banner') {
+      const text = window.prompt("請輸入你的戰場標語：", "意志如鋼，無堅不摧");
+      if (text) setBannerText(text);
+      alert("🚩 旗幟已插上戰場！");
+    } else if (type === 'social') {
+      setInventory(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+      alert(`📦 購買成功！獲得「${name}」，請至好友名單使用。`);
     }
   };
 
   const ITEMS = {
     consumables: [
       { id: 'potion', type: 'potion', name: '忘憂聖水', price: 300, icon: '🧪', desc: '抹除歷史紀錄中的一筆戰損（HP恢復）。' },
-      { id: 'shield', type: 'shield', name: '鐵血護盾', price: 200, icon: '🛡️', desc: '抵擋下一次 50% 的戰鬥戰損。' }
+      { id: 'shield', type: 'shield', name: '鐵血護盾', price: 200, icon: '🛡️', desc: '抵擋下一次 50% 的戰鬥戰損。' },
+      { id: 'insurance', type: 'insurance', name: '鋼鐵遺囑', price: 500, icon: '📄', desc: '24小時內，單筆 >3000 的消費戰損減少 80%。' }
+    ],
+    social: [
+      { id: 'stinkyEggs', type: 'social', name: '戰術臭雞蛋', price: 150, icon: '🥚', desc: '對隊友使用，若其大幅超支則發布全服通緝並罰款。' },
+      { id: 'rations', type: 'social', name: '鐵路便當', price: 250, icon: '🍱', desc: '對隊友使用，幫其恢復 10% 的生存支柱 HP。' }
+    ],
+    territory: [
+      { id: 'sofa', type: 'sofa', name: '禁慾沙發', price: 800, icon: '🪑', desc: '長期道具。放置在領地，每日登入 Exp +5。' },
+      { id: 'banner', type: 'banner', name: '意志旗幟', price: 400, icon: '🚩', desc: '在戰場頂部顯示你的個人激勵標語。' }
     ],
     frames: [
       { id: 'neon', type: 'frame', name: '青色電鍍', price: 150, icon: '💎', desc: '換上極具未來感的青色電鍍頭像框。' },
@@ -63,7 +85,7 @@ const ShopModal = ({
           {/* 🧪 戰鬥物資 */}
           <div>
             <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-4 text-left border-l-4 border-amber-400 pl-2">戰鬥物資</h4>
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-2">
               {ITEMS.consumables.map(item => (
                 <button 
                   key={item.id} 
@@ -71,12 +93,63 @@ const ShopModal = ({
                   className="bg-white p-4 rounded-3xl border border-stone-100 flex items-center gap-4 shadow-sm active:scale-95 transition-all hover:border-amber-200 text-left"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-stone-50 flex items-center justify-center text-2xl shrink-0">{item.icon}</div>
-                  <div className="flex-1">
-                    <p className="text-[12px] font-black text-stone-800">{item.name}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-black text-stone-800 truncate">{item.name}</p>
                     <p className="text-[9px] text-stone-400 font-medium leading-tight mt-0.5">{item.desc}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     <p className="text-[10px] font-black text-amber-600">{item.price}</p>
+                    <p className="text-[8px] font-bold text-stone-300 uppercase">Coins</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 👥 社交/對抗 */}
+          <div>
+            <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-4 text-left border-l-4 border-emerald-400 pl-2">社交與對抗</h4>
+            <div className="grid grid-cols-1 gap-2">
+              {ITEMS.social.map(item => (
+                <button 
+                  key={item.id} 
+                  onClick={() => buyItem(item.type, item.id, item.price, item.name, item.desc)}
+                  className="bg-white p-4 rounded-3xl border border-stone-100 flex items-center gap-4 shadow-sm active:scale-95 transition-all hover:border-emerald-200 text-left"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-stone-50 flex items-center justify-center text-2xl shrink-0">{item.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-[12px] font-black text-stone-800 truncate">{item.name}</p>
+                      <span className="text-[8px] font-black bg-stone-100 text-stone-400 px-1.5 py-0.5 rounded-md">持有: {inventory[item.id] || 0}</span>
+                    </div>
+                    <p className="text-[9px] text-stone-400 font-medium leading-tight mt-0.5">{item.desc}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-[10px] font-black text-emerald-600">{item.price}</p>
+                    <p className="text-[8px] font-bold text-stone-300 uppercase">Coins</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 🏡 領地建設 */}
+          <div>
+            <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-4 text-left border-l-4 border-purple-400 pl-2">領地與榮譽</h4>
+            <div className="grid grid-cols-1 gap-2">
+              {ITEMS.territory.map(item => (
+                <button 
+                  key={item.id} 
+                  onClick={() => buyItem(item.type, item.id, item.price, item.name, item.desc)}
+                  className="bg-white p-4 rounded-3xl border border-stone-100 flex items-center gap-4 shadow-sm active:scale-95 transition-all hover:border-purple-200 text-left"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-stone-50 flex items-center justify-center text-2xl shrink-0">{item.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-black text-stone-800 truncate">{item.name}</p>
+                    <p className="text-[9px] text-stone-400 font-medium leading-tight mt-0.5">{item.desc}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-[10px] font-black text-purple-600">{item.price}</p>
                     <p className="text-[8px] font-bold text-stone-300 uppercase">Coins</p>
                   </div>
                 </button>

@@ -107,7 +107,7 @@ const VerticalPillar = ({ label, percent, colorClass, icon: Icon, isEnemy = fals
 const BattleArenaView = ({
   stats, hpData, enemyHpData, isAiProcessing, aiComment, activeMode, setActiveMode, battleLog, activeChallenges, handleClaimChallenge, handleGiveUpChallenge,
   roomId, setRoomId, userId, lang, showFriends, setShowFriends, showRoomInput, setShowRoomInput, showInviteQR, setShowInviteQR,
-  enemyConnected, savingStreak = 0
+  enemyConnected, savingStreak = 0, bannerText = ""
 }) => {
   const [isMatchmaking, setIsMatchmaking] = useState(false);
   const [tempRoom, setTempRoom] = useState("");

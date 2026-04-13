@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, ShieldCheck, Settings2, LogOut, LogIn, Target, Edit2, Check, Sparkles } from 'lucide-react';
+import { User, ShieldCheck, Settings2, LogOut, LogIn, Target, Edit2, Check, Sparkles, BookOpen, Swords } from 'lucide-react';
 import { getBondLevel, getFrameStyle, getHomeStatus, getWalletStatus, AVATAR_OPTIONS, WALLET_LEVELS, HOME_LEVELS } from '../../utils/constants';
 import { LOCALES } from '../../utils/locales';
 import { auth } from '../../firebase';
@@ -59,17 +59,17 @@ const HeroHallView = ({
                 </div>
               ) : (
                 <>
-                  <h2 className="text-xl font-black text-stone-800 tracking-tight">{t[userName] || userName}</h2>
+                  <h2 className="text-xl font-black text-stone-800 tracking-tight">{t[userName] || userName || '匿名戰士'}</h2>
                   <button onClick={()=>setIsEditingName(true)} className="text-stone-300 hover:text-stone-500"><Edit2 size={12}/></button>
                 </>
               )}
             </div>
             <div className="flex flex-col gap-1">
               <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">ID: {userId || "------"}</p>
-              <p className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full inline-block uppercase tracking-widest w-fit">{t[userTitle] || userTitle}</p>
+              <p className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full inline-block uppercase tracking-widest w-fit">{t[userTitle] || userTitle || '省錢新兵'}</p>
             </div>
             <div className="mt-3 flex items-center gap-2">
-              <span className={`text-[10px] font-black ${bond.color}`}>{t[bond.key]}</span>
+              <span className={`text-[10px] font-black ${bond.color}`}>{t[bond.key] || '夥伴'}</span>
               <div className="flex-1 h-1 w-20 bg-stone-100 rounded-full overflow-hidden">
                 <div className="h-full bg-stone-800 transition-all duration-1000" style={{ width: `${currentPersona.intimacy}%` }} />
               </div>

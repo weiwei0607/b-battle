@@ -72,6 +72,9 @@ export const LOCALES = {
     mock_friend_1: '阿明',
     mock_friend_2: '小華',
     mock_friend_3: '新人王',
+    // 親密度
+    bond_0: '陌生人', bond_1: '普通戰友', bond_2: '可靠夥伴', bond_3: '意志摯友', bond_4: '靈魂伴侶',
+    logout_success: '帳號已安全登出',
     // 成就分類
     achievement_journey: '征途：成長紀錄', achievement_discipline: '紀律：意志磨練', achievement_mastery: '專精：消費分類',
     achievement_emotion: '情感：人格互動', achievement_supply: '物資：道具財富', achievement_forbidden: '禁忌：神祕隱藏',
@@ -115,6 +118,15 @@ export const LOCALES = {
     ac_KARMA_MASTER_name: '刷成就大師', ac_KARMA_MASTER_desc: '頻繁刪除紀錄被系統標記',
     ac_BANKRUPT_name: '破產邊緣', ac_BANKRUPT_desc: '金幣歸零且負債超過 1000',
     ac_GAMBLER_name: '豪賭客', ac_GAMBLER_desc: '同時開啟 3 個我想買挑戰',
+    // 親密度
+    bond_0: '陌生人', bond_1: '普通戰友', bond_2: '可靠夥伴', bond_3: '意志摯友', bond_4: '靈魂伴侶',
+    logout_success: '帳號已安全登出',
+    // 規則手冊
+    manual_title: '意志力戰前手冊',
+    manual_pillars_title: '四神柱防禦',
+    manual_damage_title: '戰損與百分比',
+    manual_persona_title: '人格與互動',
+    manual_supplies_title: '戰略物資',
     // 對決相關
     tap_to_duel: '點擊邀請好友',
     duel_center: '對決中心',
@@ -209,7 +221,22 @@ export const LOCALES = {
     searching_warriors: 'Searching for warriors...',
     bot_joined: 'Bot joined the battle!',
     waiting_friend: 'Waiting for friend...',
-    leave_room: 'Leave Room'
+    leave_room: 'Leave Room',
+    // Manual
+    manual_title: 'Willpower Combat Manual',
+    manual_pillars_title: 'Pillar Defense',
+    manual_damage_title: 'Damage & %',
+    manual_persona_title: 'Persona & Bond',
+    manual_supplies_title: 'Supplies',
+    // Bond
+    bond_0: 'Stranger', bond_1: 'Comrade', bond_2: 'Reliable Ally', bond_3: 'Best Friend', bond_4: 'Soulmate',
+    logout_success: 'Logged out safely',
+    // Achievements
+    achievement_journey: 'Journey: Growth', achievement_discipline: 'Discipline: Mastery', achievement_mastery: 'Mastery: Categories',
+    achievement_emotion: 'Emotion: Bonds', achievement_supply: 'Supply: Wealth', achievement_forbidden: 'Forbidden: Secret',
+    ac_LOGS_1_name: 'First Victory', ac_LOGS_1_desc: 'Complete your first log',
+    ac_STREAK_3_name: 'Good Start', ac_STREAK_3_desc: 'Log for 3 days in a row',
+    ac_SAVING_EXPERT_name: 'Saving Expert', ac_SAVING_EXPERT_desc: 'Daily survival spending under 200',
   },
   ja: {
     app_name: 'B-Battle: 意志力家計簿',
@@ -287,6 +314,21 @@ export const LOCALES = {
     searching_warriors: '戦友を探しています...',
     bot_joined: 'ボットが戦場に参加しました！',
     waiting_friend: '戦友を待っています...',
-    leave_room: '退室する'
+    leave_room: '退室する',
+    // Manual
+    manual_title: '意志力戦闘マニュアル',
+    manual_pillars_title: '四神柱防衛',
+    manual_damage_title: '戦損と割合',
+    manual_persona_title: '人格と絆',
+    manual_supplies_title: '戦略物資',
+    // Bond
+    bond_0: '未見の者', bond_1: '戦友', bond_2: '信頼の友', bond_3: '親友', bond_4: 'ソウルメイト',
+    logout_success: 'ログアウト完了',
+    // Achievements
+    achievement_journey: '征途：成長', achievement_discipline: '紀律：意志', achievement_mastery: '専精：分類',
+    achievement_emotion: '情感：絆', achievement_supply: '物資：富', achievement_forbidden: '禁忌：秘密',
+    ac_LOGS_1_name: '初陣', ac_LOGS_1_desc: '最初の記録を完了する',
+    ac_STREAK_3_name: '幸先良いスタート', ac_STREAK_3_desc: '3日連続で記録する',
+    ac_SAVING_EXPERT_name: '節約の達人', ac_SAVING_EXPERT_desc: '1日の支出を200円以下に抑える',
   }
 };

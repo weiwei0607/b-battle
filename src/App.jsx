@@ -147,6 +147,13 @@ const App = () => {
   const [savingStreak, setSavingStreak] = useState(() => load('saving_streak', 0));
   const [streakBroken, setStreakBroken] = useState(false);
   const [wishlistGoal, setWishlistGoal] = useState(() => load('wishlist_goal', 0));
+  
+  // 🎒 [新道具背包]
+  const [insuranceExpiry, setInsuranceExpiry] = useState(() => load('ins_expiry', null));
+  const [hasZenSofa, setHasZenSofa] = useState(() => load('has_sofa', false));
+  const [bannerText, setBannerText] = useState(() => load('banner_text', ""));
+  const [inventory, setInventory] = useState(() => load('inventory', { stinkyEggs: 0, rations: 0 }));
+
   const [isSplashDone, setIsSplashDone] = useState(false);
   const handleSetLang = async (newLang) => {
     setLang(newLang);

@@ -262,6 +262,14 @@ export const useBattleCore = (
     }
 
     let totalDamage = amount + penaltyHp;
+    
+    // 🛡️ [鋼鐵遺囑] 保險邏輯：單筆 > 3000 且保險未過期時戰損 -80%
+    const isInsuranceActive = insuranceExpiry && now < insuranceExpiry;
+    if (isInsuranceActive && amount >= 3000) {
+      totalDamage *= 0.2;
+      addLog(`🛡️ [Insurance] Steel Will active! Damage reduced by 80%.`);
+    }
+
     if (shield > 0) {
       totalDamage *= 0.8; 
       setShield(s => Math.max(0, s - 0.1));
@@ -482,6 +490,12 @@ export const useBattleCore = (
           if (savingStreak >= 3) setStreakBroken(true);
           setSavingStreak(0);
           addLog("❄️ [Streak Lost] Daily spending exceeded threshold.");
+        }
+
+        // 🪑 [禁慾沙發] 每日 Exp 加成
+        if (hasZenSofa) {
+          setWillpowerExp(e => e + 5);
+          addLog("🪑 [Zen Sofa] Relaxing at home, Exp +5.");
         }
       }
       if (nowTime.getDay() === 1 && nowTime.getDate() !== last.getDate()) { addLog("📅 Weekly reset."); setTeamSpentStates.setTeamSpentWeekly(0); }

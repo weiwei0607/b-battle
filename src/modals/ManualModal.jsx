@@ -3,13 +3,14 @@ import { X, Swords, Heart, Zap, Flame, Shield, Users, BookOpen } from 'lucide-re
 
 const ManualModal = ({ show, onClose, lang }) => {
   const [tab, setTab] = useState('pillars');
+  const t = LOCALES[lang] || LOCALES.zh;
   
   if (!show) return null;
 
   const sections = {
     pillars: {
       icon: <Heart size={20} />,
-      title: "四神柱防禦",
+      title: t.manual_pillars_title,
       content: [
         { label: "🏥 生存 (Survival)", desc: "食、住、交通等必要開支。這是你的生命線，超支會導致大理石支柱碎裂。" },
         { label: "⚡ 進化 (Progress)", desc: "學習、健身、自我投資。雖然是支出，但能提升你的意志力經驗值。" },
@@ -19,7 +20,7 @@ const ManualModal = ({ show, onClose, lang }) => {
     },
     damage: {
       icon: <Flame size={20} />,
-      title: "戰損與百分比",
+      title: t.manual_damage_title,
       content: [
         { label: "百分比計算", desc: "戰損 = (消費金額 / 該類別預算上限) * 100%。" },
         { label: "公平對抗", desc: "在 5v5 模式中，我們比的是預算使用比例，而非絕對金額。月薪 3 萬與 30 萬的人也能公平對決！" },
@@ -28,7 +29,7 @@ const ManualModal = ({ show, onClose, lang }) => {
     },
     persona: {
       icon: <Users size={20} />,
-      title: "人格與互動",
+      title: t.manual_persona_title,
       content: [
         { label: "親密度 (Bond)", desc: "良好的記帳習慣能提升 AI 對你的好感度。連勝 3 天以上會觸發『崇拜模式』。" },
         { label: "關係斷絕", desc: "若頻繁超支或長時間不記帳，AI 會與你斷絕關係，UI 轉為地獄灰階。" },
@@ -37,7 +38,7 @@ const ManualModal = ({ show, onClose, lang }) => {
     },
     supplies: {
       icon: <Shield size={20} />,
-      title: "戰略物資",
+      title: t.manual_supplies_title,
       content: [
         { label: "忘憂聖水", desc: "抹除歷史紀錄中的一筆戰損，恢復對應的 HP。" },
         { label: "鐵血護盾", desc: "裝備後可自動抵擋下一次 50% 的戰損（不限分類）。" },
@@ -57,7 +58,7 @@ const ManualModal = ({ show, onClose, lang }) => {
           <div className="inline-flex bg-stone-800 p-3 rounded-2xl text-white mb-3 shadow-lg">
             <BookOpen size={24} />
           </div>
-          <h3 className="text-2xl font-black text-stone-800 tracking-tight italic uppercase">意志力戰前手冊</h3>
+          <h3 className="text-2xl font-black text-stone-800 tracking-tight italic uppercase">{t.manual_title}</h3>
           <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Willpower Combat Manual</p>
         </div>
 
