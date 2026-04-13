@@ -10,6 +10,7 @@ import BudgetSetupModal from '../../modals/BudgetSetupModal';
 import ShopModal from '../../modals/ShopModal';
 import CustomPersonaModal from '../../modals/CustomPersonaModal';
 import AchievementModal from '../../modals/AchievementModal';
+import LeaderboardModal from '../../modals/LeaderboardModal';
 import { CURRENCIES } from '../../utils/constants';
 import { LOCALES } from '../../utils/locales';
 
@@ -34,8 +35,9 @@ const AppContent = ({
   wishlistGoal, setWishlistGoal
 }) => {
   const t = LOCALES[lang] || LOCALES.zh;
+  const [showLeaderboard, setShowLeaderboard] = React.useState(false);
 
-  const isModalOpen = showShop || showAchievements || showEvolutionPath || showFriends || showRoomInput || showInviteQR || showBudgetSetup || showCustomModal;
+  const isModalOpen = showShop || showAchievements || showEvolutionPath || showFriends || showRoomInput || showInviteQR || showBudgetSetup || showCustomModal || showLeaderboard;
 
   return (
     <div className={`min-h-screen transition-all duration-1000 ${isSevered ? 'bg-[#450a0a]' : 'bg-[#F7F4EF]'} text-stone-800 font-sans text-left`}>
@@ -47,12 +49,22 @@ const AppContent = ({
             <div className="flex-1">
               <Header currentTier={currentTier} coins={coins} debt={debt} willpowerExp={willpowerExp} setView={setView} onShopClick={() => setShowShop(true)} lang={lang} setLang={setLang} onWalletClick={() => setShowEvolutionPath(true)} />
             </div>
-            <button 
-              onClick={() => setShowAchievements(true)} 
-              className="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center shadow-sm active:scale-90 transition-all border border-amber-100 shrink-0"
-            >
-              <Trophy size={20} />
-            </button>
+            <div className="flex gap-1.5 shrink-0">
+              <button 
+                onClick={() => setShowAchievements(true)} 
+                className="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center shadow-sm active:scale-90 transition-all border border-amber-100"
+                title="個人成就"
+              >
+                <Trophy size={18} />
+              </button>
+              <button 
+                onClick={() => setShowLeaderboard(true)} 
+                className="w-10 h-10 bg-stone-800 text-amber-400 rounded-xl flex items-center justify-center shadow-lg active:scale-90 transition-all border border-stone-700"
+                title="全球排行榜"
+              >
+                <Trophy size={18} className="fill-amber-400" />
+              </button>
+            </div>
           </div>
         )}
         
@@ -88,6 +100,7 @@ const AppContent = ({
         <ShopModal show={showShop} onClose={() => setShowShop(false)} coins={coins} setCoins={setCoins} setUserFrame={setUserFrame} potions={potions} setPotions={setPotions} shield={shield} setShield={setShield} />
         <CustomPersonaModal show={showCustomModal} onClose={() => setShowCustomModal(false)} onSave={handleSavePersona} />
         <AchievementModal show={showAchievements} onClose={() => setShowAchievements(false)} achievements={achievements} onClaim={handleClaimAchievement} userTitle={userTitle} setUserTitle={setUserTitle} />
+        <LeaderboardModal show={showLeaderboard} onClose={() => setShowLeaderboard(false)} currentUserId={user?.uid} />
       </div>
     </div>
   );

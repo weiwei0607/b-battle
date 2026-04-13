@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "b-battle-580b5"
-  }
+  },
+  "targets": {
+    "b-battle-580b5": {
+      "hosting": {
+        "main": [
+          "willpower-battle"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
