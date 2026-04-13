@@ -23,6 +23,10 @@ const AchievementModal = ({ show, onClose, achievements, onClaim, userTitle, set
     const hasTitle = !!medal.title;
     const isEquipped = userTitle === medal.title;
 
+    // 🚀 [多語系支持]
+    const localizedName = t[`ac_${medal.id}_name`] || medal.name;
+    const localizedDesc = t[`ac_${medal.id}_desc`] || medal.desc;
+
     return (
       <div 
         key={medal.id}
@@ -42,12 +46,12 @@ const AchievementModal = ({ show, onClose, achievements, onClaim, userTitle, set
         <div className="flex-1 text-left">
           <div className="flex items-center gap-2">
             <h4 className={`text-sm font-black transition-colors ${isLocked ? 'text-stone-400' : 'text-stone-800'}`}>
-              {medal.name}
+              {localizedName}
             </h4>
             {isDone && <CheckCircle2 size={14} className="text-amber-500" />}
           </div>
           <p className="text-[9px] font-medium text-stone-500 mt-0.5">
-            {medal.desc}
+            {localizedDesc}
           </p>
           {hasTitle && !isLocked && (
             <div className="flex items-center gap-2 mt-1">
@@ -104,17 +108,25 @@ const AchievementModal = ({ show, onClose, achievements, onClaim, userTitle, set
         </div>
 
         <div className="flex-1 overflow-y-auto no-scrollbar pr-1 space-y-8">
-          <div>
-            <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 px-2"><Sparkles size={12} /> {t.medal_public || '公開榮譽榜'}</h4>
-            <div className="grid grid-cols-1 gap-3">
-              {visibleMedals.map(medal => <MedalItem key={medal.id} medal={medal} />)}
-            </div>
-          </div>
+          {['journey', 'discipline', 'mastery', 'emotion', 'supply', 'forbidden'].map(cat => {
+            const catMedals = visibleMedals.filter(m => m.cat === cat);
+            if (catMedals.length === 0) return null;
+            return (
+              <div key={cat}>
+                <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 px-2">
+                  <Sparkles size={12} /> {t[`achievement_${cat}`] || cat}
+                </h4>
+                <div className="grid grid-cols-1 gap-3">
+                  {catMedals.map(medal => <MedalItem key={medal.id} medal={medal} />)}
+                </div>
+              </div>
+            );
+          })}
 
           {hiddenMedals.length > 0 && (
             <div className="pb-6">
               <h4 className="text-[10px] font-black text-purple-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 px-2">
-                <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" /> {t.medal_hidden || '神祕禁忌勳章'}
+                <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" /> {t.medal_hidden}
               </h4>
               <div className="grid grid-cols-1 gap-3">
                 {hiddenMedals.map(medal => <MedalItem key={medal.id} medal={medal} />)}
@@ -122,6 +134,7 @@ const AchievementModal = ({ show, onClose, achievements, onClaim, userTitle, set
             </div>
           )}
         </div>
+
         <p className="mt-6 shrink-0 text-[9px] text-stone-400 text-center italic border-t border-stone-100 pt-4">「每一枚勳章，都是你對抗消費慾望的戰功」</p>
       </div>
     </div>

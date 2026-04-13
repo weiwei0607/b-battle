@@ -4,9 +4,9 @@ import { getBondLevel, getFrameStyle, getHomeStatus, getWalletStatus, AVATAR_OPT
 import { LOCALES } from '../../utils/locales';
 import { auth } from '../../firebase';
 
-const HeroHallView = ({
-  userTitle, persona, personaStats, setPersona, setShowBudgetSetup,
-  currentTier, lastPersonaSwitch, setLastPersonaSwitch, wishlist, setWishlist,
+const HeroHallView = ({ 
+  userTitle, persona, personaStats, setPersona, setShowBudgetSetup, setShowManual, currentTier, 
+ lastPersonaSwitch, setLastPersonaSwitch, wishlist, setWishlist,
   debt, userFrame, homeMaterials, user, setShowLogin, setView, lang,
   userName, setUserName, userId, userAvatar, setUserAvatar, showEvolutionPath, setShowEvolutionPath, willpowerExp,
   setShowCustomModal, coins = 0, wishlistGoal = 0, setWishlistGoal
@@ -153,6 +153,13 @@ const HeroHallView = ({
             <Sparkles size={18} /> Prime 自定義靈魂
           </button>
         )}
+
+        <button 
+          onClick={setShowManual}
+          className="w-full py-5 bg-white border-2 border-stone-100 text-stone-800 rounded-[2rem] font-black flex items-center justify-center gap-3 shadow-sm text-[11px] tracking-[0.2em] active:scale-95 transition-all mb-3"
+        >
+          <BookOpen size={18} /> 意志力戰前手冊
+        </button>
 
         <button onClick={setShowBudgetSetup} className="w-full py-5 bg-stone-800 text-white rounded-[2rem] font-black flex items-center justify-center gap-3 shadow-xl text-[11px] tracking-[0.2em] active:scale-95 transition-all"><Settings2 size={18} /> {t.budget_setup}</button>
 
