@@ -32,7 +32,7 @@ export const useBattleCore = (
   setAchievementNotification,
   lang,
   userName, roomId, setRoomId, setActiveMode,
-  savingStreak, setSavingStreak
+  savingStreak, setSavingStreak, setStreakBroken
 ) => {
 
   // 🚀 [即時連線邏輯] 監聽戰區數據 (限時 5 分鐘)
@@ -469,6 +469,7 @@ export const useBattleCore = (
           setSavingStreak(s => s + 1);
           addLog("🔥 [Combo] Saving streak continues!");
         } else if (lastDaySpent >= 200) {
+          if (savingStreak >= 3) setStreakBroken(true);
           setSavingStreak(0);
           addLog("❄️ [Streak Lost] Daily spending exceeded threshold.");
         }
@@ -487,8 +488,8 @@ export const useBattleCore = (
   useEffect(() => {
     if (!user || isCloudLoading) return;
     const timeout = setTimeout(() => {
-      setDoc(doc(db, "users", user.uid), { 
-        coins, debt, history, personaStats, persona, exp: willpowerExp, wishlist, lastTrackDate, homeMaterials, currentTier, potions, shield, userTitle, unlockedTitles, achievements, lang, userName, roomId 
+      setDoc(doc(db, "users", user.uid), {
+        coins, debt, history, personaStats, persona, exp: willpowerExp, wishlist, lastTrackDate, homeMaterials, currentTier, potions, shield, userTitle, unlockedTitles, achievements, lang, userName, roomId, updatedAt: Date.now()
       }, { merge: true });
     }, 2000);
     return () => clearTimeout(timeout);

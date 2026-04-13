@@ -118,6 +118,21 @@ const GlobalSplash = ({ onComplete, persona, lang }) => {
   );
 };
 
+const StreakBrokenOverlay = ({ onDismiss }) => {
+  useEffect(() => {
+    const t = setTimeout(onDismiss, 2800);
+    return () => clearTimeout(t);
+  }, [onDismiss]);
+  return (
+    <div onClick={onDismiss} className="fixed inset-0 z-[9000] flex flex-col items-center justify-center cursor-pointer animate-in fade-in duration-300" style={{ background: 'rgba(20,20,30,0.92)', backdropFilter: 'grayscale(100%) blur(2px)' }}>
+      <div className="text-8xl mb-6 animate-in zoom-in-50 duration-500">❄️</div>
+      <h2 className="text-4xl font-black text-white tracking-tighter uppercase italic mb-3 animate-in slide-in-from-bottom-8 duration-500">Streak Broken</h2>
+      <p className="text-stone-400 text-sm font-bold tracking-widest uppercase animate-in slide-in-from-bottom-10 duration-700">連勝中斷</p>
+      <p className="text-stone-600 text-[10px] font-bold mt-8 uppercase tracking-widest">點擊繼續</p>
+    </div>
+  );
+};
+
 const App = () => {
   const [lang, setLang] = useState(() => load('lang', 'zh'));
   const [view, setView] = useState('battle');
@@ -130,6 +145,8 @@ const App = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isCloudLoading, setIsCloudLoading] = useState(true);
   const [savingStreak, setSavingStreak] = useState(() => load('saving_streak', 0));
+  const [streakBroken, setStreakBroken] = useState(false);
+  const [wishlistGoal, setWishlistGoal] = useState(() => load('wishlist_goal', 0));
   const [isSplashDone, setIsSplashDone] = useState(false);
 
   // 🚀 [新手教學狀態]
@@ -241,7 +258,7 @@ const App = () => {
     shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles,
     potions, setPotions, achievements, setAchievements, setAchievementNotification, lang,
     userName, userAvatar, roomId, setRoomId, setActiveMode,
-    savingStreak, setSavingStreak
+    savingStreak, setSavingStreak, setStreakBroken
   );
 
   useEffect(() => {
@@ -255,13 +272,20 @@ const App = () => {
           const s = await getDoc(doc(db, "users", u.uid));
           if (s.exists()) {
             const d = s.data();
-            if (d.coins !== undefined) setCoins(d.coins);
-            if (d.debt !== undefined) setDebt(d.debt);
-            if (d.history !== undefined) setHistory(d.history || []);
-            if (d.exp !== undefined) setWillpowerExp(d.exp);
-            if (d.persona !== undefined) setPersona(d.persona);
-            if (d.personaStats !== undefined) setPersonaStats(prev => ({...prev, ...(d.personaStats || {})}));
-            if (d.achievements !== undefined) setAchievements(d.achievements || {});
+            const localUpdatedAt = load('updatedAt', 0);
+            const cloudUpdatedAt = d.updatedAt || 0;
+            // 雲端比本機新才覆蓋（離線改過的資料不被舊雲端蓋掉）
+            if (cloudUpdatedAt >= localUpdatedAt) {
+              if (d.coins !== undefined) setCoins(d.coins);
+              if (d.debt !== undefined) setDebt(d.debt);
+              if (d.history !== undefined) setHistory(d.history || []);
+              if (d.exp !== undefined) setWillpowerExp(d.exp);
+              if (d.persona !== undefined) setPersona(d.persona);
+              if (d.personaStats !== undefined) setPersonaStats(prev => ({...prev, ...(d.personaStats || {})}));
+              if (d.achievements !== undefined) setAchievements(d.achievements || {});
+              if (d.wishlistGoal !== undefined) setWishlistGoal(d.wishlistGoal || 0);
+            }
+            // 這些欄位永遠以雲端為準（帳號身份資料）
             if (d.lang !== undefined) setLang(d.lang || 'zh');
             if (d.userName !== undefined) setUserName(d.userName);
             if (d.userId !== undefined) setUserId(d.userId);
@@ -283,10 +307,10 @@ const App = () => {
   
   useEffect(() => {
     if (!user && !isCloudLoading) {
-      const data = { lang, coins, debt, history, persona, exp: willpowerExp, achievements, userTitle, userFrame, potions, shield, personaStats, userName, userId, userAvatar, roomId, has_tutorial: hasCompletedTutorial };
+      const data = { lang, coins, debt, history, persona, exp: willpowerExp, achievements, userTitle, userFrame, potions, shield, personaStats, userName, userId, userAvatar, roomId, has_tutorial: hasCompletedTutorial, wishlist_goal: wishlistGoal, updatedAt: Date.now() };
       Object.entries(data).forEach(([k, v]) => save(k, v));
     }
-  }, [user, isCloudLoading, lang, coins, debt, history, persona, willpowerExp, achievements, userTitle, userFrame, potions, shield, personaStats, userName, userId, userAvatar, roomId, hasCompletedTutorial]);
+  }, [user, isCloudLoading, lang, coins, debt, history, persona, willpowerExp, achievements, userTitle, userFrame, potions, shield, personaStats, userName, userId, userAvatar, roomId, hasCompletedTutorial, wishlistGoal]);
 
   const hpData = useMemo(() => {
     const getHp = (p) => {
@@ -375,6 +399,7 @@ const App = () => {
             userName, setUserName, userId, userAvatar, setUserAvatar, roomId, setRoomId,
             enemyConnected: enemySpentDaily >= 0,
             savingStreak,
+            wishlistGoal, setWishlistGoal,
             hasCompletedTutorial, setHasCompletedTutorial, showTutorial, setShowTutorial }} 
         />
       </div>
@@ -388,6 +413,7 @@ const App = () => {
           setShowBudgetSetup={setShowBudgetSetup}
         />
       )}
+      {streakBroken && <StreakBrokenOverlay onDismiss={() => setStreakBroken(false)} />}
       {showLogin &&<div className="fixed inset-0 z-[6000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"><div className="relative w-full max-w-md animate-in slide-in-from-bottom-10 duration-300"><button onClick={() => setShowLogin(false)} className="absolute top-4 right-4 z-[6001] p-2 bg-stone-100 rounded-full text-stone-500 hover:bg-stone-200 transition-colors"><X size={16}/></button><LoginScreen isModal={true} onClose={() => setShowLogin(false)} /></div></div>}
       {achievementNotification && <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[7000] w-[90%] max-w-sm bg-stone-900 text-white p-4 rounded-3xl shadow-2xl flex items-center gap-4 animate-in slide-in-from-top-20 border border-amber-500/50"><div className="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-amber-500/20">{achievementNotification.icon}</div><div className="flex-1 text-left"><p className="text-[10px] font-black text-amber-500 uppercase tracking-widest text-left">成就達成！</p><h4 className="text-sm font-black tracking-tight text-left">{achievementNotification.name}</h4></div><button onClick={() => { setShowAchievements(true); setAchievementNotification(null); }} className="bg-stone-800 px-3 py-2 rounded-xl text-[9px] font-black">點亮</button></div>}
     </>

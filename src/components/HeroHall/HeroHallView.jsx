@@ -9,7 +9,7 @@ const HeroHallView = ({
   currentTier, lastPersonaSwitch, setLastPersonaSwitch, wishlist, setWishlist,
   debt, userFrame, homeMaterials, user, setShowLogin, setView, lang,
   userName, setUserName, userId, userAvatar, setUserAvatar, showEvolutionPath, setShowEvolutionPath, willpowerExp,
-  setShowCustomModal
+  setShowCustomModal, coins = 0, wishlistGoal = 0, setWishlistGoal
 }) => {
   const t = LOCALES[lang] || LOCALES.zh;
   const currentPersona = personaStats[persona];
@@ -110,9 +110,39 @@ const HeroHallView = ({
           })}
         </div>
 
-        <div className="bg-white border border-stone-100 p-6 rounded-[2rem] shadow-sm">
-          <h3 className="text-[10px] font-black text-stone-400 uppercase tracking-widest flex items-center gap-2 mb-4"><Target size={14} className="text-[#D7C9B1]"/> {t.current_goal}</h3>
+        <div className="bg-white border border-stone-100 p-6 rounded-[2rem] shadow-sm space-y-4">
+          <h3 className="text-[10px] font-black text-stone-400 uppercase tracking-widest flex items-center gap-2"><Target size={14} className="text-[#D7C9B1]"/> {t.current_goal}</h3>
           <input value={wishlist} onChange={(e) => setWishlist(e.target.value)} className="w-full bg-stone-50 border border-stone-100 p-4 rounded-2xl text-sm font-black text-stone-800 focus:bg-white transition-colors outline-none" placeholder="..." />
+          <div className="flex items-center gap-3">
+            <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest shrink-0">目標金幣</span>
+            <input
+              type="number" min="0"
+              value={wishlistGoal || ''}
+              onChange={(e) => setWishlistGoal(Number(e.target.value) || 0)}
+              className="flex-1 bg-stone-50 border border-stone-100 p-2 rounded-xl text-sm font-black text-stone-800 focus:bg-white transition-colors outline-none text-right"
+              placeholder="0"
+            />
+          </div>
+          {wishlistGoal > 0 && (
+            <div className="space-y-2">
+              <div className="flex justify-between items-end">
+                <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest">進度</span>
+                <span className={`text-[10px] font-black ${coins >= wishlistGoal ? 'text-emerald-500' : 'text-amber-500'}`}>
+                  {coins >= wishlistGoal ? '🎉 達成！' : `還差 ${(wishlistGoal - coins).toLocaleString()} 金幣`}
+                </span>
+              </div>
+              <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${coins >= wishlistGoal ? 'bg-emerald-400' : 'bg-amber-400'}`}
+                  style={{ width: `${Math.min(100, (coins / wishlistGoal) * 100).toFixed(1)}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-[8px] font-black text-stone-400">
+                <span>💰 {coins.toLocaleString()}</span>
+                <span>{wishlistGoal.toLocaleString()}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {currentTier === 'prime' && (
