@@ -10,6 +10,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       devOptions: { enabled: true },
+      workbox: { skipWaiting: true, clientsClaim: true },
       manifest: {
         name: 'B-Battle: 意志力記帳',
         short_name: 'B-Battle',
