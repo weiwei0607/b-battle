@@ -147,6 +147,7 @@ const App = () => {
   const [savingStreak, setSavingStreak] = useState(() => load('saving_streak', 0));
   const [streakBroken, setStreakBroken] = useState(false);
   const [wishlistGoal, setWishlistGoal] = useState(() => load('wishlist_goal', 0));
+  const [isSplashDone, setIsSplashDone] = useState(false);
   const handleSetLang = async (newLang) => {
     setLang(newLang);
     save('lang', newLang);
