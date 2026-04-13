@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { doc, setDoc, onSnapshot, getDoc } from "firebase/firestore";
+import { doc, setDoc, onSnapshot, getDoc, collection, addDoc, deleteDoc, updateDoc, getDocs } from "firebase/firestore";
 import { db } from '../firebase';
 import { CATEGORY_MAP, ACHIEVEMENTS } from '../utils/constants';
 import { LOCALES } from '../utils/locales';
@@ -271,6 +271,9 @@ export const useBattleCore = (
 
     const newEntry = { id: Date.now(), amount, desc, category, pillar, damage: totalDamage, isCrit: penaltyHp > 0, source, time: new Date().toLocaleTimeString(), date: new Date().toLocaleDateString(), shielded: shield > 0 };
     setHistory(prev => [newEntry, ...prev]);
+    if (user) {
+      setDoc(doc(db, "users", user.uid, "history", newEntry.id.toString()), newEntry).catch(() => {});
+    }
     addLog(`${source === 'invoice' ? '🧾' : '⚔️'} ${t.log_damage} ${getDmgPercent(totalDamage, pillar)}%`);
     
     if (totalDamage > 5000) unlockAchievement('SURVIVOR');
@@ -334,15 +337,17 @@ export const useBattleCore = (
       const deleteCount = (parseInt(localStorage.getItem('bb_v4_delete_count')) || 0) + 1;
       localStorage.setItem('bb_v4_delete_count', deleteCount.toString());
       if (deleteCount >= 5) unlockAchievement('KARMA_MASTER');
+      if (user) deleteDoc(doc(db, "users", user.uid, "history", id.toString())).catch(() => {});
       return prev.filter(h => h.id !== id);
     });
-  }, [setHistory, addLog, spendCoins, unlockAchievement]);
+  }, [setHistory, addLog, spendCoins, unlockAchievement, user]);
 
   const updateTransaction = useCallback((id, newCategory) => {
     const newPillar = CATEGORY_MAP[newCategory] || 'expedition';
     setHistory(prev => prev.map(h => h.id === id ? { ...h, category: newCategory, pillar: newPillar } : h));
+    if (user) updateDoc(doc(db, "users", user.uid, "history", id.toString()), { category: newCategory, pillar: newPillar }).catch(() => {});
     addLog(`🔧 [Fixed] Category updated.`);
-  }, [setHistory, addLog]);
+  }, [setHistory, addLog, user]);
 
   const processTransaction = async (input, source = "manual") => {
     if (input.trim() === "" || isAiProcessing) return;
@@ -377,6 +382,11 @@ export const useBattleCore = (
     if ((persona === 'peer' || persona === 'instructor') && !spendCoins(500, true)) return;
     if ((persona === 'partner' || persona === 'bestie') && coldWarEndTime && now < coldWarEndTime) return;
     setIsSevered(false); setColdWarEndTime(null); addLog("🛡️ [Ritual] Relation restored."); setHistory([]);
+    if (user) {
+      getDocs(collection(db, "users", user.uid, "history")).then(snap => {
+        snap.docs.forEach(d => deleteDoc(d.ref));
+      }).catch(() => {});
+    }
     const { setTeamSpentDaily, setTeamSpentWeekly, setTeamSpentMonthly } = setTeamSpentStates;
     setTeamSpentDaily(0); setTeamSpentWeekly(0); setTeamSpentMonthly(0);
     unlockAchievement('RITUAL_MASTER');
