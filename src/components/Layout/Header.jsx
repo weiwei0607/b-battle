@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Store, Zap, ShieldCheck, AlertTriangle, Swords, Globe, ChevronDown } from 'lucide-react';
+import { Store, Zap, ShieldCheck, AlertTriangle, Swords, Globe, ChevronDown, Crown, Medal } from 'lucide-react';
 import { getWalletStatus } from '../../utils/constants';
 
 const Header = ({ currentTier, coins, debt, onShopClick, onAchievementsClick, onLeaderboardClick, setView, willpowerExp, lang, setLang, onWalletClick }) => {
@@ -38,10 +38,10 @@ const Header = ({ currentTier, coins, debt, onShopClick, onAchievementsClick, on
       <div className="flex gap-1 items-center overflow-x-auto no-scrollbar pl-2">
         {/* 🏆 排行榜與成就 (移入 Header) */}
         <div className="flex bg-stone-100/50 p-1 rounded-xl border border-stone-200/50 gap-1">
-          <button onClick={onLeaderboardClick} className="w-8 h-8 flex items-center justify-center text-amber-600 hover:bg-white rounded-lg transition-all active:scale-90">
-            <Trophy size={14} className="fill-current" />
+          <button onClick={onLeaderboardClick} className="w-8 h-8 flex items-center justify-center text-amber-600 hover:bg-white rounded-lg transition-all active:scale-90" title="全球排行榜">
+            <Crown size={14} className="fill-amber-500/20" />
           </button>
-          <button onClick={onAchievementsClick} className="w-8 h-8 flex items-center justify-center text-stone-500 hover:bg-white rounded-lg transition-all active:scale-90">
+          <button onClick={onAchievementsClick} className="w-8 h-8 flex items-center justify-center text-stone-500 hover:bg-white rounded-lg transition-all active:scale-90" title="個人成就">
             <Medal size={14} />
           </button>
         </div>

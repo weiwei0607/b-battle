@@ -39,7 +39,7 @@ const LeaderboardModal = ({ show, onClose, currentUserId }) => {
 
         <div className="text-center mb-8">
           <div className="inline-flex bg-amber-100 p-3 rounded-2xl text-amber-600 mb-3 shadow-sm">
-            <Trophy size={24} />
+            <Crown size={24} />
           </div>
           <h3 className="text-2xl font-black text-stone-800 tracking-tight italic uppercase">全球意志力排行</h3>
           <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Global Willpower Elite</p>
