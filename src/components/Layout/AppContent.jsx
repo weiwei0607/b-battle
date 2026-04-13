@@ -46,24 +46,20 @@ const AppContent = ({
         {/* 🏆 當好友名單、商店、成就、進化之路等開啟時，完全隱藏 Header 以免擠在一起 */}
         {!isSevered && !isModalOpen && (
           <div className="flex justify-between items-center z-20 mb-2 gap-2 animate-in fade-in duration-300">
-            <div className="flex-1">
-              <Header currentTier={currentTier} coins={coins} debt={debt} willpowerExp={willpowerExp} setView={setView} onShopClick={() => setShowShop(true)} lang={lang} setLang={setLang} onWalletClick={() => setShowEvolutionPath(true)} />
-            </div>
-            <div className="flex gap-1.5 shrink-0">
-              <button 
-                onClick={() => setShowAchievements(true)} 
-                className="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center shadow-sm active:scale-90 transition-all border border-amber-100"
-                title="個人成就"
-              >
-                <Trophy size={18} />
-              </button>
-              <button 
-                onClick={() => setShowLeaderboard(true)} 
-                className="w-10 h-10 bg-stone-800 text-amber-400 rounded-xl flex items-center justify-center shadow-lg active:scale-90 transition-all border border-stone-700"
-                title="全球排行榜"
-              >
-                <Trophy size={18} className="fill-amber-400" />
-              </button>
+            <div className="flex-1 min-w-0">
+              <Header 
+                currentTier={currentTier} 
+                coins={coins} 
+                debt={debt} 
+                willpowerExp={willpowerExp} 
+                setView={setView} 
+                onShopClick={() => setShowShop(true)} 
+                onAchievementsClick={() => setShowAchievements(true)}
+                onLeaderboardClick={() => setShowLeaderboard(true)}
+                lang={lang} 
+                setLang={setLang} 
+                onWalletClick={() => setShowEvolutionPath(true)} 
+              />
             </div>
           </div>
         )}

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { User, TrendingUp, TrendingDown, Minus, ArrowLeft, UserPlus, Search, X } from 'lucide-react';
+import { User, TrendingUp, TrendingDown, Minus, ArrowLeft, UserPlus, Search, X, Swords, Users } from 'lucide-react';
 import { LOCALES } from '../../utils/locales';
 
-const FriendsListView = ({ onClose, friends = [], userId, lang }) => {
+const FriendsListView = ({ onClose, friends = [], userId, lang, setRoomId, setActiveMode }) => {
   const [showAddFriend, setShowAddFriend] = useState(false);
   const [friendIdInput, setFriendIdInput] = useState("");
+  const [selectedFriend, setSelectedFriend] = useState(null);
   const t = LOCALES[lang] || LOCALES.zh;
 
   const handleAddFriend = () => {
@@ -12,6 +13,17 @@ const FriendsListView = ({ onClose, friends = [], userId, lang }) => {
     alert(`Request sent to: ${friendIdInput}\n(Firebase integration in progress)`);
     setFriendIdInput("");
     setShowAddFriend(false);
+  };
+
+  const handleInvite = (friend, mode) => {
+    const inviteId = userId + "_" + Math.floor(Math.random() * 1000);
+    if (window.confirm(`⚔️ 確定要邀請「${friend.name}」進行${mode === '1v1' ? ' 1v1 對決' : ' 5v5 團戰'}嗎？`)) {
+      setRoomId(inviteId);
+      setActiveMode(mode);
+      onClose();
+      alert(`已建立戰場房間：${inviteId}\n邀請連結已產生，請通知好友進入！`);
+    }
+    setSelectedFriend(null);
   };
 
   // Localized Mock data if empty
@@ -45,6 +57,27 @@ const FriendsListView = ({ onClose, friends = [], userId, lang }) => {
           </button>
         </div>
 
+        {/* 🎭 好友互動選單 */}
+        {selectedFriend && (
+          <div className="fixed inset-0 z-[6005] bg-stone-900/60 backdrop-blur-md flex items-center justify-center p-6" onClick={() => setSelectedFriend(null)}>
+            <div className="bg-white w-full max-w-xs rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-200 text-center" onClick={e => e.stopPropagation()}>
+              <div className="w-20 h-20 bg-stone-50 rounded-3xl flex items-center justify-center text-5xl mx-auto mb-4 shadow-inner">{selectedFriend.userAvatar}</div>
+              <h3 className="text-xl font-black text-stone-800 mb-1">{selectedFriend.name}</h3>
+              <p className="text-[10px] text-stone-400 font-bold mb-8 uppercase tracking-widest italic">戰友特派邀請</p>
+              
+              <div className="space-y-3">
+                <button onClick={() => handleInvite(selectedFriend, '1v1')} className="w-full py-4 bg-stone-800 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
+                  <Swords size={16} /> 邀請 1v1 對決
+                </button>
+                <button onClick={() => handleInvite(selectedFriend, 'team5v5')} className="w-full py-4 bg-white border-2 border-stone-100 text-stone-800 rounded-2xl font-black text-xs flex items-center justify-center gap-2 active:scale-95 transition-all">
+                  <Users size={16} /> 邀請加入 5v5 隊伍
+                </button>
+                <button onClick={() => setSelectedFriend(null)} className="w-full py-4 text-stone-400 font-black text-xs">取消</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ➕ 新增好友彈窗 */}
         {showAddFriend && (
           <div className="fixed inset-0 z-[6001] bg-stone-900/40 backdrop-blur-sm flex items-center justify-center p-6">
@@ -74,7 +107,11 @@ const FriendsListView = ({ onClose, friends = [], userId, lang }) => {
             const isNewbie = (Date.now() - friend.createdAt) < 7 * 24 * 3600000;
             
             return (
-              <div key={friend.id} className="bg-white border border-stone-100 p-5 rounded-3xl flex items-center gap-4 shadow-sm active:scale-[0.98] transition-all">
+              <div 
+                key={friend.id} 
+                onClick={() => setSelectedFriend(friend)}
+                className="bg-white border border-stone-100 p-5 rounded-3xl flex items-center gap-4 shadow-sm active:scale-[0.98] transition-all cursor-pointer hover:border-stone-200"
+              >
                 <div className="w-14 h-14 bg-stone-50 rounded-2xl flex items-center justify-center text-3xl shrink-0 shadow-inner">
                   {friend.userAvatar || '👤'}
                 </div>

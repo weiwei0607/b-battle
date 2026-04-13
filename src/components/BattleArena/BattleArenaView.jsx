@@ -172,8 +172,9 @@ const BattleArenaView = ({
           )}
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setShowFriends(true)} className="p-2 bg-white border border-stone-100 rounded-xl text-stone-400 hover:text-stone-800 transition-colors shadow-sm active:scale-90"><UserPlus size={18} /></button>
+          <button onClick={() => setShowFriends(true)} className="w-10 h-10 flex items-center justify-center bg-white border border-stone-100 rounded-xl text-stone-400 hover:text-stone-800 transition-colors shadow-sm active:scale-90" title="戰友名單"><Users size={18} /></button>
           <div className="flex bg-white border border-stone-100 rounded-xl overflow-hidden shadow-sm">
+
             <button onClick={() => setActiveMode('selection')} className={`px-4 py-2 text-[9px] font-black transition-all ${activeMode === 'selection' || (activeMode === '1v1' && !isBotRoom) ? 'bg-stone-800 text-white' : 'text-stone-400'}`}>1v1</button>
             <button onClick={() => setShowRoomInput(true)} className={`px-4 py-2 text-[9px] font-black transition-all ${activeMode === 'team5v5' || isBotRoom ? 'bg-amber-500 text-white' : 'text-stone-400'}`}>5v5 / {t.bot_mode.split(' ')[0]}</button>
           </div>
@@ -331,7 +332,7 @@ const BattleArenaView = ({
         </div>
       )}
 
-      {showFriends && <FriendsListView onClose={() => setShowFriends(false)} userId={userId} lang={lang} />}
+      {showFriends && <FriendsListView onClose={() => setShowFriends(false)} userId={userId} lang={lang} setRoomId={setRoomId} setActiveMode={setActiveMode} />}
     </div>
   );
 };

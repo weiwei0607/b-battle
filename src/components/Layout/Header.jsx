@@ -2,60 +2,69 @@ import React, { useState } from 'react';
 import { Store, Zap, ShieldCheck, AlertTriangle, Swords, Globe, ChevronDown } from 'lucide-react';
 import { getWalletStatus } from '../../utils/constants';
 
-const Header = ({ currentTier, coins, debt, onShopClick, setView, willpowerExp, lang, setLang }) => {
+const Header = ({ currentTier, coins, debt, onShopClick, onAchievementsClick, onLeaderboardClick, setView, willpowerExp, lang, setLang, onWalletClick }) => {
   const [showLangMenu, setShowLangMenu] = useState(false);
   const wallet = getWalletStatus(willpowerExp);
   const isInDebt = debt >= 500;
 
   const langOptions = [
-    { id: 'zh', label: '繁體中文' },
-    { id: 'en', label: 'English' },
-    { id: 'ja', label: '日本語' }
+    { id: 'zh', label: '繁中' },
+    { id: 'en', label: 'EN' },
+    { id: 'ja', label: 'JA' }
   ];
 
   const currentLangLabel = langOptions.find(o => o.id === lang)?.label || '繁中';
 
   return (
-    <header className="flex justify-between items-center z-[200] py-6 shrink-0 gap-2 relative">
-      <div className="flex items-center gap-3 cursor-pointer group flex-1" onClick={() => setView('battle')}>
-        <div className={`w-10 h-10 ${isInDebt ? 'bg-red-600' : 'bg-stone-800'} rounded-2xl flex items-center justify-center transition-transform group-active:scale-90 shadow-lg shadow-stone-200 shrink-0`}>
-          <Swords size={20} className="text-white" />
+    <header className="flex justify-between items-center z-[200] py-4 shrink-0 gap-2 relative">
+      <div className="flex items-center gap-2 cursor-pointer group shrink-0" onClick={() => setView('battle')}>
+        <div className={`w-9 h-9 ${isInDebt ? 'bg-red-600' : 'bg-stone-800'} rounded-xl flex items-center justify-center transition-transform group-active:scale-90 shadow-md shrink-0`}>
+          <Swords size={18} className="text-white" />
         </div>
         
         <div className="flex flex-col text-left overflow-hidden">
-          <span className={`font-black text-base leading-none tracking-tighter truncate ${isInDebt ? 'text-red-600' : 'text-stone-800'}`}>
+          <span className={`font-black text-sm leading-none tracking-tighter truncate ${isInDebt ? 'text-red-600' : 'text-stone-800'}`}>
             B-BATTLE
           </span>
-          <div onClick={(e) => { e.stopPropagation(); onWalletClick(); }} className="flex items-center gap-1.5 mt-1 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity">
-            <span className="text-[12px] leading-none shrink-0">{isInDebt ? '💸' : wallet.icon}</span>
-            <span className={`text-[8px] font-black uppercase tracking-widest truncate ${isInDebt ? 'text-red-400' : wallet.color}`}>
-              {isInDebt ? `負債超人 (-${debt})` : wallet.name}
+          <div onClick={(e) => { e.stopPropagation(); onWalletClick(); }} className="flex items-center gap-1 mt-0.5 cursor-pointer hover:opacity-80 transition-opacity">
+            <span className="text-[10px] leading-none shrink-0">{isInDebt ? '💸' : wallet.icon}</span>
+            <span className={`text-[7px] font-black uppercase tracking-widest truncate ${isInDebt ? 'text-red-400' : wallet.color}`}>
+              {isInDebt ? `負債 (-${debt})` : wallet.name}
             </span>
           </div>
         </div>
       </div>
 
-      <div className="flex gap-1.5 items-center shrink-0">
-        {/* 🌐 語系下拉選單 */}
+      <div className="flex gap-1 items-center overflow-x-auto no-scrollbar pl-2">
+        {/* 🏆 排行榜與成就 (移入 Header) */}
+        <div className="flex bg-stone-100/50 p-1 rounded-xl border border-stone-200/50 gap-1">
+          <button onClick={onLeaderboardClick} className="w-8 h-8 flex items-center justify-center text-amber-600 hover:bg-white rounded-lg transition-all active:scale-90">
+            <Trophy size={14} className="fill-current" />
+          </button>
+          <button onClick={onAchievementsClick} className="w-8 h-8 flex items-center justify-center text-stone-500 hover:bg-white rounded-lg transition-all active:scale-90">
+            <Medal size={14} />
+          </button>
+        </div>
+
+        {/* 🌐 語系 */}
         <div className="relative">
           <button 
             onClick={() => setShowLangMenu(!showLangMenu)}
-            className="bg-white/50 backdrop-blur-sm hover:bg-white text-stone-500 px-2.5 py-2 rounded-xl flex items-center gap-1 transition-all border border-stone-200 active:scale-95 shadow-sm"
+            className="bg-white border border-stone-200 h-8 px-2 rounded-xl flex items-center gap-1 transition-all active:scale-95 shadow-sm"
           >
-            <Globe size={12} />
-            <span className="text-[9px] font-black">{currentLangLabel}</span>
-            <ChevronDown size={10} className={`transition-transform duration-300 ${showLangMenu ? 'rotate-180' : ''}`} />
+            <Globe size={10} className="text-stone-400" />
+            <span className="text-[8px] font-black text-stone-600">{currentLangLabel}</span>
           </button>
 
           {showLangMenu && (
             <>
               <div className="fixed inset-0 z-[210]" onClick={() => setShowLangMenu(false)} />
-              <div className="absolute top-full mt-2 right-0 w-32 bg-white rounded-2xl shadow-2xl border border-stone-100 py-2 z-[220] animate-in slide-in-from-top-2 duration-200">
+              <div className="absolute top-full mt-2 right-0 w-24 bg-white rounded-xl shadow-2xl border border-stone-100 py-1 z-[220] animate-in slide-in-from-top-2 duration-200">
                 {langOptions.map((opt) => (
                   <button
                     key={opt.id}
                     onClick={() => { setLang(opt.id); setShowLangMenu(false); }}
-                    className={`w-full text-left px-4 py-2.5 text-[10px] font-black transition-colors ${lang === opt.id ? 'text-amber-600 bg-amber-50' : 'text-stone-500 hover:bg-stone-50'}`}
+                    className={`w-full text-left px-3 py-2 text-[9px] font-black transition-colors ${lang === opt.id ? 'text-amber-600 bg-amber-50' : 'text-stone-500 hover:bg-stone-50'}`}
                   >
                     {opt.label}
                   </button>
@@ -65,13 +74,13 @@ const Header = ({ currentTier, coins, debt, onShopClick, setView, willpowerExp, 
           )}
         </div>
 
-        <button onClick={onShopClick} className="bg-white/50 backdrop-blur-sm border border-stone-200/50 px-3 py-2 rounded-xl shadow-sm hover:bg-white transition-colors">
-          <Store size={14} className="text-stone-500" />
+        <button onClick={onShopClick} className="bg-white border border-stone-200 h-8 w-8 rounded-xl shadow-sm flex items-center justify-center hover:bg-stone-50 transition-colors shrink-0">
+          <Store size={12} className="text-stone-500" />
         </button>
         
-        <div className={`px-3 py-2 rounded-xl shadow-lg flex items-center gap-1.5 text-white text-xs font-black transition-colors ${isInDebt ? 'bg-red-600' : 'bg-stone-800'}`}>
-          {isInDebt ? <AlertTriangle size={12} className="text-white" /> : <Zap size={12} className="text-[#D7C9B1]" />}
-          {coins}
+        <div className={`h-8 px-2.5 rounded-xl shadow-md flex items-center gap-1 text-white text-[10px] font-black transition-colors shrink-0 ${isInDebt ? 'bg-red-600' : 'bg-stone-800'}`}>
+          {isInDebt ? <AlertTriangle size={10} className="text-white" /> : <Zap size={10} className="text-amber-400 fill-amber-400" />}
+          {coins.toLocaleString()}
         </div>
       </div>
     </header>
