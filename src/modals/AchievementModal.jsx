@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Medal, X, Sparkles, CheckCircle2, Lock } from 'lucide-react';
+import { Trophy, X, Sparkles, CheckCircle2, Lock } from 'lucide-react';
 import { ACHIEVEMENTS } from '../utils/constants';
 import { LOCALES } from '../utils/locales';
 
@@ -89,7 +89,7 @@ const AchievementModal = ({ show, onClose, achievements, onClaim, userTitle, set
 
         <div className="text-center mb-6 shrink-0">
           <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3 text-amber-600 shadow-inner">
-            <Medal size={32} />
+            <Trophy size={32} />
           </div>
           <h3 className="text-2xl font-black text-stone-800 tracking-tight italic uppercase">{t.achievements_title || '勳章成就館'}</h3>
           <div className="mt-3 px-6">

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Store, Zap, ShieldCheck, AlertTriangle, Swords, Globe, ChevronDown, Crown, Medal } from 'lucide-react';
+import { Store, Zap, ShieldCheck, AlertTriangle, Swords, Globe, ChevronDown, Crown, Trophy } from 'lucide-react';
 import { getWalletStatus } from '../../utils/constants';
 
 const Header = ({ currentTier, coins, debt, onShopClick, onAchievementsClick, onLeaderboardClick, setView, willpowerExp, lang, setLang, onWalletClick }) => {
@@ -42,7 +42,7 @@ const Header = ({ currentTier, coins, debt, onShopClick, onAchievementsClick, on
             <Crown size={14} className="fill-amber-500/20" />
           </button>
           <button onClick={onAchievementsClick} className="w-8 h-8 flex items-center justify-center text-stone-500 hover:bg-white rounded-lg transition-all active:scale-90" title="個人成就">
-            <Medal size={14} />
+            <Trophy size={14} />
           </button>
         </div>
 
