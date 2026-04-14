@@ -32,7 +32,8 @@ export const useBattleCore = (
   setAchievementNotification,
   lang,
   userName, roomId, setRoomId, setActiveMode,
-  savingStreak, setSavingStreak, setStreakBroken
+  savingStreak, setSavingStreak, setStreakBroken,
+  insuranceExpiry, hasZenSofa
 ) => {
 
   // 🚀 [即時連線邏輯] 監聽戰區數據 (限時 5 分鐘)

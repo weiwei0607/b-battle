@@ -274,7 +274,8 @@ const App = () => {
     shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles,
     potions, setPotions, achievements, setAchievements, setAchievementNotification, lang,
     userName, userAvatar, roomId, setRoomId, setActiveMode,
-    savingStreak, setSavingStreak, setStreakBroken
+    savingStreak, setSavingStreak, setStreakBroken,
+    insuranceExpiry, hasZenSofa
   );
 
   useEffect(() => {
