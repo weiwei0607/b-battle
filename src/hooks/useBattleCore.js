@@ -31,7 +31,7 @@ export const useBattleCore = (
   achievements, setAchievements,
   setAchievementNotification,
   lang,
-  userName, roomId, setRoomId, setActiveMode,
+  userName, userAvatar, roomId, setRoomId, setActiveMode,
   savingStreak, setSavingStreak, setStreakBroken,
   insuranceExpiry, hasZenSofa
 ) => {

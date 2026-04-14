@@ -37,7 +37,8 @@ const AppContent = ({
   insuranceExpiry, setInsuranceExpiry,
   hasZenSofa, setHasZenSofa,
   bannerText, setBannerText,
-  inventory, setInventory
+  inventory, setInventory,
+  hasCompletedTutorial, setHasCompletedTutorial, showTutorial, setShowTutorial
 }) => {
   const t = LOCALES[lang] || LOCALES.zh;
   const [showLeaderboard, setShowLeaderboard] = React.useState(false);

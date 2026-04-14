@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Swords, Heart, Zap, Flame, Shield, Users, BookOpen } from 'lucide-react';
+import { LOCALES } from '../utils/locales';
 
 const ManualModal = ({ show, onClose, lang }) => {
   const [tab, setTab] = useState('pillars');
