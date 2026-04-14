@@ -161,6 +161,13 @@ const BattleArenaView = ({
   return (
     <div className="space-y-6 pb-48 animate-in fade-in slide-in-from-left duration-700 text-left">
       <style>{SHAKE_STYLE}</style>
+      {bannerText && (
+        <div className="flex items-center justify-center gap-3 px-4 py-2 bg-gradient-to-r from-stone-800 to-stone-700 rounded-2xl shadow-lg animate-in slide-in-from-top duration-500">
+          <span className="text-[9px] text-stone-400 uppercase tracking-widest shrink-0">🚩</span>
+          <p className="text-[11px] font-black text-white tracking-tight text-center truncate">{bannerText}</p>
+          <span className="text-[9px] text-stone-400 uppercase tracking-widest shrink-0">🚩</span>
+        </div>
+      )}
       <div className="flex justify-between items-center px-2">
         <div>
           <h2 className="text-3xl font-black text-stone-800 tracking-tighter italic leading-none uppercase">{t.battle}</h2>

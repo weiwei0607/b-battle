@@ -33,7 +33,11 @@ const AppContent = ({
   userName, setUserName, userId, userAvatar, setUserAvatar, roomId, setRoomId,
   enemyConnected,
   savingStreak,
-  wishlistGoal, setWishlistGoal
+  wishlistGoal, setWishlistGoal,
+  insuranceExpiry, setInsuranceExpiry,
+  hasZenSofa, setHasZenSofa,
+  bannerText, setBannerText,
+  inventory, setInventory
 }) => {
   const t = LOCALES[lang] || LOCALES.zh;
   const [showLeaderboard, setShowLeaderboard] = React.useState(false);
@@ -75,7 +79,7 @@ const AppContent = ({
             </div>
           ) : (
             <>
-              {view === 'battle' && <BattleArenaView stats={personaStats[persona]} hpData={hpData} enemyHpData={enemyHpData} enemyConnected={enemyConnected} isAiProcessing={isAiProcessing} aiComment={aiComment} activeMode={activeMode} setActiveMode={setActiveMode} battleLog={battleLog} activeChallenges={activeChallenges} handleClaimChallenge={handleClaimChallenge} handleGiveUpChallenge={handleGiveUpChallenge} roomId={roomId} setRoomId={setRoomId} userId={userId} lang={lang} showFriends={showFriends} setShowFriends={setShowFriends} showRoomInput={showRoomInput} setShowRoomInput={setShowRoomInput} showInviteQR={showInviteQR} setShowInviteQR={setShowInviteQR} savingStreak={savingStreak} />}
+              {view === 'battle' && <BattleArenaView stats={personaStats[persona]} hpData={hpData} enemyHpData={enemyHpData} enemyConnected={enemyConnected} isAiProcessing={isAiProcessing} aiComment={aiComment} activeMode={activeMode} setActiveMode={setActiveMode} battleLog={battleLog} activeChallenges={activeChallenges} handleClaimChallenge={handleClaimChallenge} handleGiveUpChallenge={handleGiveUpChallenge} roomId={roomId} setRoomId={setRoomId} userId={userId} lang={lang} showFriends={showFriends} setShowFriends={setShowFriends} showRoomInput={showRoomInput} setShowRoomInput={setShowRoomInput} showInviteQR={showInviteQR} setShowInviteQR={setShowInviteQR} savingStreak={savingStreak} bannerText={bannerText} />}
               {view === 'history' && <HistoryView history={history} aiComment={aiComment} deleteTransaction={deleteTransaction} updateTransaction={updateTransaction} potions={potions} healTransaction={healTransaction} unlockAchievement={unlockAchievement} generateMonthlyReview={generateMonthlyReview} personaStats={personaStats} persona={persona} isAiProcessing={isAiProcessing} achievements={achievements} lang={lang} />}
               {view === 'heroHall' && <HeroHallView userTitle={userTitle} persona={persona} personaStats={personaStats} setPersona={setPersona} setShowBudgetSetup={()=>setShowBudgetSetup(true)} setShowManual={() => setShowManual(true)} currentTier={currentTier} lastPersonaSwitch={lastPersonaSwitch} setLastPersonaSwitch={setLastPersonaSwitch} wishlist={wishlist} setWishlist={setWishlist} debt={debt} userFrame={userFrame} homeMaterials={homeMaterials} user={user} setShowLogin={setShowLogin} setView={setView} lang={lang} userName={userName} setUserName={setUserName} userId={userId} userAvatar={userAvatar} setUserAvatar={setUserAvatar} showEvolutionPath={showEvolutionPath} setShowEvolutionPath={setShowEvolutionPath} willpowerExp={willpowerExp} setShowCustomModal={setShowCustomModal} coins={coins} wishlistGoal={wishlistGoal} setWishlistGoal={setWishlistGoal} />}
             </>

@@ -420,6 +420,10 @@ const App = () => {
             enemyConnected: enemySpentDaily >= 0,
             savingStreak,
             wishlistGoal, setWishlistGoal,
+            insuranceExpiry, setInsuranceExpiry,
+            hasZenSofa, setHasZenSofa,
+            bannerText, setBannerText,
+            inventory, setInventory,
             hasCompletedTutorial, setHasCompletedTutorial, showTutorial, setShowTutorial }} 
         />
       </div>
