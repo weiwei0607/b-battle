@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Store, Zap, ShieldCheck, AlertTriangle, Swords, Globe, ChevronDown, Crown, Trophy } from 'lucide-react';
+import { Store, Zap, ShieldCheck, AlertTriangle, Swords, Globe, ChevronDown, Crown, Trophy, Medal } from 'lucide-react';
 import { getWalletStatus } from '../../utils/constants';
 
 const Header = ({ currentTier, coins, debt, onShopClick, onAchievementsClick, onLeaderboardClick, setView, willpowerExp, lang, setLang, onWalletClick }) => {
