@@ -177,16 +177,18 @@ export const useBattleCore = (
 
   const addCoinsWithDebtCheck = useCallback((gain) => {
     if (debt > 0) {
+      const wasHighDebt = debt >= 500;
       if (gain >= debt) {
         const remaining = gain - debt;
         setDebt(0); setCoins(c => c + remaining);
         addLog(`💰 Debt Cleared!`);
+        if (wasHighDebt) unlockAchievement('DEBT_FREE');
       } else {
         setDebt(d => d - gain);
         addLog(`💰 Income used for debt.`);
       }
     } else { setCoins(c => c + gain); }
-  }, [debt, setDebt, setCoins, addLog]);
+  }, [debt, setDebt, setCoins, addLog, unlockAchievement]);
 
   const unlockAchievement = useCallback((id) => {
     if (achievements && achievements[id]?.unlocked) return;
@@ -209,13 +211,18 @@ export const useBattleCore = (
     if (isAiProcessing) return;
     const t = LOCALES[lang] || LOCALES.zh;
     
-    // 檢查成就
-    unlockAchievement('FIRST_BLOOD');
+    // 🚀 [成就全量監控]
+    const currentCount = history.length + 1;
+    const countThresholds = { 1: 'LOGS_1', 10: 'LOGS_10', 30: 'LOGS_30', 50: 'LOGS_50', 80: 'LOGS_80', 100: 'LOGS_100', 200: 'LOGS_200', 500: 'LOGS_500', 1000: 'LOGS_1000', 5000: 'LOGS_5000', 10000: 'LOGS_10000' };
+    if (countThresholds[currentCount]) unlockAchievement(countThresholds[currentCount]);
+
+    // 時間監測
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 7) unlockAchievement('EARLY_BIRD');
+    if (hour >= 0 && hour < 4) unlockAchievement('NIGHT_OWL');
+
+    // 大宗支出
     if (amount >= 3000) unlockAchievement('BIG_SPENDER');
-    const totalCount = history.length + 1;
-    if (totalCount >= 10) unlockAchievement('LOGS_10');
-    if (totalCount >= 100) unlockAchievement('LOGS_100');
-    if (totalCount >= 1000) unlockAchievement('LOGS_1000');
 
     let penaltyHp = 0; let isPreReported = false; let isLying = false;
     const pillar = CATEGORY_MAP[category] || 'expedition';
@@ -285,7 +292,38 @@ export const useBattleCore = (
     }
     addLog(`${source === 'invoice' ? '🧾' : '⚔️'} ${t.log_damage} ${getDmgPercent(totalDamage, pillar)}%`);
     
-    if (totalDamage > 5000) unlockAchievement('SURVIVOR');
+    if (totalDamage > 5000) unlockAchievement('SURVIVAL');
+
+    // 🚀 [專精成就監控]
+    const historyWithNew = [newEntry, ...history];
+    const getCount = (cat) => historyWithNew.filter(h => h.category === cat).length;
+
+    const shieldedCount = historyWithNew.filter(h => h.shielded).length;
+    if (shieldedCount >= 5) unlockAchievement('SHIELD_USER');
+    if (shieldedCount >= 50) unlockAchievement('SHIELD_50');
+
+    const foodCount = getCount('cat_food');
+    if (foodCount >= 10) unlockAchievement('MASTER_FOOD_1');
+    if (foodCount >= 50) unlockAchievement('MASTER_FOOD_2');
+    if (foodCount >= 150) unlockAchievement('MASTER_FOOD_3');
+
+    const studyCount = getCount('cat_study') + getCount('cat_book');
+    if (studyCount >= 5) unlockAchievement('MASTER_STUDY_1');
+    if (studyCount >= 20) unlockAchievement('MASTER_STUDY_2');
+    if (studyCount >= 50) unlockAchievement('MASTER_STUDY_3');
+
+    if (getCount('cat_drink') >= 10 && desc.includes('咖啡')) unlockAchievement('CAFFEINE_ADDICT');
+    if (getCount('cat_fitness') >= 5) unlockAchievement('HEALTH_NUT');
+
+    const convenienceCount = historyWithNew.filter(h => ['cat_drink', 'cat_snack', 'cat_daily'].includes(h.category) && (h.desc.includes('超商') || h.desc.includes('全家') || h.desc.includes('7-11') || h.desc.includes('萊爾富'))).length;
+    if (convenienceCount >= 5) unlockAchievement('CONVENIENCE_STORE_FRIEND');
+
+    if (getCount('cat_book') >= 3) unlockAchievement('BOOK_WORM');
+    
+    const dailyFoodCount = historyWithNew.filter(h => h.date === new Date().toLocaleDateString() && h.category === 'cat_food').length;
+    if (dailyFoodCount >= 5) unlockAchievement('GOURMET');
+    
+    if (hour >= 0 && hour < 4 && category === 'cat_food') unlockAchievement('MIDNIGHT_SNACK');
 
     const isCombo = savingStreak >= 3;
     const baseCoins = pillar === 'progress' ? 40 : 20;
@@ -448,11 +486,39 @@ export const useBattleCore = (
   }, [activeMode, history, setTeamSpentStates, addLog, roomId]);
 
   useEffect(() => {
+    if (coldWarEndTime && now >= coldWarEndTime && isSevered) {
+      unlockAchievement('COLD_WAR_SURVIVOR');
+    }
+  }, [coldWarEndTime, now, isSevered, unlockAchievement]);
+
+  useEffect(() => {
     if (coins >= 10000) unlockAchievement('WEALTHY_WARRIOR');
+    if (coins >= 100000) unlockAchievement('WEALTH_100000');
     if (personaStats[persona]?.intimacy >= 100) unlockAchievement('LOYAL_PARTNER');
     if (personaStats['asian_parent']?.intimacy >= 80) unlockAchievement('MOM_LOVES_ME');
-    if (achievements && Object.values(achievements).filter(a => a.unlocked).length >= 5) unlockAchievement('COLLECTOR');
+    
+    const activePersonas = Object.keys(personaStats).filter(k => personaStats[k]?.intimacy > 0 || k === persona);
+    if (activePersonas.length >= 6) unlockAchievement('PERSONA_COLLECTOR');
+
+    if (willpowerExp >= 500) unlockAchievement('EXP_500');
+    if (willpowerExp >= 1500) unlockAchievement('EXP_1500');
+    if (willpowerExp >= 3000) unlockAchievement('EXP_3000');
+    if (willpowerExp >= 5000) unlockAchievement('EXP_5000');
+
+    if (activeChallenges && activeChallenges.length >= 3) unlockAchievement('GAMBLER');
+
+    const defaultWishlists = ['想買台 PS5...', 'I want to buy a PS5...', 'PS5が欲しい...'];
+    if (wishlist && !defaultWishlists.includes(wishlist)) unlockAchievement('SET_WISHLIST');
+
+    if (achievements) {
+      const unlockedCount = Object.values(achievements).filter(a => a.unlocked).length;
+      if (unlockedCount >= 5) unlockAchievement('COLLECTOR');
+      if (unlockedCount >= 10) unlockAchievement('COLLECTOR_10');
+      if (unlockedCount >= 30) unlockAchievement('COLLECTOR_30');
+    }
+    
     if (history.length > 0 && coins === 0 && debt === 0) unlockAchievement('ZERO_HERO');
+    if (history.length > 0 && coins === 0 && debt >= 1000) unlockAchievement('BANKRUPT');
   }, [coins, debt, personaStats, persona, achievements, unlockAchievement, history]);
 
   useEffect(() => {
@@ -485,7 +551,15 @@ export const useBattleCore = (
         const lastDaySpent = history.filter(h => h.date === last.toLocaleDateString() && h.pillar === 'survival').reduce((s, h) => s + h.amount, 0);
         if (lastDaySpent > 0 && lastDaySpent < 200) {
           unlockAchievement('SAVING_EXPERT');
-          setSavingStreak(s => s + 1);
+          if (lastDaySpent < 100) unlockAchievement('SURVIVAL_100');
+          if (lastDaySpent < 50) unlockAchievement('SURVIVAL_50');
+          
+          const newStreak = savingStreak + 1;
+          setSavingStreak(newStreak);
+          if (newStreak >= 3) unlockAchievement('STREAK_3');
+          if (newStreak >= 7) unlockAchievement('STREAK_7');
+          if (newStreak >= 30) unlockAchievement('STREAK_30');
+          if (newStreak >= 100) unlockAchievement('STREAK_100');
           addLog("🔥 [Combo] Saving streak continues!");
         } else if (lastDaySpent >= 200) {
           if (savingStreak >= 3) setStreakBroken(true);
@@ -499,7 +573,25 @@ export const useBattleCore = (
           addLog("🪑 [Zen Sofa] Relaxing at home, Exp +5.");
         }
       }
-      if (nowTime.getDay() === 1 && nowTime.getDate() !== last.getDate()) { addLog("📅 Weekly reset."); setTeamSpentStates.setTeamSpentWeekly(0); }
+      if (nowTime.getDay() === 1 && nowTime.getDate() !== last.getDate()) { 
+        addLog("📅 Weekly reset."); 
+        setTeamSpentStates.setTeamSpentWeekly(0); 
+        
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        const hasExpedition = history.some(h => new Date(h.date) >= oneWeekAgo && h.pillar === 'expedition');
+        if (!hasExpedition) unlockAchievement('NO_EXPEDITION_WEEK');
+
+        const weeklySpent = history.filter(h => new Date(h.date) >= oneWeekAgo).reduce((s, h) => s + h.amount, 0);
+        const limits = {
+          survival: (weeklyPools.food?.limit || 1000) + (weeklyPools.transport?.limit || 0) + (monthlyPools.housing?.limit || 0),
+          progress: (monthlyPools.education?.limit || 0),
+          desire: (weeklyPools.social?.limit || 0),
+          expedition: (weeklyPools.shopping?.limit || 0)
+        };
+        const totalBudget = limits.survival + limits.progress + limits.desire + limits.expedition;
+        if (weeklySpent <= totalBudget * 0.8) unlockAchievement('THRIFTY_WEEK');
+      }
       if (nowTime.getDate() === 1 && nowTime.getMonth() !== last.getMonth()) {
         addLog("📅 Monthly reset!"); setTeamSpentStates.setTeamSpentMonthly(0);
         const monthlySpent = history.filter(h => h.date && h.date.startsWith(lastTrackDate.slice(0, 7))).reduce((s, h) => s + h.damage, 0);

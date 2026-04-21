@@ -91,10 +91,12 @@ export const ACHIEVEMENTS = {
   SHIELD_50: { id: 'SHIELD_50', name: '不動如山', desc: '鐵血護盾抵擋傷害達 50 次', icon: '🧱', reward: 2000, title: '鐵血守衛', cat: 'supply' },
   POTION_MASTER: { id: 'POTION_MASTER', name: '鍊金術師', desc: '累計使用 3 瓶忘憂聖水', icon: '🧪', reward: 400, title: '鍊金術師', cat: 'supply' },
   POTION_10: { id: 'POTION_10', name: '鍊金大師', desc: '累計使用 10 瓶忘憂聖水', icon: '⚗️', reward: 1500, title: '鍊金聖手', cat: 'supply' },
-  SURVIVOR: { id: 'SURVIVOR', name: '最後的生還者', desc: '遭受單次巨大戰損後生存', icon: '🤕', reward: 600, cat: 'supply' },
+  SURVIVAL: { id: 'SURVIVAL', name: '最後的生還者', desc: '遭受單次巨大戰損後生存', icon: '🤕', reward: 600, cat: 'supply' },
   WEALTHY_WARRIOR: { id: 'WEALTHY_WARRIOR', name: '金幣富翁', desc: '持有金幣超過 10000', icon: '💰', reward: 1500, title: '守財奴', cat: 'supply' },
   WEALTH_100000: { id: 'WEALTH_100000', name: '守財金庫', desc: '持有金幣超過 100,000', icon: '🏦', reward: 5000, title: '黃金守財大亨', cat: 'supply' },
-  COLLECTOR: { id: 'COLLECTOR', name: '頭像框收藏家', desc: '購買超過 3 個不同的頭像框', icon: '🖼️', reward: 1000, cat: 'supply' },
+  COLLECTOR: { id: 'COLLECTOR', name: '成就收藏家 I', desc: '解鎖 5 個成就', icon: '🖼️', reward: 1000, cat: 'supply' },
+  COLLECTOR_10: { id: 'COLLECTOR_10', name: '成就收藏家 II', desc: '解鎖 10 個成就', icon: '🌟', reward: 3000, cat: 'supply' },
+  COLLECTOR_30: { id: 'COLLECTOR_30', name: '成就收藏家 III', desc: '解鎖 30 個成就', icon: '👑', reward: 10000, title: '全成就王者', cat: 'supply' },
   
   // === 6. 【禁忌】隱藏與彩蛋系列 ===
   BIG_SPENDER: { id: 'BIG_SPENDER', name: '預算粉碎者', desc: '單筆消費超過 3000 元', icon: '💣', reward: 100, title: '暴發戶', cat: 'forbidden' },
