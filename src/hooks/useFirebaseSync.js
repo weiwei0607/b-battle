@@ -22,7 +22,7 @@ import { save } from '../stores/storage';
 export const useFirebaseSync = () => {
   // ── 從 Zustand 取需要的資料 ────────────────────────────────────────────
   const {
-    user, lang, userName, userId, userAvatar,
+    user, lang, userName,
     persona, personaStats, achievements,
     unlockedTitles, userTitle, userFrame,
     currentTier, isStudent, currency,
@@ -31,7 +31,7 @@ export const useFirebaseSync = () => {
 
   const {
     coins, debt, willpowerExp,
-    shield, potions, inventory,
+    shield, potions,
     weeklyPools, monthlyPools,
     insuranceExpiry, hasZenSofa,
     history,
@@ -41,7 +41,6 @@ export const useFirebaseSync = () => {
     isCloudLoading,
     activeMode, roomId, setRoomId, setActiveMode,
     addToBattleLog,
-    setTeamSpentDaily, setTeamSpentWeekly, setTeamSpentMonthly,
     setEnemySpentDaily, setEnemySpentWeekly, setEnemySpentMonthly,
   } = useBattleStore();
 
@@ -115,7 +114,8 @@ export const useFirebaseSync = () => {
       }
     });
     return () => unsub();
-  }, [activeMode, roomId, user, setEnemySpentDaily, setEnemySpentWeekly, setEnemySpentMonthly, addToBattleLog, setRoomId, setActiveMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeMode, roomId, user?.uid]); // 只用 stable 值，避免 Zustand selector 引用變化導致無限重訂閱
 
   // ── 3. 上傳自己的 HP 百分比到房間 ────────────────────────────────────────
   useEffect(() => {
@@ -160,7 +160,8 @@ export const useFirebaseSync = () => {
       },
       { merge: true }
     ).catch(() => {});
-  }, [history, activeMode, roomId, user, userName, weeklyPools, monthlyPools]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [history, activeMode, roomId, user?.uid, userName, weeklyPools, monthlyPools]);
 
   // ── 4. 隨機匹配與 Bot 補位 ────────────────────────────────────────────────
   useEffect(() => {
@@ -199,7 +200,8 @@ export const useFirebaseSync = () => {
     }, 8000);
 
     return () => clearTimeout(timer);
-  }, [roomId, user, userName, lang, setRoomId, setActiveMode, addToBattleLog]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId, user?.uid, userName, lang]); // setRoomId / setActiveMode / addToBattleLog 來自 Zustand 為 stable ref
 
   // ── 同步函式（供 useBattleLogic 呼叫）────────────────────────────────────
 

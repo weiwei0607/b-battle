@@ -46,6 +46,7 @@ export const useBattleLogic = () => {
     isCloudLoading,
     activeMode, roomId,
     setTeamSpentDaily, setTeamSpentWeekly, setTeamSpentMonthly,
+    setEnemySpentDaily, setEnemySpentMonthly,
     activeChallenges, setActiveChallenges,
     claimedAvoidedItems, setClaimedAvoidedItems,
     isSevered, setIsSevered,
@@ -537,12 +538,15 @@ export const useBattleLogic = () => {
         else setTeamSpentMonthly((p) => p + dmg);
         addToBattleLog('👥 [Shadow] Bot bought something!');
       } else {
+        // 單機模式下模擬敵人攻擊：直接扣敵人 HP（讓 enemySpentDaily / enemySpentMonthly 增加）
+        if (CATEGORY_MAP[favCat] === 'survival') setEnemySpentDaily((p) => (p < 0 ? 0 : p) + dmg);
+        else setEnemySpentMonthly((p) => (p < 0 ? 0 : p) + dmg);
         addToBattleLog('⚔️ [Shadow] Bot attack!');
       }
     }, 40_000);
 
     return () => clearInterval(timer);
-  }, [activeMode, roomId]);
+  }, [activeMode, roomId, history, setTeamSpentDaily, setTeamSpentMonthly, setEnemySpentDaily, setEnemySpentMonthly, addToBattleLog]);
 
   // ── 回傳 API（與原 useBattleCore 相同）──────────────────────────────────
   return {

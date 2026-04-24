@@ -6,6 +6,7 @@ import { getDoc, doc, setDoc, collection, getDocs, query, orderBy } from 'fireba
 import { CATEGORY_MAP, getBondLevel, getFrameStyle } from './utils/constants';
 import { LOCALES } from './utils/locales';
 import { useBattleLogic } from './hooks/useBattleLogic';
+import { useFirebaseSync } from './hooks/useFirebaseSync';
 import AppContent from './components/Layout/AppContent';
 import { TutorialOverlay } from './components/TutorialOverlay';
 import { X, Swords, WifiOff } from 'lucide-react';
@@ -170,6 +171,9 @@ const App = () => {
     deleteTransaction, updateTransaction, handleClaimAchievement,
     unlockAchievement, generateMonthlyReview,
   } = useBattleLogic();
+
+  // ── Firestore 聯機對戰同步（房間監聽、HP 上傳、隨機匹配）──────────────────
+  useFirebaseSync();
 
   // ── Firebase 認證 & 雲端資料載入 ─────────────────────────────────────────
   useEffect(() => {
