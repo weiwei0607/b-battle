@@ -10,7 +10,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       devOptions: { enabled: true },
-      workbox: { skipWaiting: true, clientsClaim: true },
+      workbox: { skipWaiting: true, clientsClaim: true, cleanupOutdatedCaches: true },
       manifest: {
         name: 'B-Battle: 意志力記帳',
         short_name: 'B-Battle',
@@ -27,6 +27,7 @@ export default defineConfig({
   ],
   base: '/',
   build: {
+    minify: false,
     rollupOptions: {
       output: {
         // 🚀 Code Splitting: 解決 500k 警告，將套件拆分出獨立檔案
@@ -35,6 +36,7 @@ export default defineConfig({
             if (id.includes('firebase')) return 'vendor-firebase';
             if (id.includes('react')) return 'vendor-react';
             if (id.includes('lucide')) return 'vendor-icons';
+            if (id.includes('recharts')) return 'vendor-charts';
             return 'vendor-others';
           }
         }

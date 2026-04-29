@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, ShieldCheck, Settings2, LogOut, LogIn, Target, Edit2, Check, Sparkles, BookOpen, Swords } from 'lucide-react';
-import { getBondLevel, getFrameStyle, getHomeStatus, getWalletStatus, AVATAR_OPTIONS, WALLET_LEVELS, HOME_LEVELS } from '../../utils/constants';
+import { getBondLevel, getFrameStyle, getHomeStatus, getWalletStatus, AVATAR_OPTIONS, WALLET_LEVELS, HOME_LEVELS, getTitleKey } from '../../utils/constants';
 import { LOCALES } from '../../utils/locales';
 import { auth } from '../../firebase';
 
@@ -66,7 +66,10 @@ const HeroHallView = ({
             </div>
             <div className="flex flex-col gap-1">
               <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">ID: {userId || "------"}</p>
-              <p className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full inline-block uppercase tracking-widest w-fit">{t[userTitle] || userTitle || '省錢新兵'}</p>
+              <p className="text-[10px] font-black text-amber-700 bg-amber-100 border border-amber-200 px-3 py-1 rounded-full inline-flex items-center gap-1 uppercase tracking-widest w-fit shadow-sm">
+                <Sparkles size={10} />
+                {t[getTitleKey(userTitle)] || userTitle || t.title_rookie || '省錢新兵'}
+              </p>
             </div>
             <div className="mt-3 flex items-center gap-2">
               <span className={`text-[10px] font-black ${bond.color}`}>{t[bond.key] || '夥伴'}</span>
@@ -112,7 +115,7 @@ const HeroHallView = ({
 
         <div className="bg-white border border-stone-100 p-6 rounded-[2rem] shadow-sm space-y-4">
           <h3 className="text-[10px] font-black text-stone-400 uppercase tracking-widest flex items-center gap-2"><Target size={14} className="text-[#D7C9B1]"/> {t.current_goal}</h3>
-          <input value={wishlist} onChange={(e) => setWishlist(e.target.value)} className="w-full bg-stone-50 border border-stone-100 p-4 rounded-2xl text-sm font-black text-stone-800 focus:bg-white transition-colors outline-none" placeholder="..." />
+          <input value={wishlist} onChange={(e) => setWishlist(e.target.value)} className="w-full bg-stone-50 border border-stone-100 p-4 rounded-2xl text-sm font-black text-stone-800 focus:bg-white transition-colors outline-none" placeholder="輸入你的願望，例如：去日本旅行、買新電腦..." />
           <div className="flex items-center gap-3">
             <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest shrink-0">目標金幣</span>
             <input

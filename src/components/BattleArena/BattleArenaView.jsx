@@ -1,6 +1,6 @@
-import React, { useState, memo } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import {
-  Swords, Users, MessageSquare, Loader2, Hash, Heart, Zap, Flame, Globe, Shuffle,
+  Swords, Users, MessageSquare, Loader2, Hash, Shuffle,
   Clock, QrCode, Cpu, LogOut, Trophy
 } from 'lucide-react';
 import FriendsListView from '../Friends/FriendsListView';
@@ -27,123 +27,200 @@ const SHAKE_STYLE = `
     to   { transform: rotate(360deg); }
   }
   .animate-spin-slow { animation: spin-slow 8s linear infinite; }
+  @keyframes float-damage {
+    0%   { transform: translateY(0) scale(1.15); opacity: 1; }
+    20%  { transform: translateY(4px) scale(1.05); opacity: 1; }
+    100% { transform: translateY(38px) scale(0.85); opacity: 0; }
+  }
+  .damage-float {
+    position: absolute;
+    left: 50%;
+    top: -6px;
+    transform: translateX(-50%);
+    font-size: 11px;
+    font-weight: 900;
+    color: #ef4444;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    pointer-events: none;
+    animation: float-damage 0.85s ease-out forwards;
+    z-index: 50;
+    white-space: nowrap;
+  }
 `;
 
-/* ── 子元件：裂縫 SVG ─────────────────────────────────────── */
-const PillarCracks = memo(({ isCollapsing }) => (
-  <svg
-    viewBox="0 0 24 128"
-    className="absolute inset-0 w-full h-full"
-    style={{ pointerEvents: 'none' }}
-    aria-hidden="true"
-  >
-    <path
-      d="M 4 10 L 9 24 L 5 38 L 13 54"
-      stroke="rgba(60,40,20,0.55)"
-      strokeWidth={isCollapsing ? 1.6 : 0.9}
-      fill="none"
-      strokeLinecap="round"
-    />
-    <path
-      d="M 9 24 L 13 19"
-      stroke="rgba(60,40,20,0.35)"
-      strokeWidth={isCollapsing ? 1 : 0.5}
-      fill="none"
-      strokeLinecap="round"
-    />
-    <path
-      d="M 17 60 L 10 74 L 19 88"
-      stroke="rgba(60,40,20,0.45)"
-      strokeWidth={isCollapsing ? 1.4 : 0.7}
-      fill="none"
-      strokeLinecap="round"
-    />
-    <path
-      d="M 10 74 L 6 70"
-      stroke="rgba(60,40,20,0.3)"
-      strokeWidth="0.5"
-      fill="none"
-      strokeLinecap="round"
-    />
-    {isCollapsing && (
-      <>
-        <path
-          d="M 2 96 L 11 110 L 6 126"
-          stroke="rgba(60,40,20,0.65)"
-          strokeWidth="1.8"
-          fill="none"
-          strokeLinecap="round"
-        />
-        <path
-          d="M 11 110 L 17 106"
-          stroke="rgba(60,40,20,0.4)"
-          strokeWidth="1"
-          fill="none"
-          strokeLinecap="round"
-        />
-        <circle cx="3" cy="45" r="1" fill="rgba(60,40,20,0.3)" />
-        <circle cx="20" cy="82" r="1" fill="rgba(60,40,20,0.3)" />
-        <circle cx="7" cy="118" r="1.2" fill="rgba(60,40,20,0.4)" />
-      </>
-    )}
-  </svg>
-));
-PillarCracks.displayName = 'PillarCracks';
+/* ── 子元件：SVG 圓柱 HP 柱（含液面動畫） ─────────────────── */
+const Pillar = memo(({ label, pct, color, isEnemy = false, isCombo = false }) => {
+  const crack = pct < 30;
+  const collapse = pct < 15;
+  const targetP = Math.max(0, Math.min(100, pct));
+  const uid = `p-${label}-${isEnemy ? 'e' : 'm'}`;
 
-/* ── 子元件：單根柱狀圖 ──────────────────────────────────── */
-const VerticalPillar = memo(({ label, percent, colorClass, icon: Icon, isEnemy = false, isCombo = false }) => {
-  const isCracked = percent < 30;
-  const isCollapsing = percent < 15;
-  const capColor = isEnemy
-    ? 'bg-red-400'
-    : isCollapsing
-      ? 'bg-red-500'
-      : isCombo
-        ? 'bg-amber-400'
-        : 'bg-stone-400';
+  // 液面平滑動畫
+  const [displayPct, setDisplayPct] = useState(targetP);
+  const animRef = useRef(null);
 
-  const percentText = `${Math.max(0, Math.min(100, percent)).toFixed(0)}%`;
+  // 傷害數字飄出
+  const [damageNumbers, setDamageNumbers] = useState([]);
+  const dmgIdRef = useRef(0);
+  const prevPctRef = useRef(targetP);
+
+  useEffect(() => {
+    if (displayPct === targetP) return;
+    const startVal = displayPct;
+    const diff = targetP - startVal;
+    const duration = 1200; // ms
+    const startTime = performance.now();
+
+    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+    const tick = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = easeOutCubic(progress);
+      const current = startVal + diff * eased;
+      setDisplayPct(current);
+      if (progress < 1) {
+        animRef.current = requestAnimationFrame(tick);
+      }
+    };
+
+    animRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animRef.current);
+  }, [targetP]);
+
+  // 檢測 HP 下降，觸發傷害數字
+  useEffect(() => {
+    const prev = prevPctRef.current;
+    if (targetP < prev - 0.5) {
+      const dmg = Math.round(prev - targetP);
+      const id = ++dmgIdRef.current;
+      const newDmg = { id, val: dmg };
+      setDamageNumbers(prevArr => [...prevArr, newDmg]);
+      setTimeout(() => {
+        setDamageNumbers(prevArr => prevArr.filter(d => d.id !== id));
+      }, 900);
+    }
+    prevPctRef.current = targetP;
+  }, [targetP]);
+
+  const safeP = displayPct;
+
+  const W = 42, H = 172;
+  const capH = 24, baseH = 22;
+  const shaftX = 5, shaftW = 32;
+  const shaftY = capH;
+  const shaftH = H - capH - baseH;
+  const cx = shaftX + shaftW / 2;
+  const ry = 4;
+
+  const fillH = shaftH * (safeP / 100);
+  const fillY = shaftY + shaftH - fillH;
+
+  const FLUTES = 5;
 
   return (
     <div
-      className={`flex flex-col items-center gap-2 ${isEnemy ? 'scale-90 opacity-80' : ''} ${isCollapsing ? 'pillar-shake' : ''} ${isCombo && !isEnemy ? 'pillar-combo' : ''}`}
+      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+        opacity: isEnemy ? 0.7 : 1, transform: isEnemy ? 'scale(0.88)' : 'scale(1)' }}
+      className={`${collapse ? 'pillar-shake' : ''} ${isCombo && !isEnemy ? 'pillar-combo' : ''}`}
       role="img"
-      aria-label={`${label}: ${percentText}`}
+      aria-label={`${label}: ${safeP}%`}
     >
-      <div
-        className={`w-10 h-1 rounded-full shadow-sm ${isCollapsing ? 'bg-red-300' : isCombo && !isEnemy ? 'bg-amber-300' : 'bg-stone-300'}`}
-      />
-      <div
-        className={`w-6 h-32 border-x relative flex justify-center shadow-inner overflow-hidden rounded-sm ${isCombo && !isEnemy ? 'bg-amber-50 border-amber-200' : 'bg-stone-100 border-stone-200'}`}
-      >
-        <div
-          className={`absolute bottom-0 w-full transition-all duration-1000 ease-out ${isCombo && !isEnemy ? 'bg-amber-400' : colorClass} opacity-70`}
-          style={{ height: `${Math.max(0, Math.min(100, percent))}%` }}
-        />
-        <div className="absolute inset-0 flex justify-evenly opacity-20">
-          <div className="w-px h-full bg-white" />
-          <div className="w-px h-full bg-white" />
-        </div>
-        {isCracked && !isCombo && <PillarCracks isCollapsing={isCollapsing} />}
+      {/* 傷害飄字 */}
+      <div style={{ position: 'relative', width: W, height: 0 }}>
+        {damageNumbers.map(d => (
+          <span key={d.id} className="damage-float">-{d.val}%</span>
+        ))}
       </div>
-      <div
-        className={`w-12 h-2 ${capColor} rounded-b-sm shadow-md flex items-center justify-center`}
-      >
-        <Icon size={8} className="text-white/50" aria-hidden="true" />
-      </div>
-      <span className="text-[7px] font-black text-stone-400 uppercase tracking-tighter text-center leading-none mt-1">
-        {label}
-      </span>
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} fill="none" overflow="visible">
+        <defs>
+          <clipPath id={`sh-${uid}`}>
+            <rect x={shaftX} y={shaftY} width={shaftW} height={shaftH} rx="1"/>
+          </clipPath>
+          <clipPath id={`fl-${uid}`}>
+            <rect x={shaftX} y={fillY} width={shaftW} height={fillH} rx="1"/>
+          </clipPath>
+          <linearGradient id={`hl-${uid}`} x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+            <stop offset="0%"   stopColor="#fff" stopOpacity=".00"/>
+            <stop offset="12%"  stopColor="#fff" stopOpacity=".50"/>
+            <stop offset="35%"  stopColor="#fff" stopOpacity=".16"/>
+            <stop offset="100%" stopColor="#fff" stopOpacity=".00"/>
+          </linearGradient>
+          <linearGradient id={`ev-${uid}`} x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+            <stop offset="0%"   stopColor="#000" stopOpacity=".42"/>
+            <stop offset="10%"  stopColor="#000" stopOpacity=".00"/>
+            <stop offset="90%"  stopColor="#000" stopOpacity=".00"/>
+            <stop offset="100%" stopColor="#000" stopOpacity=".42"/>
+          </linearGradient>
+          <pattern id={`fp-${uid}`} x={shaftX} y="0" width="6.4" height="2" patternUnits="userSpaceOnUse">
+            <rect x="0" y="0" width="6.4" height="2" fill="transparent"/>
+            <rect x="0.4" y="0" width="1.8" height="2" fill="rgba(70,60,40,.30)"/>
+            <rect x="4" y="0" width="1.5" height="2" fill="rgba(255,255,255,.25)"/>
+          </pattern>
+        </defs>
+
+        {/* ── 柱基 Base ── */}
+        <ellipse cx={cx} cy={shaftY+shaftH} rx={shaftW/2} ry={ry} fill="#C8C4BC"/>
+        <path d={`M${shaftX} ${shaftY+shaftH} Q${shaftX-2} ${shaftY+shaftH+2} ${shaftX-2} ${shaftY+shaftH+5} L${shaftX+shaftW+2} ${shaftY+shaftH+5} Q${shaftX+shaftW+2} ${shaftY+shaftH+2} ${shaftX+shaftW} ${shaftY+shaftH} Z`} fill="#D5D0C8"/>
+        <rect x="1" y={shaftY+shaftH+5} width={W-2} height={H-5-(shaftY+shaftH+5)} rx="1" fill="#DDD8D0"/>
+        <rect x="0" y={H-5} width={W} height="3" rx="1" fill="#C8C4BC"/>
+
+        {/* ── 柱身 Shaft ── */}
+        <g clipPath={`url(#sh-${uid})`}>
+          <rect x={shaftX} y={shaftY} width={shaftW} height={shaftH} fill="#F5F2ED" rx="1"/>
+          <rect x={shaftX} y={shaftY} width={shaftW} height={shaftH}
+            fill={color} opacity=".72" clipPath={`url(#fl-${uid})`} rx="1"/>
+          <rect x={shaftX} y={shaftY} width={shaftW} height={shaftH} fill={`url(#hl-${uid})`} rx="1"/>
+          <rect x={shaftX} y={shaftY} width={shaftW} height={shaftH} fill={`url(#ev-${uid})`} rx="1"/>
+          {/* 凹槽 Flutes — 放在最後確保可見 */}
+          <rect x={shaftX} y={shaftY} width={shaftW} height={shaftH} fill={`url(#fp-${uid})`} rx="1"/>
+        </g>
+
+        {/* 液面橢圓 */}
+        {safeP > 2 && safeP < 99 && (
+          <ellipse cx={cx} cy={fillY} rx={shaftW / 2 - 1} ry={ry * 0.7}
+            fill={color} opacity=".9"/>
+        )}
+
+        {/* ── 柱頭 Capital ── */}
+        <rect x="0" y="0" width={W} height="3" rx="1" fill="#C8C4BC"/>
+        <rect x="0" y="0" width={W} height="1" fill="rgba(255,255,255,.4)"/>
+        <rect x="0" y="3" width={W} height="4" rx="1" fill="#D0CCC4"/>
+        <path d={`M0 7 Q0 10 ${shaftX} 11 L${shaftX+shaftW} 11 Q${W} 10 ${W} 7 Z`} fill="#D8D4CC"/>
+        <rect x={shaftX} y="11" width={shaftW} height={shaftY-11} fill="#D0CCC4"/>
+        <ellipse cx={cx} cy={shaftY} rx={shaftW/2} ry={ry} fill="#E2DED6"/>
+
+        {/* ── 裂紋（低血量） ── */}
+        {crack && !isEnemy && (
+          <>
+            <path d={`M${shaftX+6} ${shaftY+8} L${shaftX+10} ${shaftY+24} L${shaftX+7} ${shaftY+40}`}
+              stroke="rgba(60,40,20,.3)" strokeWidth={collapse ? 1.4 : 0.85} fill="none" strokeLinecap="round"/>
+            <path d={`M${shaftX+19} ${shaftY+50} L${shaftX+15} ${shaftY+64}`}
+              stroke="rgba(60,40,20,.2)" strokeWidth={collapse ? 1.0 : 0.65} fill="none" strokeLinecap="round"/>
+            {collapse && (
+              <>
+                <path d={`M${shaftX+3} ${shaftY+74} L${shaftX+9} ${shaftY+88} L${shaftX+4} ${shaftY+102}`}
+                  stroke="rgba(60,40,20,.48)" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                <circle cx={shaftX+2} cy={shaftY+35} r="1" fill="rgba(60,40,20,.22)"/>
+                <circle cx={shaftX+shaftW-2} cy={shaftY+62} r="1" fill="rgba(60,40,20,.22)"/>
+              </>
+            )}
+          </>
+        )}
+      </svg>
+
+      <span style={{ fontSize: 7, fontWeight: 800, color: '#a8a29e', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', lineHeight: 1.1 }}>{label}</span>
       <span
-        className={`text-[9px] font-black ${isCollapsing ? 'text-red-600 animate-pulse' : isCracked ? 'text-red-400 animate-pulse' : isCombo && !isEnemy ? 'text-amber-500 animate-pulse' : 'text-stone-600'}`}
+        style={{ fontSize: 9, fontWeight: 800, color: collapse ? '#ef4444' : crack ? '#f97316' : isCombo && !isEnemy ? '#d97706' : '#57534e' }}
+        className={collapse || (crack && !isEnemy) || (isCombo && !isEnemy) ? 'animate-pulse' : ''}
         aria-live="polite"
       >
-        {percentText}
+        {Math.round(safeP)}%
       </span>
     </div>
   );
 });
-VerticalPillar.displayName = 'VerticalPillar';
+Pillar.displayName = 'Pillar';
 
 /* ── 子元件：對戰日誌項目 ─────────────────────────────────── */
 const BattleLogItem = memo(({ log, index, total }) => {
@@ -207,6 +284,7 @@ const BattleArenaView = ({
 }) => {
   const [isMatchmaking, setIsMatchmaking] = useState(false);
   const [tempRoom, setTempRoom] = useState('');
+  const [testHp, setTestHp] = useState(null);
   const t = LOCALES[lang] || LOCALES.zh;
 
   const handleJoinRoom = (id) => {
@@ -255,12 +333,13 @@ const BattleArenaView = ({
 
   /* 防止空值崩潰 */
   const safeStats = stats || { icon: '🙄', titleKey: 'persona_peer' };
-  const safeHp = {
+  const baseHp = {
     survival: hpData?.survival ?? 100,
     progress: hpData?.progress ?? 100,
     desire: hpData?.desire ?? 100,
     expedition: hpData?.expedition ?? 100,
   };
+  const safeHp = testHp ?? baseHp;
   const safeEnemyHp = {
     survival: enemyHpData?.survival ?? 100,
     progress: enemyHpData?.progress ?? 100,
@@ -302,6 +381,35 @@ const BattleArenaView = ({
           )}
         </div>
         <div className="flex gap-2">
+          {/* 測試動畫按鈕 */}
+          <button
+            onClick={() => {
+              const keys = ['survival', 'progress', 'desire', 'expedition'];
+              const pick = keys[Math.floor(Math.random() * keys.length)];
+              const current = testHp?.[pick] ?? baseHp[pick];
+              const dmg = 10 + Math.floor(Math.random() * 16); // 10~25%
+              setTestHp({ ...baseHp, ...(testHp || {}), [pick]: Math.max(5, current - dmg) });
+            }}
+            className="px-3 h-10 flex items-center justify-center bg-red-50 border border-red-100 rounded-xl text-red-500 hover:text-red-700 hover:bg-red-100 transition-colors shadow-sm active:scale-90 text-[9px] font-black"
+            title="測試動畫"
+          >
+            🎬 測試
+          </button>
+          <button
+            onClick={() => setTestHp(null)}
+            className="px-2 h-10 flex items-center justify-center bg-stone-50 border border-stone-100 rounded-xl text-stone-400 hover:text-stone-600 transition-colors shadow-sm active:scale-90 text-[9px] font-black"
+            title="重置"
+          >
+            ↺
+          </button>
+          {/* DEV ONLY */}
+          <button
+            onClick={() => { if (window.confirm('清空所有消費紀錄？')) { Object.keys(localStorage).filter(k=>k.startsWith('bb_v4_')).forEach(k=>localStorage.removeItem(k)); location.reload(); } }}
+            className="px-2 h-10 flex items-center justify-center bg-orange-50 border border-orange-100 rounded-xl text-orange-400 hover:text-orange-600 transition-colors shadow-sm active:scale-90 text-[9px] font-black"
+            title="[DEV] 清空資料"
+          >
+            🗑️
+          </button>
           <button
             onClick={() => setShowFriends(true)}
             className="w-10 h-10 flex items-center justify-center bg-white border border-stone-100 rounded-xl text-stone-400 hover:text-stone-800 transition-colors shadow-sm active:scale-90"
@@ -476,34 +584,10 @@ const BattleArenaView = ({
         <div className="flex items-center justify-between gap-4 mt-4 relative">
           {/* 我方柱狀圖 */}
           <div className="grid grid-cols-2 gap-x-4 gap-y-6 flex-1">
-            <VerticalPillar
-              label={t.cat_food?.slice(0, 2) || '食'}
-              percent={safeHp.survival}
-              colorClass="bg-blue-400"
-              icon={Heart}
-              isCombo={isCombo}
-            />
-            <VerticalPillar
-              label={t.cat_study?.slice(0, 2) || '學'}
-              percent={safeHp.progress}
-              colorClass="bg-emerald-400"
-              icon={Zap}
-              isCombo={isCombo}
-            />
-            <VerticalPillar
-              label={t.cat_ent?.slice(0, 2) || '娛'}
-              percent={safeHp.desire}
-              colorClass="bg-orange-400"
-              icon={Flame}
-              isCombo={isCombo}
-            />
-            <VerticalPillar
-              label={t.cat_shop?.slice(0, 2) || '購'}
-              percent={safeHp.expedition}
-              colorClass="bg-purple-500"
-              icon={Globe}
-              isCombo={isCombo}
-            />
+            <Pillar label={t.cat_food?.slice(0, 2) || '食'}  pct={safeHp.survival}   color={'#f9a8d4'} isCombo={isCombo}/>
+            <Pillar label={t.cat_study?.slice(0, 2) || '學'} pct={safeHp.progress}   color={'#c084fc'} isCombo={isCombo}/>
+            <Pillar label={t.cat_ent?.slice(0, 2) || '娛'}   pct={safeHp.desire}     color={'#fdba74'} isCombo={isCombo}/>
+            <Pillar label={t.cat_shop?.slice(0, 2) || '購'}  pct={safeHp.expedition} color={'#6ee7b7'} isCombo={isCombo}/>
           </div>
 
           {/* 中央對決按鈕 */}
@@ -527,34 +611,10 @@ const BattleArenaView = ({
           <div className="grid grid-cols-2 gap-x-4 gap-y-6 flex-1">
             {hasOpponent ? (
               <>
-                <VerticalPillar
-                  label={t.cat_food?.slice(0, 2) || '食'}
-                  percent={safeEnemyHp.survival}
-                  colorClass="bg-red-400"
-                  icon={Heart}
-                  isEnemy
-                />
-                <VerticalPillar
-                  label={t.cat_study?.slice(0, 2) || '學'}
-                  percent={safeEnemyHp.progress}
-                  colorClass="bg-red-400"
-                  icon={Zap}
-                  isEnemy
-                />
-                <VerticalPillar
-                  label={t.cat_ent?.slice(0, 2) || '娛'}
-                  percent={safeEnemyHp.desire}
-                  colorClass="bg-red-400"
-                  icon={Flame}
-                  isEnemy
-                />
-                <VerticalPillar
-                  label={t.cat_shop?.slice(0, 2) || '購'}
-                  percent={safeEnemyHp.expedition}
-                  colorClass="bg-red-400"
-                  icon={Globe}
-                  isEnemy
-                />
+                <Pillar label={t.cat_food?.slice(0, 2) || '食'}  pct={safeEnemyHp.survival}   color="#f87171" isEnemy/>
+                <Pillar label={t.cat_study?.slice(0, 2) || '學'} pct={safeEnemyHp.progress}   color="#f87171" isEnemy/>
+                <Pillar label={t.cat_ent?.slice(0, 2) || '娛'}   pct={safeEnemyHp.desire}     color="#f87171" isEnemy/>
+                <Pillar label={t.cat_shop?.slice(0, 2) || '購'}  pct={safeEnemyHp.expedition} color="#f87171" isEnemy/>
               </>
             ) : (
               <button

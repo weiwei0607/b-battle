@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "target": "main",
+    "site": "b-battle-580b5",
     "public": "dist",
     "ignore": [
       "firebase.json",

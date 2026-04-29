@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Trophy, X, Sparkles, CheckCircle2, Lock } from 'lucide-react';
-import { ACHIEVEMENTS } from '../utils/constants';
+import { ACHIEVEMENTS, getTitleKey } from '../utils/constants';
 import { LOCALES } from '../utils/locales';
 
 const AchievementModal = ({ show, onClose, achievements, onClaim, userTitle, setUserTitle, lang }) => {
@@ -22,6 +22,8 @@ const AchievementModal = ({ show, onClose, achievements, onClaim, userTitle, set
     const isLocked = !status.unlocked;
     const hasTitle = !!medal.title;
     const isEquipped = userTitle === medal.title;
+    const titleKey = getTitleKey(medal.title);
+    const localizedTitle = titleKey ? (t[titleKey] || medal.title) : medal.title;
 
     // 🚀 [多語系支持]
     const localizedName = t[`ac_${medal.id}_name`] || medal.name;
@@ -55,7 +57,7 @@ const AchievementModal = ({ show, onClose, achievements, onClaim, userTitle, set
           </p>
           {hasTitle && !isLocked && (
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-[8px] font-black bg-stone-100 text-stone-500 px-2 py-0.5 rounded-full uppercase tracking-tighter">Title: {medal.title}</span>
+              <span className="text-[8px] font-black bg-stone-100 text-stone-500 px-2 py-0.5 rounded-full uppercase tracking-tighter">Title: {localizedTitle}</span>
               {isEquipped ? (
                 <span className="text-[8px] font-black text-emerald-500 uppercase">Equipped</span>
               ) : (

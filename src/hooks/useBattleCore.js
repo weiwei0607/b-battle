@@ -344,15 +344,16 @@ export const useBattleCore = (
         const personaData = personaStats[persona];
         const systemBase = (personaData.prompts && personaData.prompts[lang]) || personaData.prompt;
         const comboInstruction = isCombo ? ` IMPORTANT: The user is on a ${savingStreak}-day saving streak! React with extreme praise, worship, and disbelief — like witnessing a miracle. Go over the top.` : '';
-        const prompt = `System: ${systemBase}.${comboInstruction} Goal: ${wishlist}. Action: spent ${amount} on ${desc}. Rules: limit 20 words, must use language: ${lang}.`;
+        const titleInstruction = userTitle ? ` IMPORTANT: The user's title is "${userTitle}". Use their title as a STANDARD to judge their behavior. Create contrast — mock them if they betray their title, praise them if they live up to it. Example: "你這個購物對得起你${userTitle}的稱號嗎？". Keep it punchy.` : '';
+        const prompt = `System: ${systemBase}.${comboInstruction}${titleInstruction} Goal: ${wishlist}. Action: spent ${amount} on ${desc}. Rules: limit 20 words, must use language: ${lang}.`;
         
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ contents: [{ parts: [{ text: `Spent ${amount} on ${desc}` }] }], systemInstruction: { parts: [{ text: prompt }] } })
         });
         const result = await res.json();
-        setAiComment(result.candidates?.[0]?.content?.parts?.[0]?.text || "...");
-      } catch { setAiComment("..."); }
+        setAiComment(result.candidates?.[0]?.content?.parts?.[0]?.text || "夥伴正在思考中...");
+      } catch { setAiComment("夥伴正在思考中..."); }
       setIsAiProcessing(false);
     }
   };
@@ -369,8 +370,8 @@ export const useBattleCore = (
         body: JSON.stringify({ contents: [{ parts: [{ text: `Monthly Report: ${JSON.stringify(summary)}` }] }], systemInstruction: { parts: [{ text: `${systemBase}. Reply in 30 words using ${lang}.` }] } })
       });
       const result = await res.json();
-      setAiComment(result.candidates?.[0]?.content?.parts?.[0]?.text || "...");
-    } catch { setAiComment("..."); }
+      setAiComment(result.candidates?.[0]?.content?.parts?.[0]?.text || "夥伴正在思考中...");
+    } catch { setAiComment("夥伴正在思考中..."); }
     setIsAiProcessing(false);
   };
 

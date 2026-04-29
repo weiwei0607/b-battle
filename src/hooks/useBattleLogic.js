@@ -148,7 +148,6 @@ export const useBattleLogic = () => {
 
   // ── 主要消費執行 ──────────────────────────────────────────────────────────
   const executeTransaction = useCallback(async (amount, desc, category, source = 'manual') => {
-    if (isAiProcessing) return;
     const t = LOCALES[lang] || LOCALES.zh;
     const pillar = CATEGORY_MAP[category] || 'expedition';
     const isUnnecessary = ['desire', 'expedition'].includes(pillar);
@@ -190,7 +189,7 @@ export const useBattleLogic = () => {
 
     if (isLying) {
       spendCoins(500, true);
-      setPersonaStats((p) => ({ ...p, [persona]: { ...p[persona], intimacy: 0 } }));
+      setPersonaStats((p) => ({ ...p, [persona]: { ...(p[persona] ?? {}), intimacy: 0 } }));
       penaltyHp += amount * 2;
       addToBattleLog('🤬 [Lying] Fined 500 coins!');
     } else {
@@ -278,14 +277,14 @@ export const useBattleLogic = () => {
     if (!isSevered) {
       setPersonaStats((p) => ({
         ...p,
-        [persona]: { ...p[persona], intimacy: Math.min(100, p[persona].intimacy + 1) },
+        [persona]: { ...(p[persona] ?? {}), intimacy: Math.min(100, (p[persona]?.intimacy ?? 0) + 1) },
       }));
     }
 
     // ── 委託 AI 評論（非阻塞）──
-    generateComment({ amount, desc, isCombo, savingStreak });
+    generateComment({ amount, desc, isCombo, savingStreak, userTitle });
   }, [
-    isAiProcessing, lang, history, isSevered, persona, claimedAvoidedItems,
+    lang, history, isSevered, persona, claimedAvoidedItems,
     activeChallenges, insuranceExpiry, shield, savingStreak, now,
     setPersonaStats, setActiveChallenges, setClaimedAvoidedItems,
     setColdWarEndTime, setShield, setWillpowerExp,
@@ -311,10 +310,13 @@ export const useBattleLogic = () => {
     }
 
     setIsAiProcessing(true);
-    const parsed = await parseNLPTransaction(input);
-    setIsAiProcessing(false);
-    setPendingTx({ ...parsed, source });
-    setNlpInput('');
+    try {
+      const parsed = await parseNLPTransaction(input);
+      setPendingTx({ ...parsed, source });
+      setNlpInput('');
+    } finally {
+      setIsAiProcessing(false);
+    }
   }, [isAiProcessing, spendCoins, now, setActiveChallenges, setNlpInput,
       setIsAiProcessing, setPendingTx, addToBattleLog, parseNLPTransaction]);
 
@@ -477,6 +479,14 @@ export const useBattleLogic = () => {
         if (savingStreak >= 3) setStreakBroken(true);
         setSavingStreak(0);
         addToBattleLog('❄️ [Streak Lost] Spending exceeded threshold.');
+        // Browser push notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('💸 B-Battle 預算警報', {
+            body: '今日消費已超過 200 HP！存錢連擊已中斷 😭',
+            icon: 'https://cdn-icons-png.flaticon.com/512/1065/1065511.png',
+            badge: 'https://cdn-icons-png.flaticon.com/512/1065/1065511.png',
+          });
+        }
       }
       if (hasZenSofa) {
         setWillpowerExp((e) => e + 5);

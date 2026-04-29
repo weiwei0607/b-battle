@@ -19,13 +19,41 @@ import { load, save } from './stores/storage';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || window.VITE_GEMINI_API_KEY || "";
 
+const AchievementToast = ({ notification, onDismiss, onDetail }) => {
+  useEffect(() => {
+    const t = setTimeout(onDismiss, 4000);
+    return () => clearTimeout(t);
+  }, [onDismiss]);
+  return (
+    <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[7000] w-[90%] max-w-sm bg-stone-900 text-white p-4 rounded-3xl shadow-2xl flex items-center gap-4 animate-in slide-in-from-top-20 border border-amber-500/50">
+      <div className="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-amber-500/20">
+        {notification.icon}
+      </div>
+      <div className="flex-1 text-left">
+        <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest">成就達成！</p>
+        <h4 className="text-sm font-black tracking-tight">{notification.name}</h4>
+      </div>
+      <button onClick={onDetail} className="bg-stone-800 px-3 py-2 rounded-xl text-[9px] font-black">
+        點亮
+      </button>
+    </div>
+  );
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Splash & Streak Overlay（純 UI，留在 App.jsx，不需搬進 store）
 // ─────────────────────────────────────────────────────────────────────────────
 const GlobalSplash = ({ onComplete, persona, lang }) => {
   const [progress, setProgress] = useState(0);
   const t = LOCALES[lang] || LOCALES.zh;
-  const messages = [t.loading_report, t.loading_sync, t.loading_ai, t.loading_ready];
+  const messages = useMemo(() => {
+    const pool = [
+      t.loading_report, t.loading_sync, t.loading_ai, t.loading_ready,
+      '檢查裝備狀態...', '召喚戰鬥夥伴...', '校準預算雷達...',
+      '讀取心情數據...', '連線多重宇宙...', '運氣值計算中...',
+    ];
+    return pool.sort(() => Math.random() - 0.5).slice(0, 4);
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -182,6 +210,11 @@ const App = () => {
     window.addEventListener('online',  handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    // Request browser notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       if (u) {
         setUser(u);
@@ -277,21 +310,28 @@ const App = () => {
 
   // ── 衍生計算（useMemo，不屬於任何 store）─────────────────────────────────
   const hpData = useMemo(() => {
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const getMonthKey = (dateStr) => {
+      if (!dateStr) return '';
+      const parts = dateStr.split('/');
+      return `${parts[0]}/${(parts[1] || '').padStart(2, '0')}`;
+    };
+    // Monthly-equivalent limits from user's pool settings (same formula as HistoryView)
+    const limits = {
+      survival:   ((weeklyPools.food?.limit || 0) + (weeklyPools.transport?.limit || 0)) * 4 + (monthlyPools.housing?.limit || 0) || 10000,
+      progress:   monthlyPools.education?.limit || 5000,
+      desire:     (weeklyPools.social?.limit || 0) * 4 || 3000,
+      expedition: (weeklyPools.shopping?.limit || 0) * 4 || 15000,
+    };
     const getHp = (p) => {
       const isTeam = activeMode === 'team5v5' || activeMode === '1v1';
-      const todayStr = new Date().toLocaleDateString();
-      const limits = {
-        survival:   (weeklyPools.food?.limit  || 1000) + (weeklyPools.transport?.limit || 0) + (monthlyPools.housing?.limit    || 0),
-        progress:   (monthlyPools.education?.limit || 0),
-        desire:     (weeklyPools.social?.limit    || 0),
-        expedition: (weeklyPools.shopping?.limit  || 0),
-      };
-      const limit = limits[p] || 10000;
+      const limit = limits[p];
       const spent = history
-        .filter(h => CATEGORY_MAP[h.category] === p && (h.date === todayStr || p !== 'survival'))
+        .filter(h => h.pillar === p && getMonthKey(h.date) === currentMonth)
         .reduce((s, h) => s + h.damage, 0);
       const teamSpent = p === 'survival' ? teamSpentDaily : (p === 'progress' ? teamSpentWeekly : teamSpentMonthly);
-      return Math.max(0, 100 - ((isTeam ? teamSpent : spent) / (isTeam ? limit * 5 : limit || 1) * 100));
+      return Math.max(0, 100 - ((isTeam ? teamSpent : spent) / (isTeam ? limit * 5 : limit) * 100));
     };
     return { survival: getHp('survival'), progress: getHp('progress'), desire: getHp('desire'), expedition: getHp('expedition') };
   }, [history, activeMode, teamSpentDaily, teamSpentWeekly, teamSpentMonthly, weeklyPools, monthlyPools]);
@@ -421,21 +461,11 @@ const App = () => {
         </div>
       )}
       {achievementNotification && (
-        <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[7000] w-[90%] max-w-sm bg-stone-900 text-white p-4 rounded-3xl shadow-2xl flex items-center gap-4 animate-in slide-in-from-top-20 border border-amber-500/50">
-          <div className="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-amber-500/20">
-            {achievementNotification.icon}
-          </div>
-          <div className="flex-1 text-left">
-            <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest text-left">成就達成！</p>
-            <h4 className="text-sm font-black tracking-tight text-left">{achievementNotification.name}</h4>
-          </div>
-          <button
-            onClick={() => { setShowAchievements(true); setAchievementNotification(null); }}
-            className="bg-stone-800 px-3 py-2 rounded-xl text-[9px] font-black"
-          >
-            點亮
-          </button>
-        </div>
+        <AchievementToast
+          notification={achievementNotification}
+          onDismiss={() => setAchievementNotification(null)}
+          onDetail={() => { setShowAchievements(true); setAchievementNotification(null); }}
+        />
       )}
     </>
   );

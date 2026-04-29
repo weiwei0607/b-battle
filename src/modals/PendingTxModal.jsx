@@ -19,12 +19,13 @@ const PendingTxModal = ({ pendingTx, setPendingTx, executeTransaction }) => {
         pendingTx.category,
         pendingTx.source
       );
-      setPendingTx(null);
     } catch (err) {
       console.error('Transaction failed:', err);
       setError('交易執行失敗，請稍後再試');
     } finally {
       setLoading(false);
+      // 無論成功或失敗，一律關閉 modal（錯誤會顯示在 battle log）
+      setPendingTx(null);
     }
   };
 

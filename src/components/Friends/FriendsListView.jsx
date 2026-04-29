@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { User, TrendingUp, TrendingDown, Minus, ArrowLeft, UserPlus, Search, X, Swords, Users } from 'lucide-react';
+import { User, TrendingUp, TrendingDown, Minus, ArrowLeft, UserPlus, Search, X, Swords, Users, Trophy } from 'lucide-react';
 import { LOCALES } from '../../utils/locales';
+import { getTitleKey } from '../../utils/constants';
 
 const FriendsListView = ({ onClose, friends = [], userId, lang, setRoomId, setActiveMode }) => {
   const [showAddFriend, setShowAddFriend] = useState(false);
@@ -28,9 +29,9 @@ const FriendsListView = ({ onClose, friends = [], userId, lang, setRoomId, setAc
 
   // Localized Mock data if empty
   const displayFriends = friends.length > 0 ? friends : [
-    { id: '1', name: t.mock_friend_1, userAvatar: '🥷', thisWeekSaved: 1200, lastWeekSaved: 1000, createdAt: Date.now() - 400000000 },
-    { id: '2', name: t.mock_friend_2, userAvatar: '😎', thisWeekSaved: 500, lastWeekSaved: 800, createdAt: Date.now() - 1000000000 },
-    { id: '3', name: t.mock_friend_3, userAvatar: '👤', thisWeekSaved: 200, lastWeekSaved: 0, createdAt: Date.now() - 100000 }
+    { id: '1', name: t.mock_friend_1, userAvatar: '🥷', userTitle: '鋼鐵意志', thisWeekSaved: 1200, lastWeekSaved: 1000, createdAt: Date.now() - 400000000 },
+    { id: '2', name: t.mock_friend_2, userAvatar: '😎', userTitle: '記帳達人', thisWeekSaved: 500, lastWeekSaved: 800, createdAt: Date.now() - 1000000000 },
+    { id: '3', name: t.mock_friend_3, userAvatar: '👤', userTitle: '省錢新兵', thisWeekSaved: 200, lastWeekSaved: 0, createdAt: Date.now() - 100000 }
   ];
 
   const calculateRatio = (curr, prev) => {
@@ -117,6 +118,12 @@ const FriendsListView = ({ onClose, friends = [], userId, lang, setRoomId, setAc
                 </div>
                 <div className="flex-1 text-left">
                   <h4 className="font-black text-stone-800 mb-0.5">{friend.name}</h4>
+                  {friend.userTitle && (
+                    <p className="text-[9px] font-black text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full inline-flex items-center gap-1 uppercase tracking-tighter mb-1">
+                      <Trophy size={8} />
+                      {t[getTitleKey(friend.userTitle)] || friend.userTitle}
+                    </p>
+                  )}
                   <div className="flex items-center gap-2">
                     {isNewbie ? (
                       <span className="text-[8px] font-black bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full uppercase">{t.is_newbie}</span>

@@ -40,7 +40,7 @@ export const useAIComment = (apiKey) => {
    * @param {{ amount, desc, isCombo, savingStreak }} params
    */
   const generateComment = useCallback(
-    async ({ amount, desc, isCombo, savingStreak }) => {
+    async ({ amount, desc, isCombo, savingStreak, userTitle }) => {
       if (!apiKey) return;
       setIsAiProcessing(true);
       try {
@@ -52,8 +52,12 @@ export const useAIComment = (apiKey) => {
           ? ` IMPORTANT: The user is on a ${savingStreak}-day saving streak! React with extreme praise and disbelief — like witnessing a miracle. Go over the top.`
           : '';
 
+        const titleInstruction = userTitle
+          ? ` IMPORTANT: The user's title is "${userTitle}". Use their title as a STANDARD to judge their behavior. Create contrast — mock them if they betray their title, praise them if they live up to it. Example tones: "你這個購物對得起你${userTitle}的稱號嗎？" or "${userTitle}居然這樣花錢？". Keep it punchy.`
+          : '';
+
         const systemPrompt =
-          `System: ${systemBase}.${comboInstruction} Goal: ${wishlist}. ` +
+          `System: ${systemBase}.${comboInstruction}${titleInstruction} Goal: ${wishlist}. ` +
           `Action: spent ${amount} on ${desc}. Rules: limit 20 words, must use language: ${lang}.`;
 
         const result = await geminiPost(apiKey, {

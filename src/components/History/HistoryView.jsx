@@ -5,39 +5,135 @@ import {
 } from 'lucide-react';
 import { CATEGORY_MAP } from '../../utils/constants';
 import { LOCALES } from '../../utils/locales';
+import { useFinanceStore } from '../../stores/useFinanceStore';
 import EmptyState from '../UI/EmptyState';
 
-/* ── 子元件：羅馬柱 ───────────────────────────────────────── */
-const RomanPillar = memo(({ label, percent, colorClass, dmg, icon: Icon }) => {
-  const remainingPercent = Math.max(0, 100 - percent);
+/* ── 子元件：羅馬柱（新古典風格）────────────────────────── */
+const TempleChart = memo(({ pillars, title }) => {
+  const W = 320, H = 272;
+  const COLS = pillars.length;
+  const colW = 40;
+  const colGap = (W - COLS * colW) / (COLS + 1);
+  const shaftH = 145;
+  const capY = 56;
+  const capHeight = 15;
+  const baseY = capY + shaftH + 15;
+  const entabY = 28;
+  const entabLeft = colGap - 8;
+  const entabRight = colGap + COLS * colW + (COLS - 1) * colGap + 8;
+  const FLUTES = 6;
+  const ry = 4;
+
   return (
-    <div className="flex-1 flex flex-col items-center group min-w-[60px]">
-      <div className="w-12 h-1.5 bg-stone-300 rounded-t-sm shadow-sm" />
-      <div className="w-8 h-36 bg-stone-100 border-x border-stone-200 relative flex justify-center shadow-inner overflow-hidden">
-        <div
-          className={`absolute bottom-0 w-full transition-all duration-1000 ease-out ${colorClass} opacity-80`}
-          style={{ height: `${remainingPercent}%` }}
-        />
-        <div className="absolute inset-0 flex justify-evenly">
-          <div className="w-px h-full bg-white/30" />
-          <div className="w-px h-full bg-white/30" />
-        </div>
-      </div>
-      <div className="w-14 h-2.5 bg-stone-400 rounded-b-sm shadow-md flex items-center justify-center">
-        <Icon size={8} className="text-white/50" aria-hidden="true" />
-      </div>
-      <div className="mt-3 flex flex-col items-center">
-        <span className="text-[7px] font-black text-stone-400 uppercase tracking-tighter text-center leading-none mb-1 h-4 flex items-center">
-          {label}
-        </span>
-        <span className={`text-[9px] font-black leading-none ${dmg > 0 ? 'text-red-500' : 'text-stone-800'}`}>
-          -{dmg.toFixed(0)}
-        </span>
-      </div>
+    <div>
+      {title && <p className="text-[9px] font-black text-stone-400 uppercase tracking-[0.2em] mb-3 text-left">{title}</p>}
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible' }}>
+        <defs>
+          <linearGradient id="t-ev" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+            <stop offset="0%"   stopColor="#000" stopOpacity=".42"/>
+            <stop offset="10%"  stopColor="#000" stopOpacity=".00"/>
+            <stop offset="90%"  stopColor="#000" stopOpacity=".00"/>
+            <stop offset="100%" stopColor="#000" stopOpacity=".42"/>
+          </linearGradient>
+          <linearGradient id="t-hl" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+            <stop offset="0%"   stopColor="#fff" stopOpacity=".00"/>
+            <stop offset="12%"  stopColor="#fff" stopOpacity=".28"/>
+            <stop offset="38%"  stopColor="#fff" stopOpacity=".08"/>
+            <stop offset="100%" stopColor="#fff" stopOpacity=".00"/>
+          </linearGradient>
+          {pillars.map((p, i) => {
+            const x = colGap + i * (colW + colGap);
+            const fillH = shaftH * (Math.max(0, Math.min(100, p.pct)) / 100);
+            const fillY = capY + shaftH - fillH;
+            return (
+              <React.Fragment key={i}>
+                <clipPath id={`t-fl-${i}`}>
+                  <rect x={x} y={fillY} width={colW} height={fillH} rx="1"/>
+                </clipPath>
+                <pattern id={`t-fp-${i}`} x={x} y="0" width="8" height="2" patternUnits="userSpaceOnUse">
+                  <rect x="0" y="0" width="8" height="2" fill="transparent"/>
+                  <rect x="0.5" y="0" width="2" height="2" fill="rgba(70,60,40,.30)"/>
+                  <rect x="5" y="0" width="1.5" height="2" fill="rgba(255,255,255,.25)"/>
+                </pattern>
+              </React.Fragment>
+            );
+          })}
+        </defs>
+
+        {/* 三角山牆 */}
+        <path d={`M${entabLeft} ${entabY} L${W/2} 4 L${entabRight} ${entabY} Z`} fill="#E8E4DD"/>
+        <path d={`M${entabLeft+2} ${entabY} L${W/2} 6 L${entabRight-2} ${entabY} Z`} fill="none" stroke="rgba(255,255,255,.5)" strokeWidth="1"/>
+
+        {/* 楣梁 */}
+        <rect x={entabLeft} y={entabY} width={entabRight - entabLeft} height={capY - capHeight - entabY} fill="#DDD8D0"/>
+        <rect x={entabLeft} y={entabY} width={entabRight - entabLeft} height="1.5" fill="rgba(255,255,255,.5)"/>
+
+        {/* 4根柱子 */}
+        {pillars.map((p, i) => {
+          const x = colGap + i * (colW + colGap);
+          const cx = x + colW / 2;
+          const safeP = Math.max(0, Math.min(100, p.pct));
+          const fillH = shaftH * (safeP / 100);
+          const fillY = capY + shaftH - fillH;
+
+          return (
+            <g key={i}>
+              {/* ── 柱基 Base ── */}
+              <ellipse cx={cx} cy={capY+shaftH} rx={colW/2} ry={ry} fill="#C8C4BC"/>
+              <path d={`M${x} ${capY+shaftH} Q${x-3} ${capY+shaftH+2} ${x-3} ${capY+shaftH+5} L${x+colW+3} ${capY+shaftH+5} Q${x+colW+3} ${capY+shaftH+2} ${x+colW} ${capY+shaftH} Z`} fill="#D5D0C8"/>
+              <rect x={x-5} y={capY+shaftH+5} width={colW+10} height="4" rx="1" fill="#DDD8D0"/>
+              <rect x={x-7} y={capY+shaftH+9} width={colW+14} height="3" rx="1" fill="#C8C4BC"/>
+
+              {/* ── 柱身 Shaft ── */}
+              <rect x={x} y={capY} width={colW} height={shaftH} fill="#F5F2ED" rx="1"/>
+              {/* 底色色調 */}
+              <rect x={x} y={capY} width={colW} height={shaftH} fill={p.color} opacity=".45" rx="1"/>
+              {/* 液體填色 */}
+              {safeP > 0 && (
+                <rect x={x} y={capY} width={colW} height={shaftH}
+                  fill={p.color} opacity=".72" clipPath={`url(#t-fl-${i})`} rx="1"/>
+              )}
+              {/* 高光+陰影 */}
+              <rect x={x} y={capY} width={colW} height={shaftH} fill="url(#t-hl)" rx="1"/>
+              <rect x={x} y={capY} width={colW} height={shaftH} fill="url(#t-ev)" rx="1"/>
+              {/* 凹槽 Flutes — 放在最後確保可見 */}
+              <rect x={x} y={capY} width={colW} height={shaftH} fill={`url(#t-fp-${i})`} rx="1"/>
+              {/* 液面橢圓 */}
+              {safeP > 2 && safeP < 99 && (
+                <ellipse cx={cx} cy={fillY} rx={colW/2 - 2} ry={ry * 0.7} fill={p.color} opacity=".9"/>
+              )}
+
+              {/* ── 柱頭 Capital ── */}
+              {/* 頂部薄板 */}
+              <rect x={x-6} y={capY-15} width={colW+12} height="3" rx="1" fill="#C8C4BC"/>
+              <rect x={x-6} y={capY-15} width={colW+12} height="1" fill="rgba(255,255,255,.45)"/>
+              {/* 方板 */}
+              <rect x={x-4} y={capY-12} width={colW+8} height="4" rx="1" fill="#D0CCC4"/>
+              {/* 弧形過渡 echinus */}
+              <path d={`M${x-4} ${capY-8} Q${x-4} ${capY-3} ${x} ${capY} L${x+colW} ${capY} Q${x+colW+4} ${capY-3} ${x+colW+4} ${capY-8} Z`} fill="#D8D4CC"/>
+              {/* 柱頂橢圓 */}
+              <ellipse cx={cx} cy={capY} rx={colW/2} ry={ry} fill="#E2DED6"/>
+
+              {/* 標籤 */}
+              <text x={cx} y={baseY + 24} textAnchor="middle" fontSize="8" fontWeight="800"
+                fill="#a8a29e" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>{p.label}</text>
+              <text x={cx} y={baseY + 38} textAnchor="middle" fontSize="11" fontWeight="800"
+                fill="#57534e">
+                {safeP.toFixed(0)}%
+              </text>
+            </g>
+          );
+        })}
+
+        {/* 基座台階 */}
+        <rect x={entabLeft - 4} y={baseY - 2} width={entabRight - entabLeft + 8} height="5" fill="#DDD8D0" rx="1"/>
+        <rect x={entabLeft - 8} y={baseY + 3} width={entabRight - entabLeft + 16} height="6" fill="#D0CCC4" rx="1"/>
+        <rect x={entabLeft - 8} y={baseY + 3} width={entabRight - entabLeft + 16} height="1" fill="rgba(255,255,255,.4)"/>
+      </svg>
     </div>
   );
 });
-RomanPillar.displayName = 'RomanPillar';
+TempleChart.displayName = 'TempleChart';
 
 /* ── 子元件：歷史項目 ─────────────────────────────────────── */
 const HistoryItem = memo(({
@@ -168,6 +264,7 @@ const HistoryView = ({
   unlockAchievement, achievements, lang
 }) => {
   const t = LOCALES[lang] || LOCALES.zh;
+  const { weeklyPools, monthlyPools } = useFinanceStore();
 
   const generateMonths = () => {
     const months = [];
@@ -197,7 +294,12 @@ const HistoryView = ({
   const filteredHistory = history.filter(h => getMonthKey(h.date) === selectedMonth);
   const totalDamage = filteredHistory.reduce((s, h) => s + h.damage, 0);
   const critCount = filteredHistory.filter(h => h.isCrit).length;
-  const limits = { survival: 10000, progress: 5000, desire: 3000, expedition: 15000 };
+  const limits = {
+    survival:   ((weeklyPools.food?.limit || 0) + (weeklyPools.transport?.limit || 0)) * 4 + (monthlyPools.housing?.limit || 0) || 10000,
+    progress:   monthlyPools.education?.limit || 5000,
+    desire:     (weeklyPools.social?.limit || 0) * 4 || 3000,
+    expedition: (weeklyPools.shopping?.limit || 0) * 4 || 15000,
+  };
   const categoryKeys = Object.keys(CATEGORY_MAP);
 
   useEffect(() => {
@@ -293,36 +395,15 @@ const HistoryView = ({
             </h3>
           </div>
         </div>
-        <div className="flex justify-between items-end gap-2 px-1 h-56">
-          <RomanPillar
-            label={t.pillar_survival}
-            percent={(filteredHistory.filter(h=>h.pillar==='survival').reduce((s,h)=>s+h.damage,0) / limits.survival * 100)}
-            dmg={filteredHistory.filter(h=>h.pillar==='survival').reduce((s,h)=>s+h.damage,0)}
-            colorClass="bg-blue-400"
-            icon={Heart}
-          />
-          <RomanPillar
-            label={t.pillar_progress}
-            percent={(filteredHistory.filter(h=>h.pillar==='progress').reduce((s,h)=>s+h.damage,0) / limits.progress * 100)}
-            dmg={filteredHistory.filter(h=>h.pillar==='progress').reduce((s,h)=>s+h.damage,0)}
-            colorClass="bg-emerald-400"
-            icon={Zap}
-          />
-          <RomanPillar
-            label={t.pillar_desire}
-            percent={(filteredHistory.filter(h=>h.pillar==='desire').reduce((s,h)=>s+h.damage,0) / limits.desire * 100)}
-            dmg={filteredHistory.filter(h=>h.pillar==='desire').reduce((s,h)=>s+h.damage,0)}
-            colorClass="bg-orange-400"
-            icon={Flame}
-          />
-          <RomanPillar
-            label={t.pillar_expedition}
-            percent={(filteredHistory.filter(h=>h.pillar==='expedition').reduce((s,h)=>s+h.damage,0) / limits.expedition * 100)}
-            dmg={filteredHistory.filter(h=>h.pillar==='expedition').reduce((s,h)=>s+h.damage,0)}
-            colorClass="bg-purple-500"
-            icon={Globe}
-          />
-        </div>
+        <TempleChart
+          title={t.weekly_damage || '本週防線損耗'}
+          pillars={[
+            { label: t.pillar_survival,   color: '#F4A6B5', pct: Math.min(100, (filteredHistory.filter(h=>h.pillar==='survival').reduce((s,h)=>s+h.damage,0)   / limits.survival   * 100)), dmg: filteredHistory.filter(h=>h.pillar==='survival').reduce((s,h)=>s+h.damage,0) },
+            { label: t.pillar_progress,   color: '#B8A9E0', pct: Math.min(100, (filteredHistory.filter(h=>h.pillar==='progress').reduce((s,h)=>s+h.damage,0)   / limits.progress   * 100)), dmg: filteredHistory.filter(h=>h.pillar==='progress').reduce((s,h)=>s+h.damage,0) },
+            { label: t.pillar_desire,     color: '#F5C89A', pct: Math.min(100, (filteredHistory.filter(h=>h.pillar==='desire').reduce((s,h)=>s+h.damage,0)     / limits.desire     * 100)), dmg: filteredHistory.filter(h=>h.pillar==='desire').reduce((s,h)=>s+h.damage,0) },
+            { label: t.pillar_expedition, color: '#A8E0D0', pct: Math.min(100, (filteredHistory.filter(h=>h.pillar==='expedition').reduce((s,h)=>s+h.damage,0) / limits.expedition * 100)), dmg: filteredHistory.filter(h=>h.pillar==='expedition').reduce((s,h)=>s+h.damage,0) },
+          ]}
+        />
       </div>
 
       {/* AI 評論 */}
