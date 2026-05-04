@@ -6,6 +6,13 @@ const PendingTxModal = ({ pendingTx, setPendingTx, executeTransaction }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // 錯誤訊息 3 秒後自動消失
+  React.useEffect(() => {
+    if (!error) return;
+    const t = setTimeout(() => setError(''), 3000);
+    return () => clearTimeout(t);
+  }, [error]);
+
   if (!pendingTx) return null;
 
   const handleConfirm = async () => {
@@ -21,7 +28,7 @@ const PendingTxModal = ({ pendingTx, setPendingTx, executeTransaction }) => {
       );
     } catch (err) {
       console.error('Transaction failed:', err);
-      setError('交易執行失敗，請稍後再試');
+      setError(err?.message || '交易執行失敗，請稍後再試');
     } finally {
       setLoading(false);
       // 無論成功或失敗，一律關閉 modal（錯誤會顯示在 battle log）

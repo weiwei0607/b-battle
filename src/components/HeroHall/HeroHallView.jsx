@@ -9,7 +9,7 @@ const HeroHallView = ({
  lastPersonaSwitch, setLastPersonaSwitch, wishlist, setWishlist,
   debt, userFrame, homeMaterials, user, setShowLogin, setView, lang,
   userName, setUserName, userId, userAvatar, setUserAvatar, showEvolutionPath, setShowEvolutionPath, willpowerExp,
-  setShowCustomModal, coins = 0, wishlistGoal = 0, setWishlistGoal
+  setShowCustomModal, coins = 0, wishlistGoal = 0, setWishlistGoal, setShowAchievements
 }) => {
   const t = LOCALES[lang] || LOCALES.zh;
   const currentPersona = personaStats[persona];
@@ -66,9 +66,9 @@ const HeroHallView = ({
             </div>
             <div className="flex flex-col gap-1">
               <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">ID: {userId || "------"}</p>
-              <p className="text-[10px] font-black text-amber-700 bg-amber-100 border border-amber-200 px-3 py-1 rounded-full inline-flex items-center gap-1 uppercase tracking-widest w-fit shadow-sm">
+              <p className="text-[10px] font-black text-amber-700 bg-amber-100 border border-amber-200 px-3 py-1 rounded-full inline-flex items-center gap-1 uppercase tracking-widest w-fit shadow-sm cursor-pointer active:scale-95 transition-all" onClick={() => setShowAchievements?.(true)}>
                 <Sparkles size={10} />
-                {t[getTitleKey(userTitle)] || userTitle || t.title_rookie || '省錢新兵'}
+                {t[userTitle] || t[getTitleKey(userTitle)] || userTitle || t.title_rookie || '省錢新兵'}
               </p>
             </div>
             <div className="mt-3 flex items-center gap-2">

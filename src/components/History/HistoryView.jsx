@@ -86,8 +86,8 @@ const TempleChart = memo(({ pillars, title }) => {
 
               {/* ── 柱身 Shaft ── */}
               <rect x={x} y={capY} width={colW} height={shaftH} fill="#F5F2ED" rx="1"/>
-              {/* 底色色調 */}
-              <rect x={x} y={capY} width={colW} height={shaftH} fill={p.color} opacity=".45" rx="1"/>
+              {/* 底色色調 — 只有損耗>0時才顯示淡色底 */}
+              {safeP < 95 && <rect x={x} y={capY} width={colW} height={shaftH} fill={p.color} opacity=".12" rx="1"/>}
               {/* 液體填色 */}
               {safeP > 0 && (
                 <rect x={x} y={capY} width={colW} height={shaftH}
@@ -398,10 +398,10 @@ const HistoryView = ({
         <TempleChart
           title={t.weekly_damage || '本週防線損耗'}
           pillars={[
-            { label: t.pillar_survival,   color: '#F4A6B5', pct: Math.min(100, (filteredHistory.filter(h=>h.pillar==='survival').reduce((s,h)=>s+h.damage,0)   / limits.survival   * 100)), dmg: filteredHistory.filter(h=>h.pillar==='survival').reduce((s,h)=>s+h.damage,0) },
-            { label: t.pillar_progress,   color: '#B8A9E0', pct: Math.min(100, (filteredHistory.filter(h=>h.pillar==='progress').reduce((s,h)=>s+h.damage,0)   / limits.progress   * 100)), dmg: filteredHistory.filter(h=>h.pillar==='progress').reduce((s,h)=>s+h.damage,0) },
-            { label: t.pillar_desire,     color: '#F5C89A', pct: Math.min(100, (filteredHistory.filter(h=>h.pillar==='desire').reduce((s,h)=>s+h.damage,0)     / limits.desire     * 100)), dmg: filteredHistory.filter(h=>h.pillar==='desire').reduce((s,h)=>s+h.damage,0) },
-            { label: t.pillar_expedition, color: '#A8E0D0', pct: Math.min(100, (filteredHistory.filter(h=>h.pillar==='expedition').reduce((s,h)=>s+h.damage,0) / limits.expedition * 100)), dmg: filteredHistory.filter(h=>h.pillar==='expedition').reduce((s,h)=>s+h.damage,0) },
+            { label: t.pillar_survival,   color: '#f9a8d4', pct: Math.max(0, 100 - Math.min(100, (filteredHistory.filter(h=>h.pillar==='survival').reduce((s,h)=>s+h.damage,0)   / limits.survival   * 100))), dmg: filteredHistory.filter(h=>h.pillar==='survival').reduce((s,h)=>s+h.damage,0) },
+            { label: t.pillar_progress,   color: '#c084fc', pct: Math.max(0, 100 - Math.min(100, (filteredHistory.filter(h=>h.pillar==='progress').reduce((s,h)=>s+h.damage,0)   / limits.progress   * 100))), dmg: filteredHistory.filter(h=>h.pillar==='progress').reduce((s,h)=>s+h.damage,0) },
+            { label: t.pillar_desire,     color: '#fdba74', pct: Math.max(0, 100 - Math.min(100, (filteredHistory.filter(h=>h.pillar==='desire').reduce((s,h)=>s+h.damage,0)     / limits.desire     * 100))), dmg: filteredHistory.filter(h=>h.pillar==='desire').reduce((s,h)=>s+h.damage,0) },
+            { label: t.pillar_expedition, color: '#6ee7b7', pct: Math.max(0, 100 - Math.min(100, (filteredHistory.filter(h=>h.pillar==='expedition').reduce((s,h)=>s+h.damage,0) / limits.expedition * 100))), dmg: filteredHistory.filter(h=>h.pillar==='expedition').reduce((s,h)=>s+h.damage,0) },
           ]}
         />
       </div>

@@ -148,6 +148,7 @@ export const useBattleLogic = () => {
 
   // ── 主要消費執行 ──────────────────────────────────────────────────────────
   const executeTransaction = useCallback(async (amount, desc, category, source = 'manual') => {
+    try {
     const t = LOCALES[lang] || LOCALES.zh;
     const pillar = CATEGORY_MAP[category] || 'expedition';
     const isUnnecessary = ['desire', 'expedition'].includes(pillar);
@@ -283,6 +284,10 @@ export const useBattleLogic = () => {
 
     // ── 委託 AI 評論（非阻塞）──
     generateComment({ amount, desc, isCombo, savingStreak, userTitle });
+    } catch (err) {
+      console.error('[executeTransaction] internal error:', err);
+      addToBattleLog(`❌ [System] ${err?.message || 'Transaction error'}`);
+    }
   }, [
     lang, history, isSevered, persona, claimedAvoidedItems,
     activeChallenges, insuranceExpiry, shield, savingStreak, now,
