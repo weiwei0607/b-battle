@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "b-battle-580b5",
+    "site": "willpower-battle",
     "public": "dist",
     "ignore": [
       "firebase.json",
