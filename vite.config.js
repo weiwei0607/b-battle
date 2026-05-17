@@ -19,18 +19,18 @@ export default defineConfig({
         background_color: '#F7F4EF',
         display: 'standalone',
         icons: [
-          { src: 'https://cdn-icons-png.flaticon.com/512/1065/1065511.png', sizes: '192x192', type: 'image/png' },
-          { src: 'https://cdn-icons-png.flaticon.com/512/1065/1065511.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
         ]
       }
     })
   ],
   base: '/',
   build: {
-    minify: false,
+    minify: 'esbuild',
     rollupOptions: {
       output: {
-        // 🚀 Code Splitting: 解決 500k 警告，將套件拆分出獨立檔案
+        // Code Splitting: 解決 500k 警告，將套件拆分出獨立檔案
         manualChunks(id) {
           if (id.includes('node_modules')) {
             if (id.includes('firebase')) return 'vendor-firebase';
@@ -42,6 +42,6 @@ export default defineConfig({
         }
       }
     },
-    chunkSizeWarningLimit: 800 // 提高警告閾值至 800k
+    chunkSizeWarningLimit: 800
   }
 })

@@ -11,13 +11,13 @@ import AppContent from './components/Layout/AppContent';
 import { TutorialOverlay } from './components/TutorialOverlay';
 import { X, Swords, WifiOff } from 'lucide-react';
 
-// ── Zustand Stores ────────────────────────────────────────────────────────────
+// ── Zustand Stores ──────────────────────────────────────────────────────────────────────────────
 import { useUserStore } from './stores/useUserStore';
 import { useFinanceStore } from './stores/useFinanceStore';
 import { useBattleStore } from './stores/useBattleStore';
 import { load, save } from './stores/storage';
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || window.VITE_GEMINI_API_KEY || "";
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
 
 const AchievementToast = ({ notification, onDismiss, onDetail }) => {
   useEffect(() => {
@@ -40,9 +40,9 @@ const AchievementToast = ({ notification, onDismiss, onDetail }) => {
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Splash & Streak Overlay（純 UI，留在 App.jsx，不需搬進 store）
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────────
+// Splash & Streak Overlay（純 UI，留在 App.jsx，不需搜進 store）
+// ────────────────────────────────────────────────────────────────────────────────
 const GlobalSplash = ({ onComplete, persona, lang }) => {
   const [progress, setProgress] = useState(0);
   const t = LOCALES[lang] || LOCALES.zh;
@@ -50,7 +50,7 @@ const GlobalSplash = ({ onComplete, persona, lang }) => {
     const pool = [
       t.loading_report, t.loading_sync, t.loading_ai, t.loading_ready,
       '檢查裝備狀態...', '召喚戰鬥夥伴...', '校準預算雷達...',
-      '讀取心情數據...', '連線多重宇宙...', '運氣值計算中...',
+      '讀取心情數據...', '連線多重宇宙...', '運氣値計算中...',
     ];
     return pool.sort(() => Math.random() - 0.5).slice(0, 4);
   }, []);
@@ -107,11 +107,11 @@ const StreakBrokenOverlay = ({ onDismiss }) => {
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────────
 // App
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────────
 const App = () => {
-  // ── 從 Stores 讀取所有狀態（取代 71 個 useState）─────────────────────────
+  // ── 從 Stores 讀取所有狀態（取代 71 個 useState）────────────────────────────────────────────
 
   // useUserStore
   const {
@@ -187,12 +187,12 @@ const App = () => {
     now, setNow,
   } = useBattleStore();
 
-  // ── 純 App.jsx 的本地狀態（不屬於任何 store）─────────────────────────────
+  // ── 純 App.jsx 的本地狀態（不屬於任何 store）─────────────────────────────────────────
   const [isSplashDone, setIsSplashDone] = useState(false);
 
   const t = LOCALES[lang] || LOCALES.zh;
 
-  // ── 遊戲邏輯（取代 useBattleCore(40個參數)）──────────────────────────────
+  // ── 遇戲邏輯（取代 useBattleCore(40個參數)）──────────────────────────────────────────────
   const {
     executeTransaction, processTransaction, spendCoins, executeRitual,
     handleClaimChallenge, handleGiveUpChallenge, simulateInvoice,
@@ -200,10 +200,10 @@ const App = () => {
     unlockAchievement, generateMonthlyReview,
   } = useBattleLogic();
 
-  // ── Firestore 聯機對戰同步（房間監聽、HP 上傳、隨機匹配）──────────────────
+  // ── Firestore 聯機對戰同步（房間監聽、HP 上傳、隨機匹配）──────────────────────────
   useFirebaseSync();
 
-  // ── Firebase 認證 & 雲端資料載入 ─────────────────────────────────────────
+  // ── Firebase 認證 & 雲端資料載入 ─────────────────────────────────────────────────
   useEffect(() => {
     const handleOnline  = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -239,7 +239,7 @@ const App = () => {
               try {
                 const hSnap = await getDocs(query(collection(db, 'users', u.uid, 'history'), orderBy('id', 'desc')));
                 if (!hSnap.empty) setHistory(hSnap.docs.map(d => d.data()));
-              } catch { /* index 未建立時靜默失敗，沿用 localStorage */ }
+              } catch { /* index 未建立時靜默失敗，没用 localStorage */ }
             }
 
             // 身份資料永遠以雲端為準
@@ -298,7 +298,7 @@ const App = () => {
   const handleSkipTutorial    = () => { setHasCompletedTutorial(true); setShowTutorial(false); };
   const handleCompleteTutorial = () => { setHasCompletedTutorial(true); setShowTutorial(false); };
 
-  // ── 語言切換（需額外寫回 Firestore）─────────────────────────────────────
+  // ── 語言切換（需額外寫回 Firestore）───────────────────────────────────────────────
   const handleSetLang = async (newLang) => {
     setLang(newLang);
     if (user) {
@@ -308,7 +308,7 @@ const App = () => {
     }
   };
 
-  // ── 衍生計算（useMemo，不屬於任何 store）─────────────────────────────────
+  // ── 衍生計算（useMemo，不屬於任何 store）─────────────────────────────────────────────
   const hpData = useMemo(() => {
     const now = new Date();
     const currentMonth = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -317,7 +317,6 @@ const App = () => {
       const parts = dateStr.split('/');
       return `${parts[0]}/${(parts[1] || '').padStart(2, '0')}`;
     };
-    // Monthly-equivalent limits from user's pool settings (same formula as HistoryView)
     const limits = {
       survival:   ((weeklyPools.food?.limit || 0) + (weeklyPools.transport?.limit || 0)) * 4 + (monthlyPools.housing?.limit || 0) || 10000,
       progress:   monthlyPools.education?.limit || 5000,
@@ -343,7 +342,7 @@ const App = () => {
     expedition: enemySpentMonthly < 0 ? 100 : enemySpentMonthly,
   }), [enemySpentDaily, enemySpentWeekly, enemySpentMonthly]);
 
-  // ── 業務函式（留在 App.jsx，因為要組合多個 store + Firestore）────────────
+  // ── 業務函式（留在 App.jsx，因為要組合多個 store + Firestore）────────────────────────────
   const handleAutoCalculate = () => {
     const total = parseInt(salaryInput) || 0;
     const monthly = Math.floor(total * 0.6);
@@ -398,9 +397,9 @@ const App = () => {
 
   const handleSplashComplete = useCallback(() => setIsSplashDone(true), []);
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────────────────
   // JSX
-  // ─────────────────────────────────────────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────────────────
   return (
     <>
       {!isSplashDone && <GlobalSplash onComplete={handleSplashComplete} persona={persona} lang={lang} />}
