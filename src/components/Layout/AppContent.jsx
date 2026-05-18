@@ -13,13 +13,12 @@ import AchievementModal from '../../modals/AchievementModal';
 import LeaderboardModal from '../../modals/LeaderboardModal';
 import ManualModal from '../../modals/ManualModal';
 import { CURRENCIES } from '../../utils/constants';
-import { LOCALES } from '../../utils/locales';
 
 const AppContent = ({
-  isSevered, view, setView, coins, setCoins, debt, setDebt, willpowerExp, persona, personaStats, setPersona,
+  isSevered, view, setView, coins, setCoins, debt, willpowerExp, persona, personaStats, setPersona,
   history, wishlist, setWishlist, homeMaterials, activeMode, setActiveMode, battleLog, activeChallenges,
-  pendingTx, setPendingTx, isAiProcessing, aiComment, reflectionText, setReflectionText, 
-  coldWarEndTime, now, nlpInput, setNlpInput, showBudgetSetup, setShowBudgetSetup, showShop, setShowShop, 
+  pendingTx, setPendingTx, isAiProcessing, aiComment, reflectionText,
+  nlpInput, setNlpInput, showBudgetSetup, setShowBudgetSetup, showShop, setShowShop,
   showCustomModal, setShowCustomModal, showAchievements, setShowAchievements, achievements,
   showEvolutionPath, setShowEvolutionPath, showFriends, setShowFriends, showRoomInput, setShowRoomInput, showInviteQR, setShowInviteQR,
   hpData, enemyHpData, executeTransaction, processTransaction, 
@@ -27,9 +26,9 @@ const AppContent = ({
   handleSavePersona, getSeveredReason, getHellPlaceholder, currentTier, lastPersonaSwitch, setLastPersonaSwitch,
   userFrame, setUserFrame, salaryInput, setSalaryInput, isStudent, setIsStudent, currency, setCurrency, setCurrentTier,
   deleteTransaction, updateTransaction, weeklyPools, setWeeklyPools, monthlyPools, setMonthlyPools,
-  getBondLevel, getFrameStyle, potions, setPotions, healTransaction,
-  shield, setShield, userTitle, setUserTitle, unlockedTitles, setUnlockedTitles, handleClaimAchievement,
-  user, setShowLogin, unlockAchievement, generateMonthlyReview, isOnline, lang, setLang,
+  potions, setPotions, healTransaction,
+  shield, setShield, userTitle, setUserTitle, handleClaimAchievement,
+  user, setShowLogin, unlockAchievement, generateMonthlyReview, lang, setLang,
   userName, setUserName, userId, userAvatar, setUserAvatar, roomId, setRoomId,
   enemyConnected,
   savingStreak,
@@ -38,9 +37,7 @@ const AppContent = ({
   hasZenSofa, setHasZenSofa,
   bannerText, setBannerText,
   inventory, setInventory,
-  hasCompletedTutorial, setHasCompletedTutorial, showTutorial, setShowTutorial
 }) => {
-  const t = LOCALES[lang] || LOCALES.zh;
   const [showLeaderboard, setShowLeaderboard] = React.useState(false);
   const [showManual, setShowManual] = React.useState(false);
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Store, Zap, ShieldCheck, AlertTriangle, Swords, Globe, ChevronDown, Crown, Trophy, Medal } from 'lucide-react';
 import { getWalletStatus } from '../../utils/constants';
 
-const Header = ({ currentTier, coins, debt, onShopClick, onAchievementsClick, onLeaderboardClick, setView, willpowerExp, lang, setLang, onWalletClick }) => {
+const Header = ({ coins, debt, onShopClick, onAchievementsClick, onLeaderboardClick, setView, willpowerExp, lang, setLang, onWalletClick }) => {
   const [showLangMenu, setShowLangMenu] = useState(false);
   const wallet = getWalletStatus(willpowerExp);
   const isInDebt = debt >= 500;
@@ -12,8 +12,6 @@ const Header = ({ currentTier, coins, debt, onShopClick, onAchievementsClick, on
     { id: 'en', label: 'English' },
     { id: 'ja', label: '日本語' }
   ];
-
-  const currentLangLabel = langOptions.find(o => o.id === lang)?.label || '繁中';
 
   return (
     <header className="flex justify-between items-center z-[200] py-4 shrink-0 gap-2 relative">

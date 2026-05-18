@@ -158,9 +158,6 @@ export const LOCALES = {
     ac_KARMA_MASTER_name: '刷成就大師', ac_KARMA_MASTER_desc: '頻繁刪除紀錄被系統標記',
     ac_BANKRUPT_name: '破產邊緣', ac_BANKRUPT_desc: '金幣歸零且負債超過 1000',
     ac_GAMBLER_name: '豪賭客', ac_GAMBLER_desc: '同時開啟 3 個我想買挑戰',
-    // 親密度
-    bond_0: '陌生人', bond_1: '普通戰友', bond_2: '可靠夥伴', bond_3: '意志摯友', bond_4: '靈魂伴侶',
-    logout_success: '帳號已安全登出',
     // 規則手冊
     manual_title: '意志力戰前手冊',
     manual_pillars_title: '四神柱防禦',

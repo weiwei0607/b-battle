@@ -5,16 +5,16 @@ import LoadingButton from '../components/UI/LoadingButton';
 import ErrorMessage from '../components/UI/ErrorMessage';
 
 const ShopModal = ({
-  show, onClose, coins, setCoins, setUserFrame, potions, setPotions,
-  shield, setShield, setInsuranceExpiry, setHasZenSofa, setBannerText, setInventory, inventory,
+  show, onClose, coins, setCoins, setUserFrame,
+  setPotions, setShield, setInsuranceExpiry, setHasZenSofa, setBannerText, setInventory, inventory,
   lang
 }) => {
-  if (!show) return null;
-
   const t = LOCALES[lang] || LOCALES.zh;
   const [loadingId, setLoadingId] = useState(null);
   const [error, setError] = useState('');
   const [successId, setSuccessId] = useState(null);
+
+  if (!show) return null;
 
   const buyItem = async (type, id, price, name, desc) => {
     if (coins < price) {
@@ -44,6 +44,7 @@ const ShopModal = ({
       setPotions(p => p + 1);
       alert(t.shop_buy_potion);
     } else if (type === 'insurance') {
+      // eslint-disable-next-line react-hooks/purity
       setInsuranceExpiry(Date.now() + 86400000);
       alert(t.shop_buy_insurance);
     } else if (type === 'sofa') {

@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'dev-dist', '.vercel', 'src/hooks/useBattleCore.js', 'final_fix.js', 'update_shop_locales2.js', 'update_shop_modal.js']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [

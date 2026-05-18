@@ -17,8 +17,6 @@ import { useFinanceStore } from './stores/useFinanceStore';
 import { useBattleStore } from './stores/useBattleStore';
 import { load, save } from './stores/storage';
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || window.VITE_GEMINI_API_KEY || "";
-
 const AchievementToast = ({ notification, onDismiss, onDetail }) => {
   useEffect(() => {
     const t = setTimeout(onDismiss, 4000);
@@ -46,14 +44,15 @@ const AchievementToast = ({ notification, onDismiss, onDetail }) => {
 const GlobalSplash = ({ onComplete, persona, lang }) => {
   const [progress, setProgress] = useState(0);
   const t = LOCALES[lang] || LOCALES.zh;
-  const messages = useMemo(() => {
+  const [messages] = useState(() => {
+    const tInit = LOCALES[lang] || LOCALES.zh;
     const pool = [
-      t.loading_report, t.loading_sync, t.loading_ai, t.loading_ready,
+      tInit.loading_report, tInit.loading_sync, tInit.loading_ai, tInit.loading_ready,
       '檢查裝備狀態...', '召喚戰鬥夥伴...', '校準預算雷達...',
       '讀取心情數據...', '連線多重宇宙...', '運氣值計算中...',
     ];
-    return pool.sort(() => Math.random() - 0.5).slice(0, 4);
-  }, []);
+    return [...pool].sort(() => Math.random() - 0.5).slice(0, 4);
+  });
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -131,7 +130,7 @@ const App = () => {
     currency, setCurrency,
     wishlist, setWishlist,
     wishlistGoal, setWishlistGoal,
-    homeMaterials, setHomeMaterials,
+    homeMaterials,
     salaryInput, setSalaryInput,
   } = useUserStore();
 
@@ -161,16 +160,16 @@ const App = () => {
     streakBroken, setStreakBroken,
     teamSpentDaily, teamSpentWeekly, teamSpentMonthly,
     enemySpentDaily, enemySpentWeekly, enemySpentMonthly,
-    activeChallenges, setActiveChallenges,
-    isSevered, setIsSevered,
+    activeChallenges,
+    isSevered,
     battleLog,
-    aiComment, setAiComment,
+    aiComment,
     isAiProcessing,
     pendingTx, setPendingTx,
     reflectionText, setReflectionText,
     nlpInput, setNlpInput,
     achievementNotification, setAchievementNotification,
-    coldWarEndTime, setColdWarEndTime,
+    coldWarEndTime,
     bannerText, setBannerText,
     hasCompletedTutorial, setHasCompletedTutorial,
     showTutorial, setShowTutorial,
@@ -194,7 +193,7 @@ const App = () => {
 
   // ── 遊戲邏輯（取代 useBattleCore(40個參數)）──────────────────────────────
   const {
-    executeTransaction, processTransaction, spendCoins, executeRitual,
+    executeTransaction, processTransaction, executeRitual,
     handleClaimChallenge, handleGiveUpChallenge, simulateInvoice,
     deleteTransaction, updateTransaction, handleClaimAchievement,
     unlockAchievement, generateMonthlyReview,
@@ -310,13 +309,8 @@ const App = () => {
 
   // ── 衍生計算（useMemo，不屬於任何 store）─────────────────────────────────
   const hpData = useMemo(() => {
-    const now = new Date();
-    const currentMonth = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const getMonthKey = (dateStr) => {
-      if (!dateStr) return '';
-      const parts = dateStr.split('/');
-      return `${parts[0]}/${(parts[1] || '').padStart(2, '0')}`;
-    };
+    const currentMonth = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' }).format(new Date()).slice(0, 7);
+    const getMonthKey = (dateStr) => (dateStr || '').slice(0, 7);
     // Monthly-equivalent limits from user's pool settings (same formula as HistoryView)
     const limits = {
       survival:   ((weeklyPools.food?.limit || 0) + (weeklyPools.transport?.limit || 0)) * 4 + (monthlyPools.housing?.limit || 0) || 10000,

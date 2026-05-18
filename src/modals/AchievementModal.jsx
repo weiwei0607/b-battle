@@ -4,7 +4,6 @@ import { ACHIEVEMENTS, getTitleKey } from '../utils/constants';
 import { LOCALES } from '../utils/locales';
 
 const AchievementModal = ({ show, onClose, achievements, onClaim, userTitle, setUserTitle, lang }) => {
-  if (!show) return null;
   const t = LOCALES[lang] || LOCALES.zh;
 
   const medalList = Object.values(ACHIEVEMENTS);
@@ -12,6 +11,8 @@ const AchievementModal = ({ show, onClose, achievements, onClaim, userTitle, set
   const hiddenMedals = medalList.filter(m => m.isHidden && achievements[m.id]?.unlocked);
 
   const unlockedCount = useMemo(() => Object.values(achievements || {}).filter(a => a.unlocked).length, [achievements]);
+
+  if (!show) return null;
   const totalCount = medalList.length;
   const progressPercent = Math.round((unlockedCount / totalCount) * 100);
 

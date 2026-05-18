@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 /**
  * Skeleton
@@ -41,20 +41,23 @@ const Skeleton = ({
  * SkeletonCard
  * 卡片骨架屏組合
  */
-export const SkeletonCard = ({ lines = 3 }) => (
-  <div className="bg-white border border-stone-100 p-6 rounded-[2.5rem] shadow-sm space-y-3">
-    <div className="flex items-center gap-3">
-      <Skeleton variant="circle" width="48px" height="48px" />
-      <div className="flex-1 space-y-2">
-        <Skeleton variant="text" width="60%" />
-        <Skeleton variant="text" width="40%" />
+export const SkeletonCard = ({ lines = 3 }) => {
+  const [widths] = useState(() => Array.from({ length: lines }, () => `${70 + Math.random() * 30}%`));
+  return (
+    <div className="bg-white border border-stone-100 p-6 rounded-[2.5rem] shadow-sm space-y-3">
+      <div className="flex items-center gap-3">
+        <Skeleton variant="circle" width="48px" height="48px" />
+        <div className="flex-1 space-y-2">
+          <Skeleton variant="text" width="60%" />
+          <Skeleton variant="text" width="40%" />
+        </div>
       </div>
+      {widths.map((width, i) => (
+        <Skeleton key={i} variant="text" width={width} />
+      ))}
     </div>
-    {Array.from({ length: lines }).map((_, i) => (
-      <Skeleton key={i} variant="text" width={`${70 + Math.random() * 30}%`} />
-    ))}
-  </div>
-);
+  );
+};
 
 /**
  * SkeletonPillar

@@ -4,6 +4,20 @@ import { db } from '../firebase';
 import { CATEGORY_MAP, ACHIEVEMENTS } from '../utils/constants';
 import { LOCALES } from '../utils/locales';
 
+const TZ = 'Asia/Taipei';
+const taipeiDateStr = (d = new Date()) =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(d);
+const taipeiParts = (d = new Date()) => {
+  const fmt = new Intl.DateTimeFormat('en-US', { timeZone: TZ, year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', weekday: 'short', hour12: false });
+  const parts = Object.fromEntries(fmt.formatToParts(d).map(p => [p.type, p.value]));
+  return {
+    date: Number(parts.day),
+    month: Number(parts.month) - 1,
+    hour: Number(parts.hour) % 24,
+    day: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(parts.weekday),
+  };
+};
+
 export const useBattleCore = (
   user, isCloudLoading,
   coins, setCoins, 
@@ -74,7 +88,7 @@ export const useBattleCore = (
             setTeamSpentStates.setEnemySpentMonthly(-1);
           }
         } else {
-          setDoc(roomRef, { createdAt: Date.now(), players: {} }, { merge: true });
+          setDoc(roomRef, { createdAt: Date.now(), players: {} }, { merge: true }).catch(() => {});
         }
       });
       return () => unsubscribe();
@@ -84,15 +98,16 @@ export const useBattleCore = (
   // 🚀 [數據上傳邏輯]
   useEffect(() => {
     if ((activeMode === 'team5v5' || activeMode === '1v1') && roomId && roomId !== "MATCHMAKING_QUEUE" && user) {
-      const todayStr = new Date().toLocaleDateString();
+      const todayStr = taipeiDateStr();
       const nowDate = new Date();
+      const nowParts = taipeiParts(nowDate);
 
-      const dayOfWeek = nowDate.getDay();
+      const dayOfWeek = nowParts.day;
       const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
       const weekStart = new Date(nowDate);
       weekStart.setDate(nowDate.getDate() - daysFromMonday);
       weekStart.setHours(0, 0, 0, 0);
-      const monthStart = new Date(nowDate.getFullYear(), nowDate.getMonth(), 1);
+      const monthStart = new Date(nowDate.getFullYear(), nowParts.month, 1);
 
       const limits = {
         survival: (weeklyPools.food?.limit || 1000) + (weeklyPools.transport?.limit || 0) + (monthlyPools.housing?.limit || 0),
@@ -113,7 +128,7 @@ export const useBattleCore = (
 
       setDoc(doc(db, "rooms", roomId), {
         [`players.${user.uid}`]: { uid: user.uid, name: userName, hpSurvival, hpProgress, hpDesire, hpExpedition, lastUpdate: Date.now() }
-      }, { merge: true });
+      }, { merge: true }).catch(() => {});
     }
   }, [history, activeMode, roomId, user, userName]);
 
@@ -141,7 +156,7 @@ export const useBattleCore = (
             ...bots,
             [user.uid]: { uid: user.uid, name: userName, hpSurvival: 100, hpProgress: 100, hpDesire: 100, hpExpedition: 100, lastUpdate: Date.now() }
           }
-        });
+        }).catch(() => {});
         
         setRoomId(botRoomId);
         setActiveMode('team5v5');
@@ -194,7 +209,7 @@ export const useBattleCore = (
     if (achievements && achievements[id]?.unlocked) return;
     const medal = ACHIEVEMENTS[id];
     if (!medal) return;
-    setAchievements(prev => ({ ...prev, [id]: { unlocked: true, claimed: false, date: new Date().toLocaleDateString() } }));
+    setAchievements(prev => ({ ...prev, [id]: { unlocked: true, claimed: false, date: taipeiDateStr() } }));
     setAchievementNotification({ id, name: medal.name, icon: medal.icon });
     addLog(`🏆 [Achievement] ${medal.name}!`);
   }, [achievements, setAchievements, addLog, setAchievementNotification]);
@@ -217,7 +232,7 @@ export const useBattleCore = (
     if (countThresholds[currentCount]) unlockAchievement(countThresholds[currentCount]);
 
     // 時間監測
-    const hour = new Date().getHours();
+    const hour = taipeiParts().hour;
     if (hour >= 5 && hour < 7) unlockAchievement('EARLY_BIRD');
     if (hour >= 0 && hour < 4) unlockAchievement('NIGHT_OWL');
 
@@ -285,7 +300,7 @@ export const useBattleCore = (
       unlockAchievement('SHIELD_USER');
     }
 
-    const newEntry = { id: Date.now(), amount, desc, category, pillar, damage: totalDamage, isCrit: penaltyHp > 0, source, time: new Date().toLocaleTimeString(), date: new Date().toLocaleDateString(), shielded: shield > 0 };
+    const newEntry = { id: Date.now(), amount, desc, category, pillar, damage: totalDamage, isCrit: penaltyHp > 0, source, time: new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(new Date()), date: taipeiDateStr(), shielded: shield > 0 };
     setHistory(prev => [newEntry, ...prev]);
     if (user) {
       setDoc(doc(db, "users", user.uid, "history", newEntry.id.toString()), newEntry).catch(() => {});
@@ -320,7 +335,7 @@ export const useBattleCore = (
 
     if (getCount('cat_book') >= 3) unlockAchievement('BOOK_WORM');
     
-    const dailyFoodCount = historyWithNew.filter(h => h.date === new Date().toLocaleDateString() && h.category === 'cat_food').length;
+    const dailyFoodCount = historyWithNew.filter(h => h.date === taipeiDateStr() && h.category === 'cat_food').length;
     if (dailyFoodCount >= 5) unlockAchievement('GOURMET');
     
     if (hour >= 0 && hour < 4 && category === 'cat_food') unlockAchievement('MIDNIGHT_SNACK');
@@ -523,14 +538,15 @@ export const useBattleCore = (
   }, [coins, debt, personaStats, persona, achievements, unlockAchievement, history]);
 
   useEffect(() => {
-    const todayStr = new Date().toLocaleDateString();
+    const todayStr = taipeiDateStr();
     if (lastTrackDate && lastTrackDate !== todayStr) {
       const nowTime = new Date();
-      const last = new Date(lastTrackDate);
-      
+      const nowP = taipeiParts(nowTime);
+      const lastP = taipeiParts(new Date(lastTrackDate));
+
       // 🚀 [季度重置] 滿血版邏輯還原
-      const currentMonth = nowTime.getMonth() + 1;
-      const isNewSeason = [1, 4, 7, 10].includes(currentMonth) && nowTime.getDate() === 1;
+      const currentMonth = nowP.month + 1;
+      const isNewSeason = [1, 4, 7, 10].includes(currentMonth) && nowP.date === 1;
       const lastResetSeason = localStorage.getItem('bb_v3_last_reset_season');
       const seasonKey = `${nowTime.getFullYear()}-${Math.ceil(currentMonth / 3)}`;
 
@@ -538,8 +554,8 @@ export const useBattleCore = (
         addLog("🌪️ [Season Reset] Willpower season settlement!");
         let bonus = 0;
         if (debt >= 500) { addLog("🕊️ [Amnesty] Reset to 2000 coins, start over!"); setDebt(0); }
-        else if (coins > 5000) { 
-          bonus = Math.floor((coins - 2000) * 0.1); 
+        else if (coins > 5000) {
+          bonus = Math.floor((coins - 2000) * 0.1);
           setHomeMaterials(prev => prev + bonus * 10);
           addLog(`🏰 [Wealth] Converted to ${bonus * 10} materials!`);
         }
@@ -547,14 +563,14 @@ export const useBattleCore = (
         localStorage.setItem('bb_v3_last_reset_season', seasonKey);
       }
 
-      if (nowTime.getDate() !== last.getDate()) { 
-        addLog("📅 Daily reset."); setTeamSpentStates.setTeamSpentDaily(0); 
-        const lastDaySpent = history.filter(h => h.date === last.toLocaleDateString() && h.pillar === 'survival').reduce((s, h) => s + h.amount, 0);
+      if (nowP.date !== lastP.date || nowP.month !== lastP.month) {
+        addLog("📅 Daily reset."); setTeamSpentStates.setTeamSpentDaily(0);
+        const lastDaySpent = history.filter(h => h.date === lastTrackDate && h.pillar === 'survival').reduce((s, h) => s + h.amount, 0);
         if (lastDaySpent > 0 && lastDaySpent < 200) {
           unlockAchievement('SAVING_EXPERT');
           if (lastDaySpent < 100) unlockAchievement('SURVIVAL_100');
           if (lastDaySpent < 50) unlockAchievement('SURVIVAL_50');
-          
+
           const newStreak = savingStreak + 1;
           setSavingStreak(newStreak);
           if (newStreak >= 3) unlockAchievement('STREAK_3');
@@ -574,16 +590,15 @@ export const useBattleCore = (
           addLog("🪑 [Zen Sofa] Relaxing at home, Exp +5.");
         }
       }
-      if (nowTime.getDay() === 1 && nowTime.getDate() !== last.getDate()) { 
-        addLog("📅 Weekly reset."); 
-        setTeamSpentStates.setTeamSpentWeekly(0); 
-        
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        const hasExpedition = history.some(h => new Date(h.date) >= oneWeekAgo && h.pillar === 'expedition');
+      if (nowP.day === 1 && (nowP.date !== lastP.date || nowP.month !== lastP.month)) {
+        addLog("📅 Weekly reset.");
+        setTeamSpentStates.setTeamSpentWeekly(0);
+
+        const oneWeekAgoStr = taipeiDateStr(new Date(Date.now() - 7 * 86400_000));
+        const hasExpedition = history.some(h => h.date >= oneWeekAgoStr && h.pillar === 'expedition');
         if (!hasExpedition) unlockAchievement('NO_EXPEDITION_WEEK');
 
-        const weeklySpent = history.filter(h => new Date(h.date) >= oneWeekAgo).reduce((s, h) => s + h.amount, 0);
+        const weeklySpent = history.filter(h => h.date >= oneWeekAgoStr).reduce((s, h) => s + h.amount, 0);
         const limits = {
           survival: (weeklyPools.food?.limit || 1000) + (weeklyPools.transport?.limit || 0) + (monthlyPools.housing?.limit || 0),
           progress: (monthlyPools.education?.limit || 0),
@@ -593,7 +608,7 @@ export const useBattleCore = (
         const totalBudget = limits.survival + limits.progress + limits.desire + limits.expedition;
         if (weeklySpent <= totalBudget * 0.8) unlockAchievement('THRIFTY_WEEK');
       }
-      if (nowTime.getDate() === 1 && nowTime.getMonth() !== last.getMonth()) {
+      if (nowP.date === 1 && nowP.month !== lastP.month) {
         addLog("📅 Monthly reset!"); setTeamSpentStates.setTeamSpentMonthly(0);
         const monthlySpent = history.filter(h => h.date && h.date.startsWith(lastTrackDate.slice(0, 7))).reduce((s, h) => s + h.damage, 0);
         const gain = monthlySpent < 20000 ? 5000 : 2000;
@@ -609,7 +624,7 @@ export const useBattleCore = (
       // history 現在存在 subcollection，不再塞進主 document
       setDoc(doc(db, "users", user.uid), {
         coins, debt, personaStats, persona, exp: willpowerExp, wishlist, lastTrackDate, homeMaterials, currentTier, potions, shield, userTitle, unlockedTitles, achievements, lang, userName, roomId, updatedAt: Date.now()
-      }, { merge: true });
+      }, { merge: true }).catch(() => {});
     }, 2000);
     return () => clearTimeout(timeout);
   }, [user, isCloudLoading, coins, debt, history, personaStats, persona, willpowerExp, wishlist, lastTrackDate, homeMaterials, currentTier, potions, shield, userTitle, unlockedTitles, achievements, lang, userName, roomId]);

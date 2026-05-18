@@ -22,12 +22,26 @@ import { useAIComment } from './useAIComment';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || window.VITE_GEMINI_API_KEY || '';
 
+const TZ = 'Asia/Taipei';
+const taipeiDateStr = (d = new Date()) =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(d);
+const taipeiParts = (d = new Date()) => {
+  const fmt = new Intl.DateTimeFormat('en-US', { timeZone: TZ, year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', weekday: 'short', hour12: false });
+  const parts = Object.fromEntries(fmt.formatToParts(d).map(p => [p.type, p.value]));
+  return {
+    date: Number(parts.day),
+    month: Number(parts.month) - 1,
+    hour: Number(parts.hour) % 24,
+    day: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(parts.weekday),
+  };
+};
+
 export const useBattleLogic = () => {
   // ── Stores ────────────────────────────────────────────────────────────────
   const {
-    user, persona, personaStats, setPersonaStats,
+    persona, personaStats, setPersonaStats,
     achievements, setAchievements, wishlist,
-    unlockedTitles, setUnlockedTitles, userTitle, setUserTitle,
+    userTitle,
     lang,
   } = useUserStore();
 
@@ -36,14 +50,11 @@ export const useBattleLogic = () => {
     history, setHistory, addToHistory, removeFromHistory, updateInHistory,
     willpowerExp, setWillpowerExp,
     shield, setShield,
-    potions, setPotions,
-    inventory, setInventory,
     weeklyPools, monthlyPools,
     insuranceExpiry, hasZenSofa,
   } = useFinanceStore();
 
   const {
-    isCloudLoading,
     activeMode, roomId,
     setTeamSpentDaily, setTeamSpentWeekly, setTeamSpentMonthly,
     setEnemySpentDaily, setEnemySpentMonthly,
@@ -57,7 +68,7 @@ export const useBattleLogic = () => {
     setAchievementNotification,
     addToBattleLog, setAiComment,
     isAiProcessing, setIsAiProcessing,
-    homeMaterials, setHomeMaterials,
+    setHomeMaterials,
     now,
   } = useBattleStore();
 
@@ -83,7 +94,7 @@ export const useBattleLogic = () => {
     const localizedName = t[`ac_${id}_name`] || medal.name;
     setAchievements((prev) => ({
       ...prev,
-      [id]: { unlocked: true, claimed: false, date: new Date().toLocaleDateString() },
+      [id]: { unlocked: true, claimed: false, date: taipeiDateStr() },
     }));
     setAchievementNotification({ id, name: localizedName, icon: medal.icon });
     addToBattleLog(`🏆 [Achievement] ${localizedName}!`);
@@ -152,7 +163,7 @@ export const useBattleLogic = () => {
     const t = LOCALES[lang] || LOCALES.zh;
     const pillar = CATEGORY_MAP[category] || 'expedition';
     const isUnnecessary = ['desire', 'expedition'].includes(pillar);
-    const hour = new Date().getHours();
+    const hour = taipeiParts().hour;
 
     // ── 成就監控：次數 ──
     const currentCount = history.length + 1;
@@ -227,8 +238,8 @@ export const useBattleLogic = () => {
     const newEntry = {
       id: Date.now(), amount, desc, category, pillar,
       damage: totalDamage, isCrit: penaltyHp > 0, source,
-      time: new Date().toLocaleTimeString(),
-      date: new Date().toLocaleDateString(),
+      time: new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date()),
+      date: taipeiDateStr(),
       shielded: shield > 0,
     };
     addToHistory(newEntry);
@@ -259,7 +270,7 @@ export const useBattleLogic = () => {
     ).length;
     if (convenienceCount >= 5) unlockAchievement('CONVENIENCE_STORE_FRIEND');
     if (getCount('cat_book') >= 3) unlockAchievement('BOOK_WORM');
-    const dailyFoodCount = historyWithNew.filter((h) => h.date === new Date().toLocaleDateString() && h.category === 'cat_food').length;
+    const dailyFoodCount = historyWithNew.filter((h) => h.date === taipeiDateStr() && h.category === 'cat_food').length;
     if (dailyFoodCount >= 5) unlockAchievement('GOURMET');
     if (hour >= 0 && hour < 4 && category === 'cat_food') unlockAchievement('MIDNIGHT_SNACK');
 
@@ -432,7 +443,7 @@ export const useBattleLogic = () => {
 
   // 日/週/月重置 + Streak 計算
   useEffect(() => {
-    const todayStr = new Date().toLocaleDateString();
+    const todayStr = taipeiDateStr();
     if (!lastTrackDate || lastTrackDate === todayStr) {
       setLastTrackDate(todayStr);
       return;
@@ -440,10 +451,12 @@ export const useBattleLogic = () => {
 
     const nowDate = new Date();
     const last = new Date(lastTrackDate);
+    const nowP = taipeiParts(nowDate);
+    const lastP = taipeiParts(last);
 
     // 季度重置
-    const currentMonth = nowDate.getMonth() + 1;
-    const isNewSeason = [1, 4, 7, 10].includes(currentMonth) && nowDate.getDate() === 1;
+    const currentMonth = nowP.month + 1;
+    const isNewSeason = [1, 4, 7, 10].includes(currentMonth) && nowP.date === 1;
     const seasonKey = `${nowDate.getFullYear()}-${Math.ceil(currentMonth / 3)}`;
     const lastResetSeason = localStorage.getItem('bb_v3_last_reset_season');
     if (isNewSeason && lastResetSeason !== seasonKey) {
@@ -461,12 +474,12 @@ export const useBattleLogic = () => {
     }
 
     // 日重置
-    if (nowDate.getDate() !== last.getDate()) {
+    if (nowP.date !== lastP.date) {
       addToBattleLog('📅 Daily reset.');
       setTeamSpentDaily(0);
 
       const lastDaySpent = history
-        .filter((h) => h.date === last.toLocaleDateString() && h.pillar === 'survival')
+        .filter((h) => h.date === taipeiDateStr(last) && h.pillar === 'survival')
         .reduce((s, h) => s + h.amount, 0);
 
       if (lastDaySpent > 0 && lastDaySpent < 200) {
@@ -500,20 +513,21 @@ export const useBattleLogic = () => {
     }
 
     // 週重置（週一）
-    if (nowDate.getDay() === 1 && nowDate.getDate() !== last.getDate()) {
+    if (nowP.day === 1 && nowP.date !== lastP.date) {
       addToBattleLog('📅 Weekly reset.');
       setTeamSpentWeekly(0);
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      const hasExpedition = history.some((h) => new Date(h.date) >= oneWeekAgo && h.pillar === 'expedition');
+      const oneWeekAgoStr = taipeiDateStr(oneWeekAgo);
+      const hasExpedition = history.some((h) => h.date >= oneWeekAgoStr && h.pillar === 'expedition');
       if (!hasExpedition) unlockAchievement('NO_EXPEDITION_WEEK');
-      const weeklySpent = history.filter((h) => new Date(h.date) >= oneWeekAgo).reduce((s, h) => s + h.amount, 0);
+      const weeklySpent = history.filter((h) => h.date >= oneWeekAgoStr).reduce((s, h) => s + h.amount, 0);
       const totalBudget = (weeklyPools.food?.limit || 1000) + (weeklyPools.transport?.limit || 0) + (weeklyPools.social?.limit || 0) + (weeklyPools.shopping?.limit || 0) + (monthlyPools.housing?.limit || 0) + (monthlyPools.education?.limit || 0);
       if (weeklySpent <= totalBudget * 0.8) unlockAchievement('THRIFTY_WEEK');
     }
 
     // 月重置
-    if (nowDate.getDate() === 1 && nowDate.getMonth() !== last.getMonth()) {
+    if (nowP.date === 1 && nowP.month !== lastP.month) {
       addToBattleLog('📅 Monthly reset!');
       setTeamSpentMonthly(0);
       const monthlySpent = history

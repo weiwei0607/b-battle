@@ -9,6 +9,19 @@
  *   呼叫端不需要自己 try/catch
  */
 import { useEffect, useCallback } from 'react';
+
+const TZ = 'Asia/Taipei';
+const taipeiDateStr = (d = new Date()) =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(d);
+const taipeiParts = (d = new Date()) => {
+  const fmt = new Intl.DateTimeFormat('en-US', { timeZone: TZ, year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short', hour12: false });
+  const parts = Object.fromEntries(fmt.formatToParts(d).map(p => [p.type, p.value]));
+  return {
+    date: Number(parts.day),
+    month: Number(parts.month) - 1,
+    day: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(parts.weekday),
+  };
+};
 import {
   doc, setDoc, deleteDoc, updateDoc,
   getDocs, collection, onSnapshot,
@@ -125,13 +138,14 @@ export const useFirebaseSync = () => {
     ) return;
 
     const nowDate = new Date();
-    const todayStr = nowDate.toLocaleDateString();
-    const dayOfWeek = nowDate.getDay();
-    const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const todayStr = taipeiDateStr(nowDate);
+    const nowP = taipeiParts(nowDate);
+    const daysFromMonday = nowP.day === 0 ? 6 : nowP.day - 1;
     const weekStart = new Date(nowDate);
     weekStart.setDate(nowDate.getDate() - daysFromMonday);
     weekStart.setHours(0, 0, 0, 0);
-    const monthStart = new Date(nowDate.getFullYear(), nowDate.getMonth(), 1);
+    const weekStartStr = taipeiDateStr(weekStart);
+    const monthStartStr = `${nowDate.getFullYear()}-${String(nowP.month + 1).padStart(2, '0')}-01`;
 
     const limits = {
       survival:   (weeklyPools.food?.limit  || 1000) + (weeklyPools.transport?.limit || 0) + (monthlyPools.housing?.limit || 0),
@@ -141,8 +155,8 @@ export const useFirebaseSync = () => {
     };
 
     const myDaily   = history.filter((h) => h.date === todayStr).reduce((s, h) => s + h.amount, 0);
-    const myWeekly  = history.filter((h) => new Date(h.date) >= weekStart).reduce((s, h) => s + h.amount, 0);
-    const myMonthly = history.filter((h) => new Date(h.date) >= monthStart).reduce((s, h) => s + h.amount, 0);
+    const myWeekly  = history.filter((h) => h.date >= weekStartStr).reduce((s, h) => s + h.amount, 0);
+    const myMonthly = history.filter((h) => h.date >= monthStartStr).reduce((s, h) => s + h.amount, 0);
 
     const hpSurvival   = Math.max(0, 100 - (myDaily   / ((limits.survival * 5)   || 1)) * 100);
     const hpProgress   = Math.max(0, 100 - (myWeekly  / ((limits.progress * 5)   || 1)) * 100);

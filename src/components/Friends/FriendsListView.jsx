@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { User, TrendingUp, TrendingDown, Minus, ArrowLeft, UserPlus, Search, X, Swords, Users, Trophy } from 'lucide-react';
 import { LOCALES } from '../../utils/locales';
 import { getTitleKey } from '../../utils/constants';
@@ -7,6 +7,7 @@ const FriendsListView = ({ onClose, friends = [], userId, lang, setRoomId, setAc
   const [showAddFriend, setShowAddFriend] = useState(false);
   const [friendIdInput, setFriendIdInput] = useState("");
   const [selectedFriend, setSelectedFriend] = useState(null);
+  const [now] = useState(() => Date.now());
   const t = LOCALES[lang] || LOCALES.zh;
 
   const handleAddFriend = () => {
@@ -28,11 +29,11 @@ const FriendsListView = ({ onClose, friends = [], userId, lang, setRoomId, setAc
   };
 
   // Localized Mock data if empty
-  const displayFriends = friends.length > 0 ? friends : [
-    { id: '1', name: t.mock_friend_1, userAvatar: '🥷', userTitle: '鋼鐵意志', thisWeekSaved: 1200, lastWeekSaved: 1000, createdAt: Date.now() - 400000000 },
-    { id: '2', name: t.mock_friend_2, userAvatar: '😎', userTitle: '記帳達人', thisWeekSaved: 500, lastWeekSaved: 800, createdAt: Date.now() - 1000000000 },
-    { id: '3', name: t.mock_friend_3, userAvatar: '👤', userTitle: '省錢新兵', thisWeekSaved: 200, lastWeekSaved: 0, createdAt: Date.now() - 100000 }
-  ];
+  const displayFriends = useMemo(() => friends.length > 0 ? friends : [
+    { id: '1', name: t.mock_friend_1, userAvatar: '🥷', userTitle: '鋼鐵意志', thisWeekSaved: 1200, lastWeekSaved: 1000, createdAt: now - 400000000 },
+    { id: '2', name: t.mock_friend_2, userAvatar: '😎', userTitle: '記帳達人', thisWeekSaved: 500, lastWeekSaved: 800, createdAt: now - 1000000000 },
+    { id: '3', name: t.mock_friend_3, userAvatar: '👤', userTitle: '省錢新兵', thisWeekSaved: 200, lastWeekSaved: 0, createdAt: now - 100000 }
+  ], [friends, t, now]);
 
   const calculateRatio = (curr, prev) => {
     if (prev <= 0) return null;
@@ -105,7 +106,7 @@ const FriendsListView = ({ onClose, friends = [], userId, lang, setRoomId, setAc
         <div className="flex-1 overflow-y-auto no-scrollbar space-y-4 pb-32">
           {displayFriends.map(friend => {
             const ratio = calculateRatio(friend.thisWeekSaved, friend.lastWeekSaved);
-            const isNewbie = (Date.now() - friend.createdAt) < 7 * 24 * 3600000;
+            const isNewbie = (now - friend.createdAt) < 7 * 24 * 3600000;
             
             return (
               <div 
