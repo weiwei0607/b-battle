@@ -196,7 +196,7 @@ const App = () => {
     executeTransaction, processTransaction, executeRitual,
     handleClaimChallenge, handleGiveUpChallenge, simulateInvoice,
     deleteTransaction, updateTransaction, handleClaimAchievement,
-    unlockAchievement, generateMonthlyReview,
+    unlockAchievement, generateMonthlyReview, syncUpdateTransaction,
   } = useBattleLogic();
 
   // ── Firestore 聯機對戰同步（房間監聽、HP 上傳、隨機匹配）──────────────────
@@ -380,13 +380,17 @@ const App = () => {
 
   const healTransaction = (id) => {
     if (potions <= 0) return;
+    const original = history.find(h => h.id === id);
+    if (!original) return;
+    const healed = { ...original, damage: 0, desc: `✨ [Healed] ${original.desc}` };
     setHistory(prev => {
-      const next = prev.map(h => h.id === id ? { ...h, damage: 0, desc: `✨ [Healed] ${h.desc}` } : h);
+      const next = prev.map(h => h.id === id ? healed : h);
       const healedCount = next.filter(h => h.desc.includes('[Healed]')).length;
       if (healedCount >= 3)  unlockAchievement('POTION_MASTER');
       if (healedCount >= 10) unlockAchievement('POTION_10');
       return next;
     });
+    syncUpdateTransaction(healed);
     setPotions(p => p - 1);
   };
 

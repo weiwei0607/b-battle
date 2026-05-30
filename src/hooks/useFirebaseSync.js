@@ -123,7 +123,10 @@ export const useFirebaseSync = () => {
           setEnemySpentMonthly(-1);
         }
       } else {
-        setDoc(roomRef, { createdAt: Date.now(), players: {} }, { merge: true }).catch(() => {});
+        // Room was deleted or expired — disconnect instead of silently recreating it
+        addToBattleLog(`⌛ [System] Room ${roomId} no longer exists.`);
+        setRoomId('');
+        setActiveMode('selection');
       }
     });
     return () => unsub();

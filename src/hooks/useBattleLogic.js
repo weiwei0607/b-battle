@@ -248,29 +248,40 @@ export const useBattleLogic = () => {
 
     if (totalDamage > 5000) unlockAchievement('SURVIVAL');
 
-    // ── 專精成就 ──
+    // ── 專精成就（單次遍歷，O(n)）──
     const historyWithNew = [newEntry, ...history];
-    const getCount = (cat) => historyWithNew.filter((h) => h.category === cat).length;
-    const shieldedCount = historyWithNew.filter((h) => h.shielded).length;
-    if (shieldedCount >= 5)  unlockAchievement('SHIELD_USER');
-    if (shieldedCount >= 50) unlockAchievement('SHIELD_50');
-    const foodCount = getCount('cat_food');
-    if (foodCount >= 10)  unlockAchievement('MASTER_FOOD_1');
-    if (foodCount >= 50)  unlockAchievement('MASTER_FOOD_2');
-    if (foodCount >= 150) unlockAchievement('MASTER_FOOD_3');
-    const studyCount = getCount('cat_study') + getCount('cat_book');
-    if (studyCount >= 5)  unlockAchievement('MASTER_STUDY_1');
-    if (studyCount >= 20) unlockAchievement('MASTER_STUDY_2');
-    if (studyCount >= 50) unlockAchievement('MASTER_STUDY_3');
-    if (getCount('cat_drink') >= 10 && desc.includes('咖啡')) unlockAchievement('CAFFEINE_ADDICT');
-    if (getCount('cat_fitness') >= 5) unlockAchievement('HEALTH_NUT');
-    const convenienceCount = historyWithNew.filter((h) =>
-      ['cat_drink', 'cat_snack', 'cat_daily'].includes(h.category) &&
-      (h.desc.includes('超商') || h.desc.includes('全家') || h.desc.includes('7-11') || h.desc.includes('萊爾富'))
-    ).length;
+    const catCounts = {};
+    let shieldedCount = 0;
+    let convenienceCount = 0;
+    let dailyFoodCount = 0;
+    const todayStr = taipeiDateStr();
+    const convenienceCats = new Set(['cat_drink', 'cat_snack', 'cat_daily']);
+    for (const h of historyWithNew) {
+      catCounts[h.category] = (catCounts[h.category] || 0) + 1;
+      if (h.shielded) shieldedCount++;
+      if (convenienceCats.has(h.category) &&
+          (h.desc.includes('超商') || h.desc.includes('全家') || h.desc.includes('7-11') || h.desc.includes('萊爾富'))) {
+        convenienceCount++;
+      }
+      if (h.date === todayStr && h.category === 'cat_food') dailyFoodCount++;
+    }
+    const foodCount   = catCounts['cat_food']    || 0;
+    const drinkCount  = catCounts['cat_drink']   || 0;
+    const studyCount  = (catCounts['cat_study']  || 0) + (catCounts['cat_book'] || 0);
+    const bookCount   = catCounts['cat_book']    || 0;
+    const fitnessCount = catCounts['cat_fitness'] || 0;
+    if (shieldedCount >= 5)   unlockAchievement('SHIELD_USER');
+    if (shieldedCount >= 50)  unlockAchievement('SHIELD_50');
+    if (foodCount >= 10)   unlockAchievement('MASTER_FOOD_1');
+    if (foodCount >= 50)   unlockAchievement('MASTER_FOOD_2');
+    if (foodCount >= 150)  unlockAchievement('MASTER_FOOD_3');
+    if (studyCount >= 5)   unlockAchievement('MASTER_STUDY_1');
+    if (studyCount >= 20)  unlockAchievement('MASTER_STUDY_2');
+    if (studyCount >= 50)  unlockAchievement('MASTER_STUDY_3');
+    if (drinkCount >= 10 && desc.includes('咖啡')) unlockAchievement('CAFFEINE_ADDICT');
+    if (fitnessCount >= 5) unlockAchievement('HEALTH_NUT');
     if (convenienceCount >= 5) unlockAchievement('CONVENIENCE_STORE_FRIEND');
-    if (getCount('cat_book') >= 3) unlockAchievement('BOOK_WORM');
-    const dailyFoodCount = historyWithNew.filter((h) => h.date === taipeiDateStr() && h.category === 'cat_food').length;
+    if (bookCount >= 3)    unlockAchievement('BOOK_WORM');
     if (dailyFoodCount >= 5) unlockAchievement('GOURMET');
     if (hour >= 0 && hour < 4 && category === 'cat_food') unlockAchievement('MIDNIGHT_SNACK');
 
@@ -592,5 +603,6 @@ export const useBattleLogic = () => {
     handleClaimAchievement,
     unlockAchievement,
     generateMonthlyReview: _generateMonthlyReview,
+    syncUpdateTransaction,
   };
 };
