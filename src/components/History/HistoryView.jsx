@@ -1,7 +1,8 @@
 import React, { useState, useEffect, memo } from 'react';
 import {
   Skull, TrendingDown, Calendar, Trash2, Edit3, Check, X, LifeBuoy,
-  AlertCircle, Heart, Zap, Flame, Globe, MessageSquare, Loader2, ChevronDown
+  AlertCircle, Heart, Zap, Flame, Globe, MessageSquare, Loader2, ChevronDown,
+  Download
 } from 'lucide-react';
 import { CATEGORY_MAP } from '../../utils/constants';
 import { LOCALES } from '../../utils/locales';
@@ -330,6 +331,84 @@ const HistoryView = ({
 
   const currentPersona = personaStats?.[persona] || { icon: '🙄', title: 'Coach', titleKey: 'persona_peer' };
 
+  const handleDownloadReport = () => {
+    const [year, month] = selectedMonth.split('/');
+    const allPools = { ...weeklyPools, ...monthlyPools };
+
+    // Map pillar -> label for display
+    const pillarLabels = {
+      survival: t.pillar_survival || '生存戰耗',
+      progress: t.pillar_progress || '進化投資',
+      desire:   t.pillar_desire   || '慾望侵蝕',
+      expedition: t.pillar_expedition || '遠征破防',
+    };
+
+    // Group spending by category
+    const byCategory = {};
+    filteredHistory.forEach(h => {
+      const key = h.category;
+      if (!byCategory[key]) byCategory[key] = 0;
+      byCategory[key] += h.amount;
+    });
+
+    // Build category lines: category label, amount, limit if any
+    const catLines = Object.entries(byCategory)
+      .sort((a, b) => b[1] - a[1])
+      .map(([catKey, total]) => {
+        const catLabel = t[catKey] || catKey;
+        // Find matching pool by label
+        const matchedPool = Object.values(allPools).find(p => p.label && (t[catKey] === p.label || p.label === catLabel));
+        if (matchedPool && matchedPool.limit) {
+          const pct = Math.round((total / matchedPool.limit) * 100);
+          return `  ${catLabel.padEnd(6, '　')} NT$${total} / 限額 NT$${matchedPool.limit} (${pct}%)`;
+        }
+        return `  ${catLabel.padEnd(6, '　')} NT$${total}`;
+      });
+
+    // Top 5 largest expenses by amount
+    const top5 = [...filteredHistory]
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5)
+      .map((h, i) => {
+        const catLabel = t[h.category] || h.category;
+        const note = h.desc ? ` — ${h.desc}` : '';
+        return `  ${i + 1}. ${catLabel} NT$${h.amount}${note}`;
+      });
+
+    const total = filteredHistory.reduce((s, h) => s + h.amount, 0);
+    const count = filteredHistory.length;
+    const avg = count > 0 ? Math.round(total / count) : 0;
+
+    const border = '══════════════════════════════════';
+    const lines = [
+      border,
+      `B-Battle 月報告 ${year}年${parseInt(month, 10)}月`,
+      border,
+      '',
+      `💰 本月總支出：NT$${total}`,
+      '',
+      '📊 各類別支出：',
+      ...(catLines.length > 0 ? catLines : ['  （無消費記錄）']),
+      '',
+      '🏆 前5大支出：',
+      ...(top5.length > 0 ? top5 : ['  （無消費記錄）']),
+      '',
+      `⚔️ 本月戰況：${count}筆消費，平均每筆NT$${avg}`,
+      border,
+    ];
+
+    const content = lines.join('\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `B-Battle_${year}${month}_月報告.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6 pb-48 animate-in fade-in slide-in-from-right duration-700 text-left">
       <div className="px-2 flex justify-between items-center text-left">
@@ -342,8 +421,21 @@ const HistoryView = ({
           </p>
         </div>
 
-        {/* 月份選擇下拉選單 */}
-        <div className="relative">
+        {/* 右側操作區 */}
+        <div className="flex items-center gap-2">
+          {/* 月報告下載 */}
+          <button
+            onClick={handleDownloadReport}
+            title="下載月報告"
+            className="bg-stone-800 text-stone-200 px-3 py-2.5 rounded-2xl flex items-center gap-1.5 shadow-sm active:scale-95 transition-all hover:bg-stone-700 text-xs font-black"
+            aria-label="下載月報告"
+          >
+            <Download size={14} aria-hidden="true" />
+            <span className="hidden sm:inline">月報告</span>
+          </button>
+
+          {/* 月份選擇下拉選單 */}
+          <div className="relative">
           <button
             onClick={() => setShowMonthMenu(!showMonthMenu)}
             className="bg-white border-2 border-stone-100 px-4 py-2.5 rounded-2xl flex items-center gap-2 shadow-sm active:scale-95 transition-all text-stone-800 font-black text-xs"
@@ -376,6 +468,7 @@ const HistoryView = ({
               </div>
             </>
           )}
+          </div>
         </div>
       </div>
 
