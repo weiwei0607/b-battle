@@ -241,7 +241,7 @@ export const useFirebaseSync = () => {
   const syncDeleteAllHistory = useCallback(async () => {
     if (!user) return;
     const snap = await getDocs(collection(db, 'users', user.uid, 'history'));
-    snap.docs.forEach((d) => deleteDoc(d.ref).catch(() => {}));
+    await Promise.all(snap.docs.map((d) => deleteDoc(d.ref).catch(() => {})));
   }, [user]);
 
   return {
