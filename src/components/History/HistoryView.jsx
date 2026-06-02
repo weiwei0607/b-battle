@@ -7,6 +7,8 @@ import {
 import { CATEGORY_MAP } from '../../utils/constants';
 import { LOCALES } from '../../utils/locales';
 import { useFinanceStore } from '../../stores/useFinanceStore';
+import { useUserStore } from '../../stores/useUserStore';
+import { CURRENCIES } from '../../utils/constants';
 import EmptyState from '../UI/EmptyState';
 
 /* ── 子元件：羅馬柱（新古典風格）────────────────────────── */
@@ -288,8 +290,14 @@ const HistoryView = ({
 
   const getMonthKey = (dateStr) => {
     if (!dateStr) return '';
-    const parts = dateStr.split('/');
-    return `${parts[0]}/${(parts[1] || '').padStart(2, '0')}`;
+    // Handle both '2024-05-15' and '2024/05/15'
+    const parts = dateStr.split(/[-\/]/);
+    if (parts.length >= 2) {
+      const year = parts[0];
+      const month = parts[1].padStart(2, '0');
+      return `${year}/${month}`;
+    }
+    return dateStr;
   };
 
   const filteredHistory = history.filter(h => getMonthKey(h.date) === selectedMonth);
@@ -332,6 +340,8 @@ const HistoryView = ({
   const currentPersona = personaStats?.[persona] || { icon: '🙄', title: 'Coach', titleKey: 'persona_peer' };
 
   const handleDownloadReport = () => {
+    const { currency: userCurrency } = useUserStore.getState();
+    const symbol = CURRENCIES[userCurrency] || CURRENCIES.TWD;
     const [year, month] = selectedMonth.split('/');
     const allPools = { ...weeklyPools, ...monthlyPools };
 
@@ -343,15 +353,15 @@ const HistoryView = ({
       expedition: t.pillar_expedition || '遠征破防',
     };
 
-    // Group spending by category
+    // Group spending by category (use damage per game core mechanic)
     const byCategory = {};
     filteredHistory.forEach(h => {
       const key = h.category;
       if (!byCategory[key]) byCategory[key] = 0;
-      byCategory[key] += h.amount;
+      byCategory[key] += h.damage;
     });
 
-    // Build category lines: category label, amount, limit if any
+    // Build category lines: category label, damage, limit if any
     const catLines = Object.entries(byCategory)
       .sort((a, b) => b[1] - a[1])
       .map(([catKey, total]) => {
@@ -360,22 +370,22 @@ const HistoryView = ({
         const matchedPool = Object.values(allPools).find(p => p.label && (t[catKey] === p.label || p.label === catLabel));
         if (matchedPool && matchedPool.limit) {
           const pct = Math.round((total / matchedPool.limit) * 100);
-          return `  ${catLabel.padEnd(6, '　')} NT$${total} / 限額 NT$${matchedPool.limit} (${pct}%)`;
+          return `  ${catLabel.padEnd(6, '　')} ${symbol}${total.toFixed(0)} / 限額 ${symbol}${matchedPool.limit} (${pct}%)`;
         }
-        return `  ${catLabel.padEnd(6, '　')} NT$${total}`;
+        return `  ${catLabel.padEnd(6, '　')} ${symbol}${total.toFixed(0)}`;
       });
 
-    // Top 5 largest expenses by amount
+    // Top 5 largest expenses by damage
     const top5 = [...filteredHistory]
-      .sort((a, b) => b.amount - a.amount)
+      .sort((a, b) => b.damage - a.damage)
       .slice(0, 5)
       .map((h, i) => {
         const catLabel = t[h.category] || h.category;
         const note = h.desc ? ` — ${h.desc}` : '';
-        return `  ${i + 1}. ${catLabel} NT$${h.amount}${note}`;
+        return `  ${i + 1}. ${catLabel} ${symbol}${h.damage.toFixed(0)}${note}`;
       });
 
-    const total = filteredHistory.reduce((s, h) => s + h.amount, 0);
+    const total = filteredHistory.reduce((s, h) => s + h.damage, 0);
     const count = filteredHistory.length;
     const avg = count > 0 ? Math.round(total / count) : 0;
 
@@ -385,7 +395,7 @@ const HistoryView = ({
       `B-Battle 月報告 ${year}年${parseInt(month, 10)}月`,
       border,
       '',
-      `💰 本月總支出：NT$${total}`,
+      `💰 本月總支出：${symbol}${total.toFixed(0)}`,
       '',
       '📊 各類別支出：',
       ...(catLines.length > 0 ? catLines : ['  （無消費記錄）']),
@@ -393,9 +403,15 @@ const HistoryView = ({
       '🏆 前5大支出：',
       ...(top5.length > 0 ? top5 : ['  （無消費記錄）']),
       '',
-      `⚔️ 本月戰況：${count}筆消費，平均每筆NT$${avg}`,
-      border,
+      `⚔️ 本月戰況：${count}筆消費，平均每筆${symbol}${avg}`,
     ];
+
+    // Include AI monthly review if available
+    if (aiComment && aiComment !== '...') {
+      lines.push('', '🤖 AI 月度評論：', `  「${aiComment}」`);
+    }
+
+    lines.push(border);
 
     const content = lines.join('\n');
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });

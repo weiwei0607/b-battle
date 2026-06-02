@@ -34,10 +34,10 @@ export const useBattleStore = create((set) => ({
   lastPersonaSwitch: null,
   now: Date.now(),
   achievementNotification: null,
-  lastTrackDate: (() => { try { return JSON.parse(localStorage.getItem('bb_lastTrack')); } catch { return null; } })(),
+  lastTrackDate: (() => { try { return JSON.parse(localStorage.getItem('bb_v4_lastTrack')); } catch { return null; } })(),
   nlpInput: '',
   bannerText: '',
-  hasCompletedTutorial: (() => { try { return JSON.parse(localStorage.getItem('bb_tutorial_done')); } catch { return false; } })() ?? false,
+  hasCompletedTutorial: (() => { try { return JSON.parse(localStorage.getItem('bb_v4_tutorial_done')); } catch { return false; } })() ?? false,
   showTutorial: false,
   showLogin: false,
 
@@ -76,14 +76,14 @@ export const useBattleStore = create((set) => ({
   setAchievementNotification: (valOrFn) => set((state) => ({ achievementNotification: typeof valOrFn === 'function' ? valOrFn(state.achievementNotification) : valOrFn })),
   setLastTrackDate: (valOrFn) => set((state) => {
     const next = typeof valOrFn === 'function' ? valOrFn(state.lastTrackDate) : valOrFn;
-    localStorage.setItem('bb_lastTrack', JSON.stringify(next));
+    localStorage.setItem('bb_v4_lastTrack', JSON.stringify(next));
     return { lastTrackDate: next };
   }),
   setNlpInput: (valOrFn) => set((state) => ({ nlpInput: typeof valOrFn === 'function' ? valOrFn(state.nlpInput) : valOrFn })),
   setBannerText: (valOrFn) => set((state) => ({ bannerText: typeof valOrFn === 'function' ? valOrFn(state.bannerText) : valOrFn })),
   setHasCompletedTutorial: (valOrFn) => set((state) => {
     const next = typeof valOrFn === 'function' ? valOrFn(state.hasCompletedTutorial) : valOrFn;
-    localStorage.setItem('bb_tutorial_done', JSON.stringify(next));
+    localStorage.setItem('bb_v4_tutorial_done', JSON.stringify(next));
     return { hasCompletedTutorial: next };
   }),
   setShowTutorial: (valOrFn) => set((state) => ({ showTutorial: typeof valOrFn === 'function' ? valOrFn(state.showTutorial) : valOrFn })),

@@ -377,6 +377,12 @@ export const useBattleLogic = () => {
     if ((persona === 'peer' || persona === 'instructor') && !spendCoins(500, true)) return;
     if ((persona === 'partner' || persona === 'bestie') && coldWarEndTime && now < coldWarEndTime) return;
 
+    // Backup history before clearing
+    const backupKey = `bb_v4_history_backup_${taipeiDateStr()}`;
+    try {
+      localStorage.setItem(backupKey, JSON.stringify(history));
+    } catch { /* ignore quota errors */ }
+
     setIsSevered(false);
     setColdWarEndTime(null);
     addToBattleLog('🛡️ [Ritual] Relation restored.');
@@ -387,7 +393,7 @@ export const useBattleLogic = () => {
     setTeamSpentMonthly(0);
     unlockAchievement('RITUAL_MASTER');
   }, [
-    persona, spendCoins, coldWarEndTime, now,
+    persona, spendCoins, coldWarEndTime, now, history,
     setIsSevered, setColdWarEndTime, addToBattleLog,
     setHistory, syncDeleteAllHistory,
     setTeamSpentDaily, setTeamSpentWeekly, setTeamSpentMonthly,
@@ -454,6 +460,9 @@ export const useBattleLogic = () => {
 
   // 日/週/月重置 + Streak 計算
   useEffect(() => {
+    const previousDateStr = lastTrackDate; // this is still the OLD date on first render
+    const previousMonthKey = previousDateStr ? previousDateStr.slice(0, 7).replace('-', '/') : '';
+
     const todayStr = taipeiDateStr();
     if (!lastTrackDate || lastTrackDate === todayStr) {
       setLastTrackDate(todayStr);
@@ -472,11 +481,12 @@ export const useBattleLogic = () => {
     const lastResetSeason = localStorage.getItem('bb_v3_last_reset_season');
     if (isNewSeason && lastResetSeason !== seasonKey) {
       addToBattleLog('🌪️ [Season Reset] Willpower season settlement!');
+      let bonus = 0;
       if (debt >= 500) {
         addToBattleLog('🕊️ [Amnesty] Reset to 2000 coins!');
         setDebt(0);
       } else if (coins > 5000) {
-        const bonus = Math.floor((coins - 2000) * 0.1);
+        bonus = Math.floor((coins - 2000) * 0.1);
         setHomeMaterials((prev) => prev + bonus * 10);
         addToBattleLog(`🏰 [Wealth] Converted to ${bonus * 10} materials!`);
       }
@@ -542,7 +552,7 @@ export const useBattleLogic = () => {
       addToBattleLog('📅 Monthly reset!');
       setTeamSpentMonthly(0);
       const monthlySpent = history
-        .filter((h) => h.date?.startsWith(lastTrackDate.slice(0, 7)))
+        .filter((h) => h.date?.startsWith(previousDateStr?.slice(0, 7) || ''))
         .reduce((s, h) => s + h.damage, 0);
       const gain = monthlySpent < 20000 ? 5000 : 2000;
       setHomeMaterials((prev) => prev + gain);

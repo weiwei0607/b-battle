@@ -71,6 +71,7 @@ export const useFirebaseSync = () => {
           potions, shield, userTitle, userFrame,
           unlockedTitles, achievements, lang, userName, 
           isStudent, currency, insuranceExpiry, hasZenSofa,
+          weeklyPools, monthlyPools,
           roomId,
           updatedAt: nowTime,
         },
@@ -85,7 +86,7 @@ export const useFirebaseSync = () => {
     coins, debt, personaStats, persona, willpowerExp, wishlist, wishlistGoal,
     homeMaterials, currentTier, potions, shield, userTitle, userFrame,
     unlockedTitles, achievements, lang, userName, isStudent, currency,
-    insuranceExpiry, hasZenSofa, roomId,
+    insuranceExpiry, hasZenSofa, weeklyPools, monthlyPools, roomId,
   ]);
 
   // ── 2. 監聽房間（Firestore onSnapshot），同步對手 HP ──────────────────────

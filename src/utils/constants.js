@@ -82,7 +82,7 @@ export const ACHIEVEMENTS = {
   // === 4. 【情感】人格與互動系列 ===
   LOYAL_PARTNER: { id: 'LOYAL_PARTNER', name: '靈魂伴侶', desc: '任一人格親密度達到 100', icon: '💖', reward: 1000, title: '靈魂伴侶', titleKey: 'title_partner', cat: 'emotion' },
   COLD_WAR_SURVIVOR: { id: 'COLD_WAR_SURVIVOR', name: '冷戰倖存者', desc: '度過一次長達 24 小時的冷戰', icon: '❄️', reward: 500, title: '冷戰專家', titleKey: 'title_cold_war', cat: 'emotion' },
-  RITUAL_MASTER: { id: 'RITUAL_MASTER', name: '重生大師', desc: '成功執行過 3 次重建儀式', icon: '🔥', reward: 800, title: '和解之神', titleKey: 'title_ritual', cat: 'emotion' },
+  RITUAL_MASTER: { id: 'RITUAL_MASTER', name: '重生大師', desc: '成功執行過 1 次重建儀式', icon: '🔥', reward: 800, title: '和解之神', titleKey: 'title_ritual', cat: 'emotion' },
   PERSONA_COLLECTOR: { id: 'PERSONA_COLLECTOR', name: '千面人', desc: '使用過所有的人格進行互動', icon: '🎭', reward: 600, title: '千面之王', titleKey: 'title_persona', cat: 'emotion' },
   MOM_LOVES_ME: { id: 'MOM_LOVES_ME', name: '老媽的驕傲', desc: '與亞洲家長親密度達 80', icon: '🤱', reward: 500, title: '乖孩子', titleKey: 'title_mom_loves', cat: 'emotion' },
   
