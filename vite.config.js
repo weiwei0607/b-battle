@@ -27,7 +27,6 @@ export default defineConfig({
   ],
   base: '/',
   build: {
-    minify: false,
     rollupOptions: {
       output: {
         // 🚀 Code Splitting: 解決 500k 警告，將套件拆分出獨立檔案
