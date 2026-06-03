@@ -43,6 +43,7 @@ export const useBattleLogic = () => {
     achievements, setAchievements, wishlist,
     userTitle,
     lang,
+    setHomeMaterials,
   } = useUserStore();
 
   const {
@@ -68,7 +69,6 @@ export const useBattleLogic = () => {
     setAchievementNotification,
     addToBattleLog, setAiComment,
     isAiProcessing, setIsAiProcessing,
-    setHomeMaterials,
     now,
   } = useBattleStore();
 
@@ -330,7 +330,7 @@ export const useBattleLogic = () => {
         setActiveChallenges((p) => [...p, { item, startTime: now }]);
         addToBattleLog(`🛡️ [Bet] 500 locked for: ${item}`);
       } else {
-        alert('No coins!');
+        addToBattleLog('❌ [System] Not enough coins!');
       }
       setNlpInput('');
       return;

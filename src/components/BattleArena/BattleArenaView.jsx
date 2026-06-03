@@ -381,35 +381,37 @@ const BattleArenaView = ({
           )}
         </div>
         <div className="flex gap-2">
-          {/* 測試動畫按鈕 */}
-          <button
-            onClick={() => {
-              const keys = ['survival', 'progress', 'desire', 'expedition'];
-              const pick = keys[Math.floor(Math.random() * keys.length)];
-              const current = testHp?.[pick] ?? baseHp[pick];
-              const dmg = 10 + Math.floor(Math.random() * 16); // 10~25%
-              setTestHp({ ...baseHp, ...(testHp || {}), [pick]: Math.max(5, current - dmg) });
-            }}
-            className="px-3 h-10 flex items-center justify-center bg-red-50 border border-red-100 rounded-xl text-red-500 hover:text-red-700 hover:bg-red-100 transition-colors shadow-sm active:scale-90 text-[9px] font-black"
-            title="測試動畫"
-          >
-            🎬 測試
-          </button>
-          <button
-            onClick={() => setTestHp(null)}
-            className="px-2 h-10 flex items-center justify-center bg-stone-50 border border-stone-100 rounded-xl text-stone-400 hover:text-stone-600 transition-colors shadow-sm active:scale-90 text-[9px] font-black"
-            title="重置"
-          >
-            ↺
-          </button>
-          {/* DEV ONLY */}
-          <button
-            onClick={() => { if (window.confirm('清空所有消費紀錄？')) { Object.keys(localStorage).filter(k=>k.startsWith('bb_v4_')).forEach(k=>localStorage.removeItem(k)); location.reload(); } }}
-            className="px-2 h-10 flex items-center justify-center bg-orange-50 border border-orange-100 rounded-xl text-orange-400 hover:text-orange-600 transition-colors shadow-sm active:scale-90 text-[9px] font-black"
-            title="[DEV] 清空資料"
-          >
-            🗑️
-          </button>
+          {import.meta.env.DEV && (
+            <>
+              <button
+                onClick={() => {
+                  const keys = ['survival', 'progress', 'desire', 'expedition'];
+                  const pick = keys[Math.floor(Math.random() * keys.length)];
+                  const current = testHp?.[pick] ?? baseHp[pick];
+                  const dmg = 10 + Math.floor(Math.random() * 16); // 10~25%
+                  setTestHp({ ...baseHp, ...(testHp || {}), [pick]: Math.max(5, current - dmg) });
+                }}
+                className="px-3 h-10 flex items-center justify-center bg-red-50 border border-red-100 rounded-xl text-red-500 hover:text-red-700 hover:bg-red-100 transition-colors shadow-sm active:scale-90 text-[9px] font-black"
+                title={t.dev_test_anim}
+              >
+                🎬 {t.dev_test_anim}
+              </button>
+              <button
+                onClick={() => setTestHp(null)}
+                className="px-2 h-10 flex items-center justify-center bg-stone-50 border border-stone-100 rounded-xl text-stone-400 hover:text-stone-600 transition-colors shadow-sm active:scale-90 text-[9px] font-black"
+                title={t.dev_reset}
+              >
+                ↺
+              </button>
+              <button
+                onClick={() => { if (window.confirm('清空所有消費紀錄？')) { Object.keys(localStorage).filter(k=>k.startsWith('bb_v4_')).forEach(k=>localStorage.removeItem(k)); location.reload(); } }}
+                className="px-2 h-10 flex items-center justify-center bg-orange-50 border border-orange-100 rounded-xl text-orange-400 hover:text-orange-600 transition-colors shadow-sm active:scale-90 text-[9px] font-black"
+                title={t.dev_clear_data}
+              >
+                🗑️
+              </button>
+            </>
+          )}
           <button
             onClick={() => setShowFriends(true)}
             className="w-10 h-10 flex items-center justify-center bg-white border border-stone-100 rounded-xl text-stone-400 hover:text-stone-800 transition-colors shadow-sm active:scale-90"

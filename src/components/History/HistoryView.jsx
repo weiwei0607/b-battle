@@ -2,8 +2,9 @@ import React, { useState, useEffect, memo } from 'react';
 import {
   Skull, TrendingDown, Calendar, Trash2, Edit3, Check, X, LifeBuoy,
   AlertCircle, Heart, Zap, Flame, Globe, MessageSquare, Loader2, ChevronDown,
-  Download
+  Download, Search
 } from 'lucide-react';
+import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import { CATEGORY_MAP } from '../../utils/constants';
 import { LOCALES } from '../../utils/locales';
 import { useFinanceStore } from '../../stores/useFinanceStore';
@@ -285,6 +286,7 @@ const HistoryView = ({
   const [editingId, setEditingId] = useState(null);
   const [tempCategory, setTempCategory] = useState('');
   const [clickCounts, setClickCounts] = useState({});
+  const [searchQuery, setSearchQuery] = useState('');
 
   const isDenialUnlocked = achievements?.DENIAL_OF_REALITY?.unlocked;
 
@@ -301,8 +303,14 @@ const HistoryView = ({
   };
 
   const filteredHistory = history.filter(h => getMonthKey(h.date) === selectedMonth);
-  const totalDamage = filteredHistory.reduce((s, h) => s + h.damage, 0);
-  const critCount = filteredHistory.filter(h => h.isCrit).length;
+  const searchedHistory = searchQuery.trim()
+    ? filteredHistory.filter(h =>
+        h.desc.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (t[h.category] || h.category).toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : filteredHistory;
+  const totalDamage = searchedHistory.reduce((s, h) => s + h.damage, 0);
+  const critCount = searchedHistory.filter(h => h.isCrit).length;
   const limits = {
     survival:   ((weeklyPools.food?.limit || 0) + (weeklyPools.transport?.limit || 0)) * 4 + (monthlyPools.housing?.limit || 0) || 10000,
     progress:   monthlyPools.education?.limit || 5000,
@@ -536,25 +544,69 @@ const HistoryView = ({
         </div>
       </div>
 
+      {/* 週間趨勢 */}
+      {searchedHistory.length > 1 && (
+        <div className="bg-white border border-stone-100 p-5 rounded-[2.5rem] shadow-sm">
+          <p className="text-[9px] font-black text-stone-400 uppercase tracking-[0.2em] mb-3 text-left">
+            {t.weekly_trend}
+          </p>
+          <div className="h-24 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={[...searchedHistory].reverse().slice(-14).map((h, i) => ({ day: i + 1, dmg: h.damage }))}>
+                <defs>
+                  <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#d6d3d1" stopOpacity={0.6} />
+                    <stop offset="100%" stopColor="#d6d3d1" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="day" hide />
+                <Tooltip
+                  contentStyle={{ borderRadius: '1rem', border: '1px solid #e7e5e4', fontSize: '10px', fontWeight: 800 }}
+                  formatter={(value) => [value, 'Damage']}
+                  labelFormatter={() => ''}
+                />
+                <Area type="monotone" dataKey="dmg" stroke="#78716c" strokeWidth={2} fill="url(#trendGrad)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
       {/* 詳細列表 */}
       <div className="space-y-4">
-        <p className="px-2 text-[10px] font-black text-stone-400 uppercase tracking-widest flex justify-between items-center">
-          <span>{t.detail_list}</span>
-          {potions > 0 && (
-            <span className="text-blue-600 animate-pulse flex items-center gap-1">
-              <LifeBuoy size={10} aria-hidden="true" /> {t.has_potions} x{potions}
-            </span>
-          )}
-        </p>
+        <div className="px-2 flex items-center justify-between">
+          <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">
+            {t.detail_list}
+          </p>
+          <div className="flex items-center gap-2">
+            {potions > 0 && (
+              <span className="text-blue-600 animate-pulse flex items-center gap-1 text-[10px] font-black">
+                <LifeBuoy size={10} aria-hidden="true" /> {t.has_potions} x{potions}
+              </span>
+            )}
+          </div>
+        </div>
 
-        {filteredHistory.length === 0 ? (
+        {/* 搜尋 */}
+        <div className="relative px-2">
+          <Search size={14} className="absolute left-5 top-1/2 -translate-y-1/2 text-stone-400" aria-hidden="true" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t.search_placeholder}
+            className="w-full bg-white border border-stone-100 pl-10 pr-4 py-3 rounded-2xl text-xs font-black text-stone-800 outline-none focus:border-stone-300 transition-all shadow-sm"
+          />
+        </div>
+
+        {searchedHistory.length === 0 ? (
           <EmptyState
             icon="inbox"
-            title={t.no_data}
-            description={t.no_data_hint || '選擇其他月份或開始記帳'}
+            title={searchQuery.trim() ? 'No matches' : t.no_data}
+            description={searchQuery.trim() ? 'Try different keywords' : (t.no_data_hint || '選擇其他月份或開始記帳')}
           />
         ) : (
-          filteredHistory.map(h => (
+          searchedHistory.map(h => (
             <HistoryItem
               key={h.id}
               item={h}

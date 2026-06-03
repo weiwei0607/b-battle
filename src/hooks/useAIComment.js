@@ -116,30 +116,55 @@ export const useAIComment = (apiKey) => {
    */
   const parseNLPTransaction = useCallback(
     async (input) => {
-      // 先用 regex 給出保底值（無 API key 時也能使用）
-      const fallback = {
-        amount: parseInt(input.match(/\d+/)?.[0] || '100', 10),
-        desc: input.replace(/\d+/g, '').replace(/買了|花了|塊|元|bought|spent/g, '').trim() || 'Expense',
-        category: 'cat_food',
-      };
+      // Smart regex fallback (works without API key)
+      const numMatch = input.match(/(\d{1,6}(?:\.\d{1,2})?)/);
+      const amount = numMatch ? parseInt(numMatch[1], 10) : 100;
+      const desc = input
+        .replace(/(\d{1,6}(?:\.\d{1,2})?)/g, '')
+        .replace(/買了|花了|塊|元|買|杯|碗|個|份|包|瓶|件|本|張|台|支|雙|對|組|set|bought|spent|for|at|\$/g, '')
+        .trim() || 'Expense';
+
+      const lower = input.toLowerCase();
+      const categoryMap = [
+        { keys: ['food', 'lunch', 'dinner', 'breakfast', 'meal', 'rice', 'noodle', 'pizza', 'burger', '餐', '飯', '麵', '拉麵', '便當', '壽司', '食'], cat: 'cat_food' },
+        { keys: ['coffee', 'tea', 'bubble', 'drink', 'beer', 'wine', 'boba', '飲料', '咖啡', '茶', '酒', '奶', '汁'], cat: 'cat_drink' },
+        { keys: ['transport', 'bus', 'taxi', 'uber', 'metro', 'train', 'gas', 'gasoline', 'mrt', '交通', '捷運', '公車', '計程車', '加油', '高鐵', '火車'], cat: 'cat_transport' },
+        { keys: ['rent', 'housing', 'mortgage', '房租', '租金', '房貸', '住'], cat: 'cat_rent' },
+        { keys: ['book', 'course', 'class', 'tutorial', '學習', '課程', '課', '書', '學'], cat: 'cat_study' },
+        { keys: ['game', 'movie', 'netflix', 'spotify', 'subscription', 'entertainment', '娛樂', '電影', '遊戲', '訂閱', '會員'], cat: 'cat_ent' },
+        { keys: ['shopping', 'clothes', 'shoes', 'bag', 'amazon', 'shopee', '淘寶', '購物', '衣服', '鞋', '包'], cat: 'cat_shop' },
+        { keys: ['travel', 'hotel', 'flight', 'trip', '旅遊', '旅行', '機票', '住宿', '飯店'], cat: 'cat_travel' },
+        { keys: ['fitness', 'gym', 'sport', 'yoga', '健身', '運動', '瑜珈', '游泳'], cat: 'cat_fitness' },
+        { keys: ['medical', 'doctor', 'medicine', 'hospital', '醫療', '醫生', '藥', '看病'], cat: 'cat_medical' },
+        { keys: ['snack', 'dessert', 'cake', 'ice cream', '零食', '甜點', '蛋糕', '餅乾'], cat: 'cat_snack' },
+        { keys: ['gift', 'present', '禮物', '送'], cat: 'cat_gift' },
+        { keys: ['social', 'party', 'gathering', 'bar', '社交', '聚餐', '聚會', '酒吧'], cat: 'cat_social' },
+      ];
+      let category = 'cat_other';
+      for (const m of categoryMap) {
+        if (m.keys.some(k => lower.includes(k))) { category = m.cat; break; }
+      }
+
+      const fallback = { amount, desc, category };
       if (!apiKey) return fallback;
 
       try {
         const response = await geminiPost(apiKey, {
-          contents: [{ parts: [{ text: `Extract amount, item, category_key: ${input}` }] }],
+          contents: [{ parts: [{ text: `Parse this expense: "${input}". Reply ONLY with valid JSON: {"amount": number, "item": "string", "category": "one of cat_food, cat_drink, cat_transport, cat_rent, cat_study, cat_ent, cat_shop, cat_travel, cat_fitness, cat_medical, cat_snack, cat_gift, cat_social, cat_other"}` }] }],
+          generationConfig: { temperature: 0.1, maxOutputTokens: 128 },
         });
         const text = extractText(response);
-        const match = text?.match(/\{[\s\S]*\}/);
+        const match = text?.match(/\{[\s\S]*?\}/);
         if (match) {
           const d = JSON.parse(match[0]);
           return {
-            amount:   d.amount   || fallback.amount,
-            desc:     d.item     || fallback.desc,
+            amount:   typeof d.amount === 'number' ? d.amount : fallback.amount,
+            desc:     d.item || fallback.desc,
             category: d.category || fallback.category,
           };
         }
       } catch {
-        // 解析失敗回退到 regex 結果
+        // fallback on parse failure
       }
       return fallback;
     },

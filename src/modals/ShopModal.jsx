@@ -3,6 +3,7 @@ import { Zap, X, Check } from 'lucide-react';
 import { LOCALES } from '../utils/locales';
 import LoadingButton from '../components/UI/LoadingButton';
 import ErrorMessage from '../components/UI/ErrorMessage';
+import { useBattleStore } from '../stores/useBattleStore';
 
 const ShopModal = ({
   show, onClose, coins, setCoins, setUserFrame,
@@ -13,6 +14,7 @@ const ShopModal = ({
   const [loadingId, setLoadingId] = useState(null);
   const [error, setError] = useState('');
   const [successId, setSuccessId] = useState(null);
+  const { addToBattleLog } = useBattleStore();
 
   if (!show) return null;
 
@@ -36,27 +38,27 @@ const ShopModal = ({
 
     if (type === 'frame') {
       setUserFrame(id);
-      alert(t.shop_buy_frame.replace("{name}", name));
+      addToBattleLog(`✨ ${t.shop_buy_frame.replace("{name}", name)}`);
     } else if (type === 'shield') {
       setShield(prev => prev + 1);
-      alert(t.shop_buy_shield);
+      addToBattleLog(`🛡️ ${t.shop_buy_shield}`);
     } else if (type === 'potion') {
       setPotions(p => p + 1);
-      alert(t.shop_buy_potion);
+      addToBattleLog(`🧪 ${t.shop_buy_potion}`);
     } else if (type === 'insurance') {
       // eslint-disable-next-line react-hooks/purity
       setInsuranceExpiry(Date.now() + 86400000);
-      alert(t.shop_buy_insurance);
+      addToBattleLog(`🛡️ ${t.shop_buy_insurance}`);
     } else if (type === 'sofa') {
       setHasZenSofa(true);
-      alert(t.shop_buy_sofa);
+      addToBattleLog(`🪑 ${t.shop_buy_sofa}`);
     } else if (type === 'banner') {
       const text = window.prompt(t.shop_prompt_banner, t.shop_default_banner);
       if (text) setBannerText(text);
-      alert(t.shop_buy_banner);
+      addToBattleLog(`🚩 ${t.shop_buy_banner}`);
     } else if (type === 'social') {
       setInventory(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
-      alert(t.shop_buy_social.replace("{name}", name));
+      addToBattleLog(`📦 ${t.shop_buy_social.replace("{name}", name)}`);
     }
 
     setSuccessId(id);

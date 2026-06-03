@@ -179,7 +179,25 @@ export const LOCALES = {
     searching_warriors: '正在搜尋全球戰友...',
     bot_joined: '已加入虛擬戰友進入戰場！',
     waiting_friend: '等待戰友加入...',
-    leave_room: '離開房間'
+    leave_room: '離開房間',
+    // Pending TX Modal
+    pending_tx_title: '情報解析完成',
+    pending_tx_item_label: '項目名稱',
+    pending_tx_amount_label: '金額',
+    pending_tx_confirm: '確認送出攻擊',
+    pending_tx_close: '關閉',
+    no_coins_error: '金幣不足！多記幾筆生存消費來賺金幣吧！',
+    // Search & Quick Add
+    search_placeholder: '搜尋消費紀錄...',
+    quick_add_food: '餐飲',
+    quick_add_transport: '交通',
+    quick_add_drink: '飲料',
+    weekly_trend: '近7日趨勢',
+    // Dev mode
+    dev_test_anim: '測試動畫',
+    dev_reset: '重置',
+    dev_clear_data: '清空資料',
+    tx_error: '交易執行失敗，請稍後再試',
   },
   en: {
     app_name: 'B-Battle: Willpower Finance',
@@ -268,6 +286,24 @@ export const LOCALES = {
     bot_joined: 'Bot joined the battle!',
     waiting_friend: 'Waiting for friend...',
     leave_room: 'Leave Room',
+    // Pending TX Modal
+    pending_tx_title: 'Intel Parsed',
+    pending_tx_item_label: 'Item Name',
+    pending_tx_amount_label: 'Amount',
+    pending_tx_confirm: 'Confirm Attack',
+    pending_tx_close: 'Close',
+    no_coins_error: 'Not enough coins! Log more survival expenses to earn coins!',
+    // Search & Quick Add
+    search_placeholder: 'Search transactions...',
+    quick_add_food: 'Food',
+    quick_add_transport: 'Transport',
+    quick_add_drink: 'Drink',
+    weekly_trend: '7-Day Trend',
+    // Dev mode
+    dev_test_anim: 'Test Anim',
+    dev_reset: 'Reset',
+    dev_clear_data: 'Clear Data',
+    tx_error: 'Transaction failed, please try again',
     // Manual
     manual_title: 'Willpower Combat Manual',
     manual_pillars_title: 'Pillar Defense',
@@ -463,6 +499,24 @@ export const LOCALES = {
     bot_joined: 'ボットが戦場に参加しました！',
     waiting_friend: '戦友を待っています...',
     leave_room: '退室する',
+    // Pending TX Modal
+    pending_tx_title: '情報解析完了',
+    pending_tx_item_label: '項目名',
+    pending_tx_amount_label: '金額',
+    pending_tx_confirm: '攻撃を確認',
+    pending_tx_close: '閉じる',
+    no_coins_error: 'コイン不足！支出を記録してコインを稼ごう！',
+    // Search & Quick Add
+    search_placeholder: '記録を検索...',
+    quick_add_food: '食事',
+    quick_add_transport: '交通',
+    quick_add_drink: '飲料',
+    weekly_trend: '7日間の傾向',
+    // Dev mode
+    dev_test_anim: 'テスト',
+    dev_reset: 'リセット',
+    dev_clear_data: 'データ消去',
+    tx_error: '処理に失敗しました。後でもう一度お試しください。',
     // Manual
     manual_title: '意志力戦闘マニュアル',
     manual_pillars_title: '四神柱防衛',

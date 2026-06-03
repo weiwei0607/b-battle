@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { X, AlertCircle } from 'lucide-react';
+import { LOCALES } from '../utils/locales';
 import LoadingButton from '../components/UI/LoadingButton';
 
-const PendingTxModal = ({ pendingTx, setPendingTx, executeTransaction }) => {
+const PendingTxModal = ({ pendingTx, setPendingTx, executeTransaction, lang }) => {
+  const t = LOCALES[lang] || LOCALES.zh;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -28,7 +30,7 @@ const PendingTxModal = ({ pendingTx, setPendingTx, executeTransaction }) => {
       );
     } catch (err) {
       console.error('Transaction failed:', err);
-      setError(err?.message || '交易執行失敗，請稍後再試');
+      setError(err?.message || t.tx_error || 'Transaction failed, please try again');
     } finally {
       setLoading(false);
       // 無論成功或失敗，一律關閉 modal（錯誤會顯示在 battle log）
@@ -58,7 +60,7 @@ const PendingTxModal = ({ pendingTx, setPendingTx, executeTransaction }) => {
           onClick={handleClose}
           disabled={loading}
           className="absolute top-6 right-6 p-2 bg-stone-200/50 rounded-full text-stone-500 active:scale-90 transition-all disabled:opacity-30"
-          aria-label="關閉"
+          aria-label={t.pending_tx_close}
         >
           <X size={16} />
         </button>
@@ -67,7 +69,7 @@ const PendingTxModal = ({ pendingTx, setPendingTx, executeTransaction }) => {
           id="pending-tx-title"
           className="text-2xl font-bold text-stone-800 italic text-center mb-6 tracking-tight"
         >
-          情報解析完成
+          {t.pending_tx_title}
         </h3>
 
         {error && (
@@ -80,19 +82,19 @@ const PendingTxModal = ({ pendingTx, setPendingTx, executeTransaction }) => {
         <div className="space-y-4">
           <div>
             <label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">
-              項目名稱
+              {t.pending_tx_item_label}
             </label>
             <input
               value={pendingTx.desc}
               onChange={(e) => setPendingTx({ ...pendingTx, desc: e.target.value })}
               className="w-full bg-stone-50 border border-stone-100 p-4 rounded-2xl text-stone-800 font-bold text-sm focus:ring-2 focus:ring-stone-200 outline-none transition-all"
-              aria-label="項目名稱"
+              aria-label={t.pending_tx_item_label}
             />
           </div>
 
           <div>
             <label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">
-              金額
+              {t.pending_tx_amount_label}
             </label>
             <input
               type="number"
@@ -104,7 +106,7 @@ const PendingTxModal = ({ pendingTx, setPendingTx, executeTransaction }) => {
                 })
               }
               className="w-full bg-stone-50 border border-stone-100 p-4 rounded-2xl text-stone-800 font-bold text-sm focus:ring-2 focus:ring-stone-200 outline-none transition-all"
-              aria-label="金額"
+              aria-label={t.pending_tx_amount_label}
             />
           </div>
 
@@ -114,7 +116,7 @@ const PendingTxModal = ({ pendingTx, setPendingTx, executeTransaction }) => {
             variant="primary"
             size="lg"
           >
-            確認送出攻擊
+            {t.pending_tx_confirm}
           </LoadingButton>
         </div>
       </div>

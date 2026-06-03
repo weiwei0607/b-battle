@@ -58,6 +58,10 @@ export const useBattleStore = create((set) => ({
   setClaimedAvoidedItems: (valOrFn) => set((state) => ({ claimedAvoidedItems: typeof valOrFn === 'function' ? valOrFn(state.claimedAvoidedItems) : valOrFn })),
   setIsSevered: (valOrFn) => set((state) => ({ isSevered: typeof valOrFn === 'function' ? valOrFn(state.isSevered) : valOrFn })),
   setBattleLog: (valOrFn) => set((state) => ({ battleLog: typeof valOrFn === 'function' ? valOrFn(state.battleLog) : valOrFn })),
+  addToBattleLog: (entry) => set((state) => {
+    const next = [entry, ...state.battleLog].slice(0, 200);
+    return { battleLog: next };
+  }),
   setAiComment: (valOrFn) => set((state) => ({ aiComment: typeof valOrFn === 'function' ? valOrFn(state.aiComment) : valOrFn })),
   setIsAiProcessing: (valOrFn) => set((state) => ({ isAiProcessing: typeof valOrFn === 'function' ? valOrFn(state.isAiProcessing) : valOrFn })),
   setPendingTx: (valOrFn) => set((state) => ({ pendingTx: typeof valOrFn === 'function' ? valOrFn(state.pendingTx) : valOrFn })),

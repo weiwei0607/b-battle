@@ -13,6 +13,7 @@ import AchievementModal from '../../modals/AchievementModal';
 import LeaderboardModal from '../../modals/LeaderboardModal';
 import ManualModal from '../../modals/ManualModal';
 import { CURRENCIES } from '../../utils/constants';
+import { LOCALES } from '../../utils/locales';
 
 const AppContent = ({
   isSevered, view, setView, coins, setCoins, debt, willpowerExp, persona, personaStats, setPersona,
@@ -40,6 +41,7 @@ const AppContent = ({
 }) => {
   const [showLeaderboard, setShowLeaderboard] = React.useState(false);
   const [showManual, setShowManual] = React.useState(false);
+  const t = LOCALES[lang] || LOCALES.zh;
 
   const isModalOpen = showShop || showAchievements || showEvolutionPath || showFriends || showRoomInput || showInviteQR || showBudgetSetup || showCustomModal || showLeaderboard || showManual;
 
@@ -85,7 +87,24 @@ const AppContent = ({
         </main>
 
         {!isSevered && !isModalOpen && (
-          <div className="fixed bottom-32 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-[150] animate-in slide-in-from-bottom-4 duration-300">
+          <div className="fixed bottom-32 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-[150] animate-in slide-in-from-bottom-4 duration-300 space-y-2">
+            {/* Quick-add chips */}
+            <div className="flex gap-2 justify-center">
+              {[
+                { label: t.quick_add_food, icon: '🍱', preset: '120 午餐' },
+                { label: t.quick_add_transport, icon: '🚇', preset: '35 捷運' },
+                { label: t.quick_add_drink, icon: '☕', preset: '60 咖啡' },
+              ].map(chip => (
+                <button
+                  key={chip.label}
+                  onClick={() => { setNlpInput(chip.preset); processTransaction(chip.preset); }}
+                  className="bg-white/70 backdrop-blur-sm border border-stone-200 rounded-full px-3 py-1.5 text-[10px] font-black text-stone-600 shadow-sm active:scale-90 transition-all hover:bg-white flex items-center gap-1"
+                >
+                  <span>{chip.icon}</span>
+                  {chip.label}
+                </button>
+              ))}
+            </div>
             <div className={`bg-white/80 backdrop-blur-md border border-stone-200 rounded-2xl p-2 shadow-xl flex items-center gap-2 ${isSevered ? 'opacity-100 scale-105 border-red-500 shadow-red-900/20' : ''}`}>
               <button onClick={simulateInvoice} className="w-10 h-10 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center active:scale-90 transition-all shrink-0"><Receipt size={16} /></button>
               <input value={nlpInput} onChange={(e)=>setNlpInput(e.target.value)} placeholder={getHellPlaceholder()} className={`bg-stone-50/50 flex-1 text-xs px-4 py-3.5 rounded-xl outline-none focus:bg-white transition-all shadow-inner ${isSevered ? 'text-red-600 placeholder:text-red-300 font-bold' : 'text-stone-800'}`} onKeyDown={(e) => e.key === 'Enter' && processTransaction(nlpInput)} />
@@ -95,7 +114,7 @@ const AppContent = ({
         )}
         {!isSevered && !showFriends && <BottomNav view={view} setView={setView} lang={lang} />}
 
-        <PendingTxModal pendingTx={pendingTx} setPendingTx={setPendingTx} executeTransaction={executeTransaction} />
+        <PendingTxModal pendingTx={pendingTx} setPendingTx={setPendingTx} executeTransaction={executeTransaction} lang={lang} />
         <BudgetSetupModal show={showBudgetSetup} onClose={() => setShowBudgetSetup(false)} salaryInput={salaryInput} setSalaryInput={setSalaryInput} handleAutoCalculate={handleAutoCalculate} weeklyPools={weeklyPools} setWeeklyPools={setWeeklyPools} monthlyPools={monthlyPools} setMonthlyPools={setMonthlyPools} isStudent={isStudent} setIsStudent={setIsStudent} currency={currency} setCurrency={setCurrency} CURRENCIES={CURRENCIES} currentTier={currentTier} setCurrentTier={setCurrentTier} />
         <ShopModal
           show={showShop}

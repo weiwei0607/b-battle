@@ -11,7 +11,7 @@ const BottomNav = ({ view, setView, lang }) => {
   ];
 
   return (
-    <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[88%] max-w-sm bg-white/90 backdrop-blur-md border border-stone-200/60 rounded-[2.5rem] p-2 flex justify-around shadow-[0_8px_30px_rgb(0,0,0,0.04)] z-[100]">
+    <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[88%] max-w-sm bg-white/90 backdrop-blur-md border border-stone-200/60 rounded-[2.5rem] p-2 flex justify-around shadow-[0_8px_30px_rgb(0,0,0,0.04)] z-[100] pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       {items.map(item => (
         <button 
           key={item.id} 
