@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, ShieldCheck, Settings2, LogOut, LogIn, Target, Edit2, Check, Sparkles, BookOpen, Swords } from 'lucide-react';
+import { User, ShieldCheck, Settings2, LogOut, LogIn, Target, Edit2, Check, Sparkles, BookOpen, Swords, Loader2 } from 'lucide-react';
 import { getBondLevel, getFrameStyle, getHomeStatus, getWalletStatus, AVATAR_OPTIONS, WALLET_LEVELS, HOME_LEVELS, getTitleKey } from '../../utils/constants';
 import { LOCALES } from '../../utils/locales';
 import { auth } from '../../firebase';
@@ -19,6 +19,7 @@ const HeroHallView = ({
   const [isEditingName, setIsEditingName] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [tempName, setTempName] = useState(userName);
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
 
   const handleSaveName = () => {
     setUserName(tempName);
@@ -37,7 +38,17 @@ const HeroHallView = ({
     setLastPersonaSwitch(now);
   };
 
-  const handleLogout = () => { auth.signOut(); alert(t.logout_success); };
+  const handleLogout = async () => {
+    setIsAuthLoading(true);
+    try {
+      await auth.signOut();
+      alert(t.logout_success);
+    } catch (err) {
+      alert('登出失敗：' + (err?.message || '未知錯誤'));
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-8 pb-48 animate-in fade-in slide-in-from-bottom duration-700 text-left">
@@ -168,7 +179,10 @@ const HeroHallView = ({
         <button onClick={setShowBudgetSetup} className="w-full py-5 bg-stone-800 text-white rounded-[2rem] font-black flex items-center justify-center gap-3 shadow-xl text-[11px] tracking-[0.2em] active:scale-95 transition-all"><Settings2 size={18} /> {t.budget_setup}</button>
 
         {user ? (
-          <button onClick={handleLogout} className="w-full py-4 mt-4 bg-transparent border-2 border-stone-200 text-stone-400 hover:text-stone-600 hover:border-stone-300 rounded-[2rem] font-bold flex items-center justify-center gap-2 text-[11px] tracking-[0.2em] active:scale-95 transition-all"><LogOut size={16} /> {t.logout}</button>
+          <button onClick={handleLogout} disabled={isAuthLoading} className="w-full py-4 mt-4 bg-transparent border-2 border-stone-200 text-stone-400 hover:text-stone-600 hover:border-stone-300 rounded-[2rem] font-bold flex items-center justify-center gap-2 text-[11px] tracking-[0.2em] active:scale-95 transition-all disabled:opacity-50">
+            {isAuthLoading ? <Loader2 size={16} className="animate-spin" /> : <LogOut size={16} />}
+            {t.logout}
+          </button>
         ) : (
           <button onClick={() => setShowLogin(true)} className="w-full py-4 mt-4 bg-blue-50 border-2 border-blue-100 text-blue-600 hover:bg-blue-100 rounded-[2rem] font-bold flex items-center justify-center gap-2 text-[11px] tracking-[0.2em] active:scale-95 transition-all shadow-sm"><LogIn size={16} /> {t.login_sync}</button>
         )}

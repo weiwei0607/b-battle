@@ -9,7 +9,7 @@ import { useBattleLogic } from './hooks/useBattleLogic';
 import { useFirebaseSync } from './hooks/useFirebaseSync';
 import AppContent from './components/Layout/AppContent';
 import { TutorialOverlay } from './components/TutorialOverlay';
-import { X, Swords, WifiOff } from 'lucide-react';
+import { X, Swords, WifiOff, AlertCircle, Loader2 } from 'lucide-react';
 
 // ── Zustand Stores ────────────────────────────────────────────────────────────
 import { useUserStore } from './stores/useUserStore';
@@ -184,6 +184,7 @@ const App = () => {
     showInviteQR, setShowInviteQR,
     lastPersonaSwitch, setLastPersonaSwitch,
     now, setNow,
+    errorMessage, clearError, isFirebaseRetrying,
   } = useBattleStore();
 
   // ── 純 App.jsx 的本地狀態（不屬於任何 store）─────────────────────────────
@@ -214,46 +215,61 @@ const App = () => {
       Notification.requestPermission();
     }
 
+    // Auth fetch cache: avoid redundant Firestore reads within 30s for same user
+    const lastAuthFetchKey = 'bb_v4_lastAuthFetch';
+    const lastAuthUidKey = 'bb_v4_lastAuthUid';
+
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       if (u) {
         setUser(u);
         setUserId(u.uid.slice(0, 6).toUpperCase());
         try {
-          const snap = await getDoc(doc(db, 'users', u.uid));
-          if (snap.exists()) {
-            const d = snap.data();
-            const localUpdatedAt = load('updatedAt', 0);
-            const cloudUpdatedAt = d.updatedAt || 0;
+          const lastFetch = parseInt(load(lastAuthFetchKey, '0'), 10);
+          const lastUid = load(lastAuthUidKey, '');
+          const shouldSkipFetch = lastUid === u.uid && Date.now() - lastFetch < 30_000;
 
-            // 雲端比本機新才覆蓋（保護離線期間修改的資料）
-            if (cloudUpdatedAt >= localUpdatedAt) {
-              if (d.coins     !== undefined) setCoins(d.coins);
-              if (d.debt      !== undefined) setDebt(d.debt);
-              if (d.exp       !== undefined) setWillpowerExp(d.exp);
-              if (d.persona   !== undefined) setPersona(d.persona);
-              if (d.personaStats !== undefined) setPersonaStats(prev => ({ ...prev, ...(d.personaStats || {}) }));
-              if (d.achievements !== undefined) setAchievements(d.achievements || {});
-              if (d.wishlistGoal !== undefined) setWishlistGoal(d.wishlistGoal || 0);
-              // history 從 subcollection 讀取（有 index 時才生效）
-              try {
-                const hSnap = await getDocs(query(collection(db, 'users', u.uid, 'history'), orderBy('id', 'desc')));
-                if (!hSnap.empty) setHistory(hSnap.docs.map(d => d.data()));
-              } catch { /* index 未建立時靜默失敗，沿用 localStorage */ }
+          if (!shouldSkipFetch) {
+            save(lastAuthFetchKey, Date.now().toString());
+            save(lastAuthUidKey, u.uid);
+
+            const snap = await getDoc(doc(db, 'users', u.uid));
+            if (snap.exists()) {
+              const d = snap.data();
+              const localUpdatedAt = load('updatedAt', 0);
+              const cloudUpdatedAt = d.updatedAt || 0;
+
+              // 雲端比本機新才覆蓋（保護離線期間修改的資料）
+              if (cloudUpdatedAt >= localUpdatedAt) {
+                if (d.coins     !== undefined) setCoins(d.coins);
+                if (d.debt      !== undefined) setDebt(d.debt);
+                if (d.exp       !== undefined) setWillpowerExp(d.exp);
+                if (d.persona   !== undefined) setPersona(d.persona);
+                if (d.personaStats !== undefined) setPersonaStats(prev => ({ ...prev, ...(d.personaStats || {}) }));
+                if (d.achievements !== undefined) setAchievements(d.achievements || {});
+                if (d.wishlistGoal !== undefined) setWishlistGoal(d.wishlistGoal || 0);
+                // history 從 subcollection 讀取（有 index 時才生效）
+                try {
+                  const hSnap = await getDocs(query(collection(db, 'users', u.uid, 'history'), orderBy('id', 'desc')));
+                  if (!hSnap.empty) setHistory(hSnap.docs.map(d => d.data()));
+                } catch { /* index 未建立時靜默失敗，沿用 localStorage */ }
+              }
+
+              // 身份資料永遠以雲端為準
+              if (d.lang      !== undefined) setLang(d.lang || 'zh');
+              if (d.userName  !== undefined) setUserName(d.userName);
+              if (d.userId    !== undefined) setUserId(d.userId);
+              if (d.userAvatar !== undefined) setUserAvatar(d.userAvatar);
+              if (d.roomId    !== undefined) setRoomId(d.roomId);
+              if (d.hasTutorial !== undefined) setHasCompletedTutorial(d.hasTutorial);
             }
-
-            // 身份資料永遠以雲端為準
-            if (d.lang      !== undefined) setLang(d.lang || 'zh');
-            if (d.userName  !== undefined) setUserName(d.userName);
-            if (d.userId    !== undefined) setUserId(d.userId);
-            if (d.userAvatar !== undefined) setUserAvatar(d.userAvatar);
-            if (d.roomId    !== undefined) setRoomId(d.roomId);
-            if (d.hasTutorial !== undefined) setHasCompletedTutorial(d.hasTutorial);
           }
         } catch (err) {
           console.error('Sync Error:', err);
         }
       } else {
         setUser(null);
+        save(lastAuthFetchKey, '0');
+        save(lastAuthUidKey, '');
         if (!userId) setUserId(Math.random().toString(36).substring(2, 8).toUpperCase());
       }
       setIsCloudLoading(false);
@@ -410,6 +426,13 @@ const App = () => {
           </div>
         )}
 
+        {isFirebaseRetrying && (
+          <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[4001] bg-amber-50 border border-amber-200 px-4 py-2 rounded-full flex items-center gap-2 animate-in fade-in duration-300">
+            <Loader2 size={12} className="animate-spin text-amber-500" />
+            <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">同步中…</span>
+          </div>
+        )}
+
         {/* ── Phase 1：Props 維持原樣傳給 AppContent，AppContent 零改動 ── */}
         <AppContent
           {...{
@@ -464,6 +487,25 @@ const App = () => {
           onDismiss={() => setAchievementNotification(null)}
           onDetail={() => { setShowAchievements(true); setAchievementNotification(null); }}
         />
+      )}
+
+      {errorMessage && (
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-[7001] w-[90%] max-w-sm">
+          <div
+            className="bg-red-600 text-white px-5 py-3 rounded-2xl text-sm font-bold shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-2 duration-300"
+            role="alert"
+          >
+            <AlertCircle size={18} className="shrink-0" />
+            <span className="flex-1">{errorMessage}</span>
+            <button
+              onClick={clearError}
+              className="p-1 hover:bg-white/20 rounded-full transition-colors shrink-0"
+              aria-label="關閉錯誤訊息"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </div>
       )}
     </>
   );

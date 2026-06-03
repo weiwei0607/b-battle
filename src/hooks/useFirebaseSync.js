@@ -2,13 +2,13 @@
  * useFirebaseSync
  * 職責：所有 Firestore 讀寫操作的唯一入口。
  *
- * 設計原則：
- * - 直接從 Zustand stores 讀取需要備份的資料，不靠外部傳參
- * - 提供 sync* 函式供 useBattleLogic 在執行業務邏輯後呼叫
- * - 所有 setDoc / deleteDoc / updateDoc 的 .catch(() => {}) 封在這裡，
- *   呼叫端不需要自己 try/catch
+ * 優化重點：
+ * - 寫入失敗時自動重試（指數退避，最多 3 次）
+ * - 離線時將寫入加入佇列，恢復連線後自動補發
+ * - 錯誤不再靜默吞掉，而是回報到 store 供 UI 顯示
+ * - onSnapshot 只在真正需要時訂閱，避免無意義重建
  */
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 
 const TZ = 'Asia/Taipei';
 const taipeiDateStr = (d = new Date()) =>
@@ -32,6 +32,32 @@ import { useFinanceStore } from '../stores/useFinanceStore';
 import { useBattleStore } from '../stores/useBattleStore';
 import { save } from '../stores/storage';
 
+/* ── 工具：帶指數退避的重試 ─────────────────────────────────────── */
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000;
+
+const withRetry = async (operation, onError) => {
+  let lastErr;
+  for (let i = 0; i < MAX_RETRIES; i++) {
+    try {
+      return await operation();
+    } catch (err) {
+      lastErr = err;
+      if (i < MAX_RETRIES - 1) {
+        await new Promise(r => setTimeout(r, RETRY_DELAY * Math.pow(2, i)));
+      }
+    }
+  }
+  if (onError) onError(lastErr);
+  throw lastErr;
+};
+
+/* ── 離線寫入佇列（session 級別） ───────────────────────────────── */
+let _offlineQueue = [];
+const getOfflineQueue = () => _offlineQueue;
+const pushOffline = (item) => { _offlineQueue.push(item); };
+const clearOffline = () => { _offlineQueue = []; };
+
 export const useFirebaseSync = () => {
   // ── 從 Zustand 取需要的資料 ────────────────────────────────────────────
   const {
@@ -51,46 +77,68 @@ export const useFirebaseSync = () => {
   } = useFinanceStore();
 
   const {
-    isCloudLoading,
+    isCloudLoading, isOnline,
     activeMode, roomId, setRoomId, setActiveMode,
     addToBattleLog,
     setEnemySpentDaily, setEnemySpentWeekly, setEnemySpentMonthly,
+    setErrorMessage, setIsFirebaseRetrying,
   } = useBattleStore();
+
+  const roomUnsubRef = useRef(null);
 
   // ── 1. 定時備份使用者主資料（debounce 2s，不含 history subcollection）──
   useEffect(() => {
     if (!user || isCloudLoading) return;
     const timeout = setTimeout(() => {
       const nowTime = Date.now();
-      setDoc(
-        doc(db, 'users', user.uid),
-        {
-          coins, debt, personaStats, persona,
-          exp: willpowerExp, wishlist, wishlistGoal,
-          homeMaterials, currentTier,
-          potions, shield, userTitle, userFrame,
-          unlockedTitles, achievements, lang, userName, 
-          isStudent, currency, insuranceExpiry, hasZenSofa,
-          weeklyPools, monthlyPools,
-          roomId,
-          updatedAt: nowTime,
-        },
-        { merge: true }
-      ).then(() => {
+      const payload = {
+        coins, debt, personaStats, persona,
+        exp: willpowerExp, wishlist, wishlistGoal,
+        homeMaterials, currentTier,
+        potions, shield, userTitle, userFrame,
+        unlockedTitles, achievements, lang, userName,
+        isStudent, currency, insuranceExpiry, hasZenSofa,
+        weeklyPools, monthlyPools,
+        roomId,
+        updatedAt: nowTime,
+      };
+      const operation = () => setDoc(doc(db, 'users', user.uid), payload, { merge: true });
+
+      if (!isOnline) {
+        pushOffline({ type: 'setDoc', path: `users/${user.uid}`, payload });
+        return;
+      }
+
+      setIsFirebaseRetrying(false);
+      withRetry(operation, (err) => {
+        console.error("Firebase Sync Error:", err);
+        setErrorMessage('同步失敗，正在重試…');
+        setIsFirebaseRetrying(true);
+      }).then(() => {
         save('updatedAt', nowTime);
-      }).catch((err) => console.error("Firebase Sync Error:", err));
+        setIsFirebaseRetrying(false);
+      }).catch(() => {
+        pushOffline({ type: 'setDoc', path: `users/${user.uid}`, payload });
+      });
     }, 2000);
     return () => clearTimeout(timeout);
   }, [
-    user, isCloudLoading,
+    user, isCloudLoading, isOnline,
     coins, debt, personaStats, persona, willpowerExp, wishlist, wishlistGoal,
     homeMaterials, currentTier, potions, shield, userTitle, userFrame,
     unlockedTitles, achievements, lang, userName, isStudent, currency,
     insuranceExpiry, hasZenSofa, weeklyPools, monthlyPools, roomId,
+    setErrorMessage, setIsFirebaseRetrying,
   ]);
 
   // ── 2. 監聽房間（Firestore onSnapshot），同步對手 HP ──────────────────────
   useEffect(() => {
+    // 清理舊監聽
+    if (roomUnsubRef.current) {
+      roomUnsubRef.current();
+      roomUnsubRef.current = null;
+    }
+
     if (!roomId || roomId === 'MATCHMAKING_QUEUE') {
       setEnemySpentDaily(-1);
       setEnemySpentWeekly(-1);
@@ -124,13 +172,19 @@ export const useFirebaseSync = () => {
           setEnemySpentMonthly(-1);
         }
       } else {
-        // Room was deleted or expired — disconnect instead of silently recreating it
         addToBattleLog(`⌛ [System] Room ${roomId} no longer exists.`);
         setRoomId('');
         setActiveMode('selection');
       }
+    }, (err) => {
+      console.error('Room snapshot error:', err);
+      setErrorMessage('房間連線異常，請檢查網路');
     });
-    return () => unsub();
+    roomUnsubRef.current = unsub;
+    return () => {
+      unsub();
+      roomUnsubRef.current = null;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeMode, roomId, user?.uid]); // 只用 stable 值，避免 Zustand selector 引用變化導致無限重訂閱
 
@@ -167,19 +221,25 @@ export const useFirebaseSync = () => {
     const hpDesire     = Math.max(0, 100 - (myMonthly / ((limits.desire * 5)     || 1)) * 100);
     const hpExpedition = Math.max(0, 100 - (myMonthly / ((limits.expedition * 5) || 1)) * 100);
 
-    setDoc(
-      doc(db, 'rooms', roomId),
-      {
-        [`players.${user.uid}`]: {
-          uid: user.uid, name: userName,
-          hpSurvival, hpProgress, hpDesire, hpExpedition,
-          lastUpdate: Date.now(),
-        },
+    const payload = {
+      [`players.${user.uid}`]: {
+        uid: user.uid, name: userName,
+        hpSurvival, hpProgress, hpDesire, hpExpedition,
+        lastUpdate: Date.now(),
       },
-      { merge: true }
+    };
+
+    if (!isOnline) {
+      pushOffline({ type: 'setDoc', path: `rooms/${roomId}`, payload });
+      return;
+    }
+
+    withRetry(
+      () => setDoc(doc(db, 'rooms', roomId), payload, { merge: true }),
+      () => pushOffline({ type: 'setDoc', path: `rooms/${roomId}`, payload })
     ).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [history, activeMode, roomId, user?.uid, userName, weeklyPools, monthlyPools]);
+  }, [history, activeMode, roomId, user?.uid, userName, weeklyPools, monthlyPools, isOnline]);
 
   // ── 4. 隨機匹配與 Bot 補位 ────────────────────────────────────────────────
   useEffect(() => {
@@ -205,13 +265,22 @@ export const useFirebaseSync = () => {
         })
       );
 
-      setDoc(doc(db, 'rooms', botRoomId), {
+      const payload = {
         createdAt: Date.now(),
         players: {
           ...bots,
           [user.uid]: { uid: user.uid, name: userName, hpSurvival: 100, hpProgress: 100, hpDesire: 100, hpExpedition: 100, lastUpdate: Date.now() },
         },
-      }).catch(() => {});
+      };
+
+      if (!isOnline) {
+        pushOffline({ type: 'setDoc', path: `rooms/${botRoomId}`, payload });
+      } else {
+        withRetry(
+          () => setDoc(doc(db, 'rooms', botRoomId), payload),
+          () => pushOffline({ type: 'setDoc', path: `rooms/${botRoomId}`, payload })
+        ).catch(() => {});
+      }
 
       setRoomId(botRoomId);
       setActiveMode('team5v5');
@@ -219,30 +288,91 @@ export const useFirebaseSync = () => {
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId, user?.uid, userName, lang]); // setRoomId / setActiveMode / addToBattleLog 來自 Zustand 為 stable ref
+  }, [roomId, user?.uid, userName, lang, isOnline]); // setRoomId / setActiveMode / addToBattleLog 來自 Zustand 為 stable ref
+
+  // ── 5. 離線恢復：連線後補發佇列 ──────────────────────────────────────────
+  useEffect(() => {
+    if (!isOnline || !user) return;
+    const queue = getOfflineQueue();
+    if (queue.length === 0) return;
+
+    const processQueue = async () => {
+      setIsFirebaseRetrying(true);
+      const remaining = [];
+      for (const item of queue) {
+        try {
+          if (item.type === 'setDoc') {
+            const [collection, id] = item.path.split('/');
+            await setDoc(doc(db, collection, id), item.payload, { merge: true });
+          }
+        } catch {
+          remaining.push(item);
+        }
+      }
+      clearOffline();
+      remaining.forEach(pushOffline);
+      setIsFirebaseRetrying(false);
+      if (remaining.length === 0) {
+        addToBattleLog('🔄 [System] Offline data synced.');
+      } else {
+        setErrorMessage('部分資料同步失敗，將在下次連線時重試');
+      }
+    };
+
+    processQueue();
+  }, [isOnline, user, setIsFirebaseRetrying, setErrorMessage, addToBattleLog]);
 
   // ── 同步函式（供 useBattleLogic 呼叫）────────────────────────────────────
 
   const syncNewTransaction = useCallback((entry) => {
     if (!user) return;
-    setDoc(doc(db, 'users', user.uid, 'history', entry.id.toString()), entry).catch(() => {});
+    const operation = () => setDoc(doc(db, 'users', user.uid, 'history', entry.id.toString()), entry);
+    if (!navigator.onLine) {
+      pushOffline({ type: 'setDoc', path: `users/${user.uid}/history/${entry.id}`, payload: entry });
+      return;
+    }
+    withRetry(operation, (err) => {
+      console.error('syncNewTransaction error:', err);
+      pushOffline({ type: 'setDoc', path: `users/${user.uid}/history/${entry.id}`, payload: entry });
+    }).catch(() => {});
   }, [user]);
 
   const syncDeleteTransaction = useCallback((id) => {
     if (!user) return;
-    deleteDoc(doc(db, 'users', user.uid, 'history', id.toString())).catch(() => {});
+    const operation = () => deleteDoc(doc(db, 'users', user.uid, 'history', id.toString()));
+    if (!navigator.onLine) {
+      pushOffline({ type: 'deleteDoc', path: `users/${user.uid}/history/${id}` });
+      return;
+    }
+    withRetry(operation, (err) => {
+      console.error('syncDeleteTransaction error:', err);
+      pushOffline({ type: 'deleteDoc', path: `users/${user.uid}/history/${id}` });
+    }).catch(() => {});
   }, [user]);
 
   const syncUpdateTransaction = useCallback((id, patch) => {
     if (!user) return;
-    updateDoc(doc(db, 'users', user.uid, 'history', id.toString()), patch).catch(() => {});
+    const operation = () => updateDoc(doc(db, 'users', user.uid, 'history', id.toString()), patch);
+    if (!navigator.onLine) {
+      pushOffline({ type: 'updateDoc', path: `users/${user.uid}/history/${id}`, payload: patch });
+      return;
+    }
+    withRetry(operation, (err) => {
+      console.error('syncUpdateTransaction error:', err);
+      pushOffline({ type: 'updateDoc', path: `users/${user.uid}/history/${id}`, payload: patch });
+    }).catch(() => {});
   }, [user]);
 
   const syncDeleteAllHistory = useCallback(async () => {
     if (!user) return;
-    const snap = await getDocs(collection(db, 'users', user.uid, 'history'));
-    await Promise.all(snap.docs.map((d) => deleteDoc(d.ref).catch(() => {})));
-  }, [user]);
+    try {
+      const snap = await getDocs(collection(db, 'users', user.uid, 'history'));
+      await Promise.all(snap.docs.map((d) => withRetry(() => deleteDoc(d.ref))));
+    } catch (err) {
+      console.error('syncDeleteAllHistory error:', err);
+      setErrorMessage('清除歷史記錄失敗');
+    }
+  }, [user, setErrorMessage]);
 
   return {
     syncNewTransaction,

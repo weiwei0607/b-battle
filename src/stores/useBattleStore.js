@@ -41,6 +41,11 @@ export const useBattleStore = create((set) => ({
   showTutorial: false,
   showLogin: false,
 
+  // Error & offline resilience
+  errorMessage: null,
+  isFirebaseRetrying: false,
+  offlineQueue: [],
+
   setView: (valOrFn) => set((state) => ({ view: typeof valOrFn === 'function' ? valOrFn(state.view) : valOrFn })),
   setActiveMode: (valOrFn) => set((state) => ({ activeMode: typeof valOrFn === 'function' ? valOrFn(state.activeMode) : valOrFn })),
   setRoomId: (valOrFn) => set((state) => ({ roomId: typeof valOrFn === 'function' ? valOrFn(state.roomId) : valOrFn })),
@@ -92,4 +97,16 @@ export const useBattleStore = create((set) => ({
   }),
   setShowTutorial: (valOrFn) => set((state) => ({ showTutorial: typeof valOrFn === 'function' ? valOrFn(state.showTutorial) : valOrFn })),
   setShowLogin: (valOrFn) => set((state) => ({ showLogin: typeof valOrFn === 'function' ? valOrFn(state.showLogin) : valOrFn })),
+
+  setErrorMessage: (valOrFn) => set((state) => ({
+    errorMessage: typeof valOrFn === 'function' ? valOrFn(state.errorMessage) : valOrFn,
+  })),
+  clearError: () => set({ errorMessage: null }),
+  setIsFirebaseRetrying: (valOrFn) => set((state) => ({
+    isFirebaseRetrying: typeof valOrFn === 'function' ? valOrFn(state.isFirebaseRetrying) : valOrFn,
+  })),
+  enqueueOfflineWrite: (writeFn) => set((state) => ({
+    offlineQueue: [...state.offlineQueue, writeFn],
+  })),
+  clearOfflineQueue: () => set({ offlineQueue: [] }),
 }));

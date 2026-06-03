@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Store, Zap, ShieldCheck, AlertTriangle, Swords, Globe, ChevronDown, Crown, Trophy, Medal } from 'lucide-react';
+import { Store, Zap, ShieldCheck, AlertTriangle, Swords, Globe, ChevronDown, Crown, Trophy, Medal, Loader2 } from 'lucide-react';
 import { getWalletStatus } from '../../utils/constants';
 
 const Header = ({ coins, debt, onShopClick, onAchievementsClick, onLeaderboardClick, setView, willpowerExp, lang, setLang, onWalletClick }) => {
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [langLoading, setLangLoading] = useState(false);
   const wallet = getWalletStatus(willpowerExp);
   const isInDebt = debt >= 500;
 
@@ -50,7 +51,11 @@ const Header = ({ coins, debt, onShopClick, onAchievementsClick, onLeaderboardCl
             onClick={() => setShowLangMenu(!showLangMenu)}
             className="bg-white border border-stone-200 h-8 px-2 rounded-xl flex items-center gap-1 transition-all active:scale-95 shadow-sm min-w-[48px] justify-center"
           >
-            <Globe size={10} className="text-stone-400" />
+            {langLoading ? (
+              <Loader2 size={10} className="animate-spin text-stone-400" />
+            ) : (
+              <Globe size={10} className="text-stone-400" />
+            )}
             <span className="text-[8px] font-black text-stone-600 uppercase">{lang}</span>
           </button>
 
@@ -59,9 +64,14 @@ const Header = ({ coins, debt, onShopClick, onAchievementsClick, onLeaderboardCl
               {langOptions.map((opt) => (
                 <button
                   key={opt.id}
-                  onClick={() => { 
-                    setLang(opt.id); 
-                    setShowLangMenu(false); 
+                  onClick={async () => { 
+                    setLangLoading(true);
+                    try {
+                      await setLang(opt.id); 
+                    } finally {
+                      setLangLoading(false);
+                      setShowLangMenu(false); 
+                    }
                   }}
                   className={`w-full text-left px-4 py-2.5 text-[10px] font-black transition-colors ${lang === opt.id ? 'text-amber-600 bg-amber-50' : 'text-stone-500 hover:bg-stone-50'}`}
                 >

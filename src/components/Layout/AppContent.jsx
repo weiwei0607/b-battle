@@ -1,19 +1,27 @@
-import React from 'react';
-import { Receipt, Send, LifeBuoy, Trophy } from 'lucide-react';
+import React, { Suspense } from 'react';
+import { Receipt, Send, LifeBuoy, Trophy, Loader2 } from 'lucide-react';
 import Header from './Header';
 import BottomNav from './BottomNav';
 import BattleArenaView from '../BattleArena/BattleArenaView';
-import HistoryView from '../History/HistoryView';
-import HeroHallView from '../HeroHall/HeroHallView';
 import PendingTxModal from '../../modals/PendingTxModal';
 import BudgetSetupModal from '../../modals/BudgetSetupModal';
-import ShopModal from '../../modals/ShopModal';
-import CustomPersonaModal from '../../modals/CustomPersonaModal';
-import AchievementModal from '../../modals/AchievementModal';
-import LeaderboardModal from '../../modals/LeaderboardModal';
-import ManualModal from '../../modals/ManualModal';
 import { CURRENCIES } from '../../utils/constants';
 import { LOCALES } from '../../utils/locales';
+
+/* ── Lazy load heavy components ─────────────────────────────────── */
+const HistoryView = React.lazy(() => import('../History/HistoryView'));
+const HeroHallView = React.lazy(() => import('../HeroHall/HeroHallView'));
+const ShopModal = React.lazy(() => import('../../modals/ShopModal'));
+const CustomPersonaModal = React.lazy(() => import('../../modals/CustomPersonaModal'));
+const AchievementModal = React.lazy(() => import('../../modals/AchievementModal'));
+const LeaderboardModal = React.lazy(() => import('../../modals/LeaderboardModal'));
+const ManualModal = React.lazy(() => import('../../modals/ManualModal'));
+
+const LazyFallback = () => (
+  <div className="flex-1 flex items-center justify-center min-h-[200px]">
+    <Loader2 size={24} className="animate-spin text-stone-300" />
+  </div>
+);
 
 const AppContent = ({
   isSevered, view, setView, coins, setCoins, debt, willpowerExp, persona, personaStats, setPersona,
@@ -80,8 +88,16 @@ const AppContent = ({
           ) : (
             <>
               {view === 'battle' && <BattleArenaView stats={personaStats[persona]} hpData={hpData} enemyHpData={enemyHpData} enemyConnected={enemyConnected} isAiProcessing={isAiProcessing} aiComment={aiComment} activeMode={activeMode} setActiveMode={setActiveMode} battleLog={battleLog} activeChallenges={activeChallenges} handleClaimChallenge={handleClaimChallenge} handleGiveUpChallenge={handleGiveUpChallenge} roomId={roomId} setRoomId={setRoomId} userId={userId} lang={lang} showFriends={showFriends} setShowFriends={setShowFriends} showRoomInput={showRoomInput} setShowRoomInput={setShowRoomInput} showInviteQR={showInviteQR} setShowInviteQR={setShowInviteQR} savingStreak={savingStreak} bannerText={bannerText} />}
-              {view === 'history' && <HistoryView history={history} aiComment={aiComment} deleteTransaction={deleteTransaction} updateTransaction={updateTransaction} potions={potions} healTransaction={healTransaction} unlockAchievement={unlockAchievement} generateMonthlyReview={generateMonthlyReview} personaStats={personaStats} persona={persona} isAiProcessing={isAiProcessing} achievements={achievements} lang={lang} />}
-              {view === 'heroHall' && <HeroHallView userTitle={userTitle} persona={persona} personaStats={personaStats} setPersona={setPersona} setShowBudgetSetup={()=>setShowBudgetSetup(true)} setShowManual={() => setShowManual(true)} currentTier={currentTier} lastPersonaSwitch={lastPersonaSwitch} setLastPersonaSwitch={setLastPersonaSwitch} wishlist={wishlist} setWishlist={setWishlist} debt={debt} userFrame={userFrame} homeMaterials={homeMaterials} user={user} setShowLogin={setShowLogin} setView={setView} lang={lang} userName={userName} setUserName={setUserName} userId={userId} userAvatar={userAvatar} setUserAvatar={setUserAvatar} showEvolutionPath={showEvolutionPath} setShowEvolutionPath={setShowEvolutionPath} willpowerExp={willpowerExp} setShowCustomModal={setShowCustomModal} coins={coins} wishlistGoal={wishlistGoal} setWishlistGoal={setWishlistGoal} setShowAchievements={setShowAchievements} />}
+              {view === 'history' && (
+                <Suspense fallback={<LazyFallback />}>
+                  <HistoryView history={history} aiComment={aiComment} deleteTransaction={deleteTransaction} updateTransaction={updateTransaction} potions={potions} healTransaction={healTransaction} unlockAchievement={unlockAchievement} generateMonthlyReview={generateMonthlyReview} personaStats={personaStats} persona={persona} isAiProcessing={isAiProcessing} achievements={achievements} lang={lang} />
+                </Suspense>
+              )}
+              {view === 'heroHall' && (
+                <Suspense fallback={<LazyFallback />}>
+                  <HeroHallView userTitle={userTitle} persona={persona} personaStats={personaStats} setPersona={setPersona} setShowBudgetSetup={()=>setShowBudgetSetup(true)} setShowManual={() => setShowManual(true)} currentTier={currentTier} lastPersonaSwitch={lastPersonaSwitch} setLastPersonaSwitch={setLastPersonaSwitch} wishlist={wishlist} setWishlist={setWishlist} debt={debt} userFrame={userFrame} homeMaterials={homeMaterials} user={user} setShowLogin={setShowLogin} setView={setView} lang={lang} userName={userName} setUserName={setUserName} userId={userId} userAvatar={userAvatar} setUserAvatar={setUserAvatar} showEvolutionPath={showEvolutionPath} setShowEvolutionPath={setShowEvolutionPath} willpowerExp={willpowerExp} setShowCustomModal={setShowCustomModal} coins={coins} wishlistGoal={wishlistGoal} setWishlistGoal={setWishlistGoal} setShowAchievements={setShowAchievements} />
+                </Suspense>
+              )}
             </>
           )}
         </main>
@@ -116,29 +132,39 @@ const AppContent = ({
 
         <PendingTxModal pendingTx={pendingTx} setPendingTx={setPendingTx} executeTransaction={executeTransaction} lang={lang} />
         <BudgetSetupModal show={showBudgetSetup} onClose={() => setShowBudgetSetup(false)} salaryInput={salaryInput} setSalaryInput={setSalaryInput} handleAutoCalculate={handleAutoCalculate} weeklyPools={weeklyPools} setWeeklyPools={setWeeklyPools} monthlyPools={monthlyPools} setMonthlyPools={setMonthlyPools} isStudent={isStudent} setIsStudent={setIsStudent} currency={currency} setCurrency={setCurrency} CURRENCIES={CURRENCIES} currentTier={currentTier} setCurrentTier={setCurrentTier} />
-        <ShopModal
-          show={showShop}
-          onClose={() => setShowShop(false)}
-          coins={coins}
-          setCoins={setCoins}
-          setUserFrame={setUserFrame}
-          potions={potions}
-          setPotions={setPotions}
-          shield={shield}
-          setShield={setShield}
-          insuranceExpiry={insuranceExpiry}
-          setInsuranceExpiry={setInsuranceExpiry}
-          hasZenSofa={hasZenSofa}
-          setHasZenSofa={setHasZenSofa}
-          setBannerText={setBannerText}
-          setInventory={setInventory}
-          inventory={inventory}
-          lang={lang}
-        />
-        <CustomPersonaModal show={showCustomModal} onClose={() => setShowCustomModal(false)} onSave={handleSavePersona} />
-        <AchievementModal show={showAchievements} onClose={() => setShowAchievements(false)} achievements={achievements} onClaim={handleClaimAchievement} userTitle={userTitle} setUserTitle={setUserTitle} lang={lang} />
-        <LeaderboardModal show={showLeaderboard} onClose={() => setShowLeaderboard(false)} currentUserId={user?.uid} />
-        <ManualModal show={showManual} onClose={() => setShowManual(false)} lang={lang} />
+        <Suspense fallback={null}>
+          <ShopModal
+            show={showShop}
+            onClose={() => setShowShop(false)}
+            coins={coins}
+            setCoins={setCoins}
+            setUserFrame={setUserFrame}
+            potions={potions}
+            setPotions={setPotions}
+            shield={shield}
+            setShield={setShield}
+            insuranceExpiry={insuranceExpiry}
+            setInsuranceExpiry={setInsuranceExpiry}
+            hasZenSofa={hasZenSofa}
+            setHasZenSofa={setHasZenSofa}
+            setBannerText={setBannerText}
+            setInventory={setInventory}
+            inventory={inventory}
+            lang={lang}
+          />
+        </Suspense>
+        <Suspense fallback={null}>
+          <CustomPersonaModal show={showCustomModal} onClose={() => setShowCustomModal(false)} onSave={handleSavePersona} />
+        </Suspense>
+        <Suspense fallback={null}>
+          <AchievementModal show={showAchievements} onClose={() => setShowAchievements(false)} achievements={achievements} onClaim={handleClaimAchievement} userTitle={userTitle} setUserTitle={setUserTitle} lang={lang} />
+        </Suspense>
+        <Suspense fallback={null}>
+          <LeaderboardModal show={showLeaderboard} onClose={() => setShowLeaderboard(false)} currentUserId={user?.uid} />
+        </Suspense>
+        <Suspense fallback={null}>
+          <ManualModal show={showManual} onClose={() => setShowManual(false)} lang={lang} />
+        </Suspense>
       </div>
     </div>
   );
