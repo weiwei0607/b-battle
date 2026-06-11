@@ -353,14 +353,6 @@ const HistoryView = ({
     const [year, month] = selectedMonth.split('/');
     const allPools = { ...weeklyPools, ...monthlyPools };
 
-    // Map pillar -> label for display
-    const pillarLabels = {
-      survival: t.pillar_survival || '生存戰耗',
-      progress: t.pillar_progress || '進化投資',
-      desire:   t.pillar_desire   || '慾望侵蝕',
-      expedition: t.pillar_expedition || '遠征破防',
-    };
-
     // Group spending by category (use damage per game core mechanic)
     const byCategory = {};
     filteredHistory.forEach(h => {

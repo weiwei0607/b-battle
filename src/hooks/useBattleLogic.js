@@ -460,9 +460,6 @@ export const useBattleLogic = () => {
 
   // 日/週/月重置 + Streak 計算
   useEffect(() => {
-    const previousDateStr = lastTrackDate; // this is still the OLD date on first render
-    const previousMonthKey = previousDateStr ? previousDateStr.slice(0, 7).replace('-', '/') : '';
-
     const todayStr = taipeiDateStr();
     if (!lastTrackDate || lastTrackDate === todayStr) {
       setLastTrackDate(todayStr);

@@ -29,7 +29,7 @@ const HeroHallView = ({
   const checkAndSetPersona = (id) => {
     const isLocked = currentTier === 'free' && !['peer'].includes(id);
     if (isLocked) { alert("此人格為高級版專屬，請升級意志力會員！"); return; }
-    // eslint-disable-next-line react-hooks/purity
+     
     const now = Date.now();
     if (lastPersonaSwitch && now - lastPersonaSwitch < 3600000) {
       alert("頻繁切換人格會導致關係不穩！請一小時後再試。"); return;
