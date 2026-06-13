@@ -92,9 +92,14 @@ const Header = ({ coins, debt, onShopClick, onAchievementsClick, onLeaderboardCl
           <Store size={12} className="text-stone-500" />
         </button>
         
-        <div className={`h-8 px-2.5 rounded-xl shadow-md flex items-center gap-1 text-white text-[10px] font-black transition-colors shrink-0 ${isInDebt ? 'bg-red-600' : 'bg-stone-800'}`}>
-          {isInDebt ? <AlertTriangle size={10} className="text-white" /> : <Zap size={10} className="text-amber-400 fill-amber-400" />}
-          {coins.toLocaleString()}
+        <div
+          className={`h-8 px-3 rounded-xl flex items-center gap-1.5 text-[11px] font-black shrink-0 transition-all ${isInDebt ? 'bg-red-600 text-white' : 'bg-stone-800 text-amber-300'}`}
+          style={isInDebt ? {} : { boxShadow: '0 2px 8px rgba(28,25,23,0.25), inset 0 1px 0 rgba(255,255,255,0.06)' }}
+        >
+          {isInDebt
+            ? <AlertTriangle size={10} className="text-white" />
+            : <Zap size={11} className="fill-amber-400 text-amber-400" />}
+          <span className={isInDebt ? 'text-white' : 'text-amber-300 font-syne'}>{coins.toLocaleString()}</span>
         </div>
       </div>
     </header>

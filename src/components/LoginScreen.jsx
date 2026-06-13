@@ -50,8 +50,8 @@ const LoginScreen = ({ isModal = false, onClose }) => {
 
   const content = (
     <div className="w-full max-w-md bg-white rounded-[2.5rem] p-8 shadow-xl border border-stone-100">
-      <h2 className="text-3xl font-black mb-8 text-center tracking-tight text-stone-800">
-        {isRegistering ? '註冊帳號' : '登入 B-Battle'}
+      <h2 className="text-xl font-black mb-6 text-center tracking-tight text-stone-700">
+        {isRegistering ? '建立帳號' : '歡迎回來'}
       </h2>
       
       <ErrorMessage 
@@ -146,8 +146,29 @@ const LoginScreen = ({ isModal = false, onClose }) => {
   if (isModal) return content;
 
   return (
-    <div className="min-h-screen bg-[#F7F4EF] flex items-center justify-center p-6">
-      {content}
+    <div className="min-h-screen bg-[#F7F4EF] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      {/* Background orbs */}
+      <div className="absolute top-[-60px] right-[-40px] w-72 h-72 rounded-full bg-amber-100/60 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-20 left-[-60px] w-56 h-56 rounded-full bg-stone-200/70 blur-3xl pointer-events-none" />
+
+      {/* Hero branding */}
+      <div className="text-center mb-8 relative z-10 bb-slide-up">
+        <div className="w-[72px] h-[72px] bg-stone-800 rounded-[1.75rem] flex items-center justify-center mx-auto mb-5" style={{ boxShadow: '0 12px 40px rgba(28,25,23,0.22), 0 4px 8px rgba(28,25,23,0.12)' }}>
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" x2="19" y1="19" y2="13"/><line x1="16" x2="20" y1="16" y2="20"/><line x1="19" x2="21" y1="21" y2="19"/>
+            <polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" x2="9" y1="14" y2="10"/>
+          </svg>
+        </div>
+        <h1 className="font-syne text-[26px] font-black tracking-[-0.03em] text-stone-800 mb-1.5">B-BATTLE</h1>
+        <p className="text-[11px] text-stone-400 font-semibold tracking-[0.18em] uppercase">意志力記帳戰場</p>
+      </div>
+
+      {/* Card */}
+      <div className="relative z-10 w-full max-w-md bb-slide-up delay-100">
+        {content}
+      </div>
+
+      <p className="mt-6 text-[10px] text-stone-300 font-medium relative z-10 bb-fade-in delay-500 tracking-wider">這不是記帳，這是戰場</p>
     </div>
   );
 };
