@@ -41,53 +41,177 @@ const AchievementToast = ({ notification, onDismiss, onDetail }) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // Splash & Streak Overlay（純 UI，留在 App.jsx，不需搬進 store）
 // ─────────────────────────────────────────────────────────────────────────────
-const GlobalSplash = ({ onComplete, persona, lang }) => {
-  const [progress, setProgress] = useState(0);
-  const t = LOCALES[lang] || LOCALES.zh;
-  const [messages] = useState(() => {
-    const tInit = LOCALES[lang] || LOCALES.zh;
-    const pool = [
-      tInit.loading_report, tInit.loading_sync, tInit.loading_ai, tInit.loading_ready,
-      '檢查裝備狀態...', '召喚戰鬥夥伴...', '校準預算雷達...',
-      '讀取心情數據...', '連線多重宇宙...', '運氣值計算中...',
-    ];
-    return [...pool].sort(() => Math.random() - 0.5).slice(0, 4);
-  });
+const GlobalSplash = ({ onComplete }) => {
+  const canvasRef = React.useRef(null);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress(p => {
-        if (p >= 100) { clearInterval(timer); setTimeout(onComplete, 500); return 100; }
-        return p + 1;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const W = canvas.width, H = canvas.height;
+    const cx = W / 2, cy = H / 2;
+
+    // Marble crack lines
+    const cracks = [];
+    const DURATION = 2400;
+    const startTime = performance.now();
+    let frame = 0;
+    let raf;
+
+    // Gold dust particles
+    const dust = [];
+
+    function spawnCrack(x, y, angle, depth, t) {
+      if (depth <= 0 || t > 0.7) return;
+      const len = 30 + Math.random() * 80 * (1 - depth / 6);
+      const endX = x + Math.cos(angle) * len;
+      const endY = y + Math.sin(angle) * len;
+      cracks.push({ x1: x, y1: y, x2: endX, y2: endY, alpha: 0, maxAlpha: 0.3 + Math.random() * 0.4, depth });
+      // Branch
+      if (depth > 1 && Math.random() < 0.55) {
+        const branchAngle = angle + (Math.random() - 0.5) * 1.4;
+        spawnCrack(endX, endY, branchAngle, depth - 1, t);
+      }
+      if (depth > 2 && Math.random() < 0.3) {
+        spawnCrack(endX, endY, angle + (Math.random() - 0.5) * 0.6, depth - 2, t);
+      }
+      // Gold dust at crack tips
+      for (let i = 0; i < 3; i++) {
+        dust.push({
+          x: endX + (Math.random() - 0.5) * 8,
+          y: endY + (Math.random() - 0.5) * 8,
+          vx: (Math.random() - 0.5) * 1.5,
+          vy: (Math.random() - 0.5) * 1.5 - 0.5,
+          life: 1, size: 0.8 + Math.random() * 1.5,
+        });
+      }
+    }
+
+    let nextCrack = 0;
+    const CENTER_MARBLE = '#F2EDE3';
+
+    function draw(now) {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / DURATION, 1);
+
+      ctx.clearRect(0, 0, W, H);
+
+      // Marble background
+      ctx.fillStyle = CENTER_MARBLE;
+      ctx.fillRect(0, 0, W, H);
+
+      // Marble veining (repeating-linear-gradient equivalent via canvas)
+      for (let i = 0; i < 8; i++) {
+        const x1 = Math.random() * W * 2 - W * 0.5;
+        const y1 = Math.random() * H * 2 - H * 0.5;
+        const x2 = x1 + Math.cos(1.88) * W;
+        const y2 = y1 + Math.sin(1.88) * H;
+        const grd = ctx.createLinearGradient(x1, y1, x2, y2);
+        grd.addColorStop(0, 'transparent');
+        grd.addColorStop(0.48, 'transparent');
+        grd.addColorStop(0.5, 'rgba(197,161,64,0.06)');
+        grd.addColorStop(0.52, 'transparent');
+        grd.addColorStop(1, 'transparent');
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      // Radial gold glow from center
+      const glowR = 200 + Math.sin(frame * 0.04) * 20;
+      const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
+      grd.addColorStop(0, 'rgba(197,161,64,0.12)');
+      grd.addColorStop(1, 'transparent');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, W, H);
+
+      // Spawn cracks from center outward
+      if (now > nextCrack && t < 0.68) {
+        const angle = Math.random() * Math.PI * 2;
+        const startDist = 10 + Math.random() * 40;
+        spawnCrack(
+          cx + Math.cos(angle) * startDist,
+          cy + Math.sin(angle) * startDist,
+          angle, 4 + Math.round(Math.random() * 2), t
+        );
+        nextCrack = now + 80 + Math.random() * 120;
+      }
+
+      // Grow cracks
+      cracks.forEach(c => {
+        c.alpha = Math.min(c.alpha + 0.04, c.maxAlpha);
+        ctx.beginPath();
+        ctx.moveTo(c.x1, c.y1);
+        ctx.lineTo(c.x2, c.y2);
+        ctx.strokeStyle = `rgba(42,34,24,${c.alpha})`;
+        ctx.lineWidth = 0.5 + c.depth * 0.2;
+        ctx.stroke();
       });
-    }, 25);
-    return () => clearInterval(timer);
+
+      // Gold dust
+      for (let i = dust.length - 1; i >= 0; i--) {
+        const p = dust[i];
+        p.x += p.vx; p.y += p.vy;
+        p.vy += 0.02; // gravity
+        p.life -= 0.015;
+        if (p.life <= 0) { dust.splice(i, 1); continue; }
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(197,161,64,${p.life * 0.8})`;
+        ctx.fill();
+      }
+
+      // Center ornament
+      const ornAlpha = Math.min(t * 2.5, 1) * (t < 0.75 ? 1 : (1 - t) * 4);
+      if (ornAlpha > 0) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, ornAlpha);
+        // Gold circle
+        ctx.beginPath();
+        ctx.arc(cx, cy, 36, 0, Math.PI * 2);
+        ctx.strokeStyle = '#C5A140';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        // Inner dot
+        ctx.beginPath();
+        ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#C5A140';
+        ctx.fill();
+
+        // B·BATTLE text
+        ctx.font = `900 ${Math.round(W * 0.072)}px 'Cinzel', Georgia, serif`;
+        ctx.fillStyle = '#2A2218';
+        ctx.textAlign = 'center';
+        ctx.fillText('B·BATTLE', cx, cy + 70);
+        ctx.font = `500 ${Math.round(W * 0.028)}px 'Cinzel', serif`;
+        ctx.fillStyle = '#C5A140';
+        ctx.fillText('意志力決鬥場', cx, cy + 100);
+        ctx.restore();
+      }
+
+      // Fade to cream
+      if (t > 0.76) {
+        const fade = (t - 0.76) / 0.24;
+        ctx.fillStyle = `rgba(242,237,227,${fade})`;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      frame++;
+      if (t < 1) { raf = requestAnimationFrame(draw); }
+      else { onComplete(); }
+    }
+
+    raf = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(raf);
   }, [onComplete]);
 
-  const msgIdx = Math.min(Math.floor(progress / 25), 3);
-
   return (
-    <div className="fixed inset-0 z-[5000] bg-[#F7F4EF] flex flex-col items-center justify-center animate-in fade-in duration-700">
-      <style>{`
-        @keyframes floating { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
-        .animate-float { animation: floating 3s ease-in-out infinite; }
-      `}</style>
-      <div className="animate-float mb-12 text-center text-stone-800">
-        <div className="w-20 h-20 bg-stone-800 rounded-[2.5rem] flex items-center justify-center shadow-2xl mx-auto mb-4">
-          <Swords size={40} className="text-white" />
-        </div>
-        <div className="text-xl font-black tracking-tighter">B-BATTLE</div>
-      </div>
-      <div className="w-48 h-1 bg-stone-200 rounded-full relative overflow-hidden mb-6 shadow-inner">
-        <div className="absolute inset-y-0 left-0 bg-stone-800 transition-all duration-300 ease-out" style={{ width: `${progress}%` }} />
-      </div>
-      <div className="text-[11px] font-black text-stone-400 tracking-[0.2em] uppercase h-4 text-center">
-        {messages[msgIdx]}
-      </div>
-      <div className="fixed bottom-16 text-[10px] font-medium text-stone-400 italic px-8 text-center animate-pulse">
-        {t[`splash_${persona}`] || "Loading your willpower journey..."}
-      </div>
-    </div>
+    <canvas
+      ref={canvasRef}
+      style={{ position: 'fixed', inset: 0, zIndex: 5000, width: '100vw', height: '100vh', cursor: 'none' }}
+    />
   );
 };
 
