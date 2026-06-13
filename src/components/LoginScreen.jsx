@@ -3,6 +3,18 @@ import { auth, googleProvider, signInWithRedirect, createUserWithEmailAndPasswor
 import LoadingButton from './UI/LoadingButton';
 import ErrorMessage from './UI/ErrorMessage';
 
+/* ── 羅馬柱頭裝飾 SVG ─── */
+const CapitalOrnament = () => (
+  <svg width="80" height="24" viewBox="0 0 80 24" fill="none" aria-hidden="true">
+    <line x1="0" y1="23" x2="80" y2="23" stroke="#D8CFC3" strokeWidth="1"/>
+    <line x1="8" y1="18" x2="72" y2="18" stroke="#D8CFC3" strokeWidth="0.75"/>
+    <path d="M8 18 Q40 6 72 18" stroke="#C5A140" strokeWidth="0.8" fill="none" opacity="0.6"/>
+    <circle cx="40" cy="8" r="2.5" fill="#C5A140" opacity="0.7"/>
+    <circle cx="14" cy="18" r="1.5" fill="#D8CFC3"/>
+    <circle cx="66" cy="18" r="1.5" fill="#D8CFC3"/>
+  </svg>
+);
+
 const LoginScreen = ({ isModal = false, onClose }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -12,10 +24,7 @@ const LoginScreen = ({ isModal = false, onClose }) => {
 
   const handleEmailAuth = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError('請輸入電子郵件和密碼');
-      return;
-    }
+    if (!email || !password) { setError('請輸入電子郵件和密碼'); return; }
     setLoading(true);
     setError('');
     try {
@@ -26,7 +35,6 @@ const LoginScreen = ({ isModal = false, onClose }) => {
       }
       if (isModal && onClose) onClose();
     } catch (err) {
-      console.error(err);
       if (err.code === 'auth/email-already-in-use') setError('該電子郵件已被註冊');
       else if (err.code === 'auth/invalid-credential') setError('電子郵件或密碼錯誤');
       else if (err.code === 'auth/weak-password') setError('密碼強度太弱');
@@ -42,36 +50,41 @@ const LoginScreen = ({ isModal = false, onClose }) => {
     try {
       await signInWithRedirect(auth, googleProvider);
     } catch (err) {
-      console.error("Google Auth Error:", err);
       setError(`Google 登入失敗 (${err.code})`);
       setLoading(false);
     }
   };
 
+  /* ── 表單卡片 ── */
   const content = (
-    <div className="w-full max-w-md bg-white rounded-[2.5rem] p-8 shadow-xl border border-stone-100">
-      <h2 className="text-xl font-black mb-6 text-center tracking-tight text-stone-700">
-        {isRegistering ? '建立帳號' : '歡迎回來'}
+    <div className="w-full max-w-md marble-card-elevated rounded-3xl p-8" style={{ background: '#FAF8F4' }}>
+      {/* 卡片標題 */}
+      <h2 className="font-cinzel text-lg font-semibold text-center mb-5 tracking-wider"
+        style={{ color: '#2A2218', letterSpacing: '0.08em' }}>
+        {isRegistering ? 'REGISTER' : 'ENTER THE ARENA'}
       </h2>
-      
-      <ErrorMessage 
-        message={error} 
-        onDismiss={() => setError('')} 
-      />
 
-      <form onSubmit={handleEmailAuth} className="space-y-4 mb-6">
+      {/* 金色分隔線 */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, #D8CFC3)' }} />
+        <div className="w-1 h-1 rounded-full" style={{ background: '#C5A140', opacity: 0.7 }} />
+        <div className="flex-1 h-px" style={{ background: 'linear-gradient(to left, transparent, #D8CFC3)' }} />
+      </div>
+
+      <ErrorMessage message={error} onDismiss={() => setError('')} />
+
+      <form onSubmit={handleEmailAuth} className="space-y-4 mb-5">
         <div>
-          <label 
-            htmlFor="login-email"
-            className="block text-sm font-bold text-stone-500 mb-1"
-          >
+          <label htmlFor="login-email"
+            className="block text-[11px] font-semibold mb-1.5 tracking-widest uppercase"
+            style={{ color: '#6B5B45', fontFamily: 'Cinzel, serif' }}>
             電子郵件
           </label>
           <input
             id="login-email"
             type="email"
             autoComplete="email"
-            className="w-full bg-stone-50 border-none px-4 py-3.5 rounded-2xl outline-none focus:ring-2 focus:ring-stone-200 transition-all text-stone-800 disabled:opacity-50"
+            className="w-full px-4 py-3.5 rounded-2xl text-sm input-roman disabled:opacity-50"
             placeholder="your@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -80,17 +93,16 @@ const LoginScreen = ({ isModal = false, onClose }) => {
           />
         </div>
         <div>
-          <label 
-            htmlFor="login-password"
-            className="block text-sm font-bold text-stone-500 mb-1"
-          >
+          <label htmlFor="login-password"
+            className="block text-[11px] font-semibold mb-1.5 tracking-widest uppercase"
+            style={{ color: '#6B5B45', fontFamily: 'Cinzel, serif' }}>
             密碼
           </label>
           <input
             id="login-password"
             type="password"
             autoComplete={isRegistering ? 'new-password' : 'current-password'}
-            className="w-full bg-stone-50 border-none px-4 py-3.5 rounded-2xl outline-none focus:ring-2 focus:ring-stone-200 transition-all text-stone-800 disabled:opacity-50"
+            className="w-full px-4 py-3.5 rounded-2xl text-sm input-roman disabled:opacity-50"
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -98,46 +110,58 @@ const LoginScreen = ({ isModal = false, onClose }) => {
             aria-required="true"
           />
         </div>
-        <LoadingButton
+
+        <button
           type="submit"
-          loading={loading}
-          variant="primary"
-          size="lg"
-          className="mt-4"
+          disabled={loading}
+          className="w-full py-4 rounded-2xl text-xs font-cinzel font-semibold tracking-[0.18em] uppercase btn-gold disabled:opacity-50"
+          style={{ fontFamily: 'Cinzel, serif' }}
         >
-          {isRegistering ? '立即註冊' : '登入'}
-        </LoadingButton>
+          {loading ? '驗證中…' : isRegistering ? 'Join the Legion' : 'Enter Battle'}
+        </button>
       </form>
 
-      <div className="flex items-center gap-4 mb-6 opacity-50">
-        <div className="flex-1 h-px bg-stone-300"></div>
-        <span className="text-xs font-bold uppercase tracking-widest text-stone-400">OR</span>
-        <div className="flex-1 h-px bg-stone-300"></div>
+      {/* OR 分隔 */}
+      <div className="flex items-center gap-3 mb-5">
+        <div className="flex-1 h-px" style={{ background: '#D8CFC3', opacity: 0.6 }} />
+        <span className="text-[10px] tracking-[0.2em] uppercase font-cinzel" style={{ color: '#B8A898' }}>or</span>
+        <div className="flex-1 h-px" style={{ background: '#D8CFC3', opacity: 0.6 }} />
       </div>
 
-      <LoadingButton
+      {/* Google 登入 */}
+      <button
         onClick={handleGoogleLogin}
-        loading={loading}
-        variant="secondary"
-        size="lg"
-        className="flex items-center justify-center gap-3"
+        disabled={loading}
+        className="w-full py-3.5 rounded-2xl flex items-center justify-center gap-3 text-sm font-semibold transition-all disabled:opacity-50 active:scale-[0.98]"
+        style={{
+          background: 'var(--cream)',
+          border: '1px solid var(--stone-line)',
+          color: 'var(--stone-dark)',
+          boxShadow: '0 2px 6px rgba(42,34,24,0.06)',
+        }}
+        onMouseEnter={e => e.currentTarget.style.borderColor = '#C5A140'}
+        onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--stone-line)'}
       >
-        <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
-          <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-          <path fill="#34A853" d="M12 24c2.87 0 5.28-.95 7.04-2.58l-3.57-2.77c-.95.64-2.17 1.02-3.47 1.02-2.68 0-4.95-1.81-5.76-4.25H2.5v2.85C4.26 21.75 7.82 24 12 24z" />
-          <path fill="#FBBC05" d="M6.24 15.42c-.2-.6-.32-1.25-.32-1.92s.12-1.32.32-1.92V8.73H2.5C1.79 10.16 1.39 11.75 1.39 13.5s.4 3.34 1.11 4.77l3.74-2.85z" />
-          <path fill="#EA4335" d="M12 4.98c1.56 0 2.96.54 4.07 1.6l3.05-3.05C17.28 1.68 14.87 0 12 0 7.82 0 4.26 2.25 2.5 5.73l3.74 2.85c.81-2.44 3.08-4.25 5.76-4.25z" />
+        <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 24c2.87 0 5.28-.95 7.04-2.58l-3.57-2.77c-.95.64-2.17 1.02-3.47 1.02-2.68 0-4.95-1.81-5.76-4.25H2.5v2.85C4.26 21.75 7.82 24 12 24z"/>
+          <path fill="#FBBC05" d="M6.24 15.42c-.2-.6-.32-1.25-.32-1.92s.12-1.32.32-1.92V8.73H2.5C1.79 10.16 1.39 11.75 1.39 13.5s.4 3.34 1.11 4.77l3.74-2.85z"/>
+          <path fill="#EA4335" d="M12 4.98c1.56 0 2.96.54 4.07 1.6l3.05-3.05C17.28 1.68 14.87 0 12 0 7.82 0 4.26 2.25 2.5 5.73l3.74 2.85c.81-2.44 3.08-4.25 5.76-4.25z"/>
         </svg>
-        Google 帳號登入
-      </LoadingButton>
+        以 Google 帳號繼續
+      </button>
 
-      <p className="mt-8 text-center text-sm font-medium text-stone-500">
-        {isRegistering ? '已經有帳號了？ ' : '還沒有帳號？ '}
+      {/* 切換登入 / 註冊 */}
+      <p className="mt-7 text-center text-[12px]" style={{ color: '#B8A898' }}>
+        {isRegistering ? '已有帳號？ ' : '尚未加入？ '}
         <button
           onClick={() => { setIsRegistering(!isRegistering); setError(''); }}
-          className="text-stone-800 font-bold underline underline-offset-4 hover:text-stone-600 transition-colors"
+          className="font-semibold underline underline-offset-4 transition-colors"
+          style={{ color: '#6B5B45' }}
+          onMouseEnter={e => e.currentTarget.style.color = '#C5A140'}
+          onMouseLeave={e => e.currentTarget.style.color = '#6B5B45'}
         >
-          {isRegistering ? '登入' : '註冊'}
+          {isRegistering ? '登入' : '立即加入'}
         </button>
       </p>
     </div>
@@ -146,29 +170,57 @@ const LoginScreen = ({ isModal = false, onClose }) => {
   if (isModal) return content;
 
   return (
-    <div className="min-h-screen bg-[#F7F4EF] flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Background orbs */}
-      <div className="absolute top-[-60px] right-[-40px] w-72 h-72 rounded-full bg-amber-100/60 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-20 left-[-60px] w-56 h-56 rounded-full bg-stone-200/70 blur-3xl pointer-events-none" />
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden"
+      style={{ background: 'var(--cream)' }}>
 
-      {/* Hero branding */}
-      <div className="text-center mb-8 relative z-10 bb-slide-up">
-        <div className="w-[72px] h-[72px] bg-stone-800 rounded-[1.75rem] flex items-center justify-center mx-auto mb-5" style={{ boxShadow: '0 12px 40px rgba(28,25,23,0.22), 0 4px 8px rgba(28,25,23,0.12)' }}>
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" x2="19" y1="19" y2="13"/><line x1="16" x2="20" y1="16" y2="20"/><line x1="19" x2="21" y1="21" y2="19"/>
-            <polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" x2="9" y1="14" y2="10"/>
-          </svg>
+      {/* 大理石紋路光暈 */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[480px] h-[320px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse, rgba(197,161,64,0.07) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+
+      {/* 頂部羅馬紋樣線條 */}
+      <div className="absolute top-0 left-0 right-0 h-1 pointer-events-none"
+        style={{ background: 'linear-gradient(90deg, transparent 0%, #C5A140 30%, #D4B55A 50%, #C5A140 70%, transparent 100%)', opacity: 0.4 }} />
+
+      {/* ── 品牌區 ── */}
+      <div className="text-center mb-10 relative z-10 bb-slide-up">
+        {/* 裝飾性柱頭 */}
+        <div className="flex justify-center mb-6">
+          <CapitalOrnament />
         </div>
-        <h1 className="font-syne text-[26px] font-black tracking-[-0.03em] text-stone-800 mb-1.5">B-BATTLE</h1>
-        <p className="text-[11px] text-stone-400 font-semibold tracking-[0.18em] uppercase">意志力記帳戰場</p>
+
+        {/* 品牌名 */}
+        <h1 className="font-cinzel text-[2.2rem] font-black tracking-[0.15em] mb-2"
+          style={{ color: '#2A2218', letterSpacing: '0.15em' }}>
+          B·BATTLE
+        </h1>
+
+        {/* 金色細橫線 */}
+        <div className="flex items-center justify-center gap-3 my-3">
+          <div className="h-px w-16" style={{ background: 'linear-gradient(to right, transparent, #C5A140)' }} />
+          <div className="w-1 h-1 rounded-full" style={{ background: '#C5A140' }} />
+          <div className="h-px w-16" style={{ background: 'linear-gradient(to left, transparent, #C5A140)' }} />
+        </div>
+
+        <p className="text-[11px] tracking-[0.3em] uppercase font-cinzel"
+          style={{ color: '#B8A898', fontFamily: 'Cinzel, serif' }}>
+          意志力決鬥場
+        </p>
       </div>
 
-      {/* Card */}
-      <div className="relative z-10 w-full max-w-md bb-slide-up delay-100">
+      {/* ── 卡片 ── */}
+      <div className="relative z-10 w-full max-w-md bb-slide-up delay-200">
         {content}
       </div>
 
-      <p className="mt-6 text-[10px] text-stone-300 font-medium relative z-10 bb-fade-in delay-500 tracking-wider">這不是記帳，這是戰場</p>
+      {/* 底部裝飾文字 */}
+      <p className="mt-8 text-[10px] tracking-[0.25em] relative z-10 bb-fade-in delay-500 font-cinzel"
+        style={{ color: '#C5A140', opacity: 0.6, fontFamily: 'Cinzel, serif' }}>
+        GUARD THE PILLARS · DEFEND THE BUDGET
+      </p>
+
+      {/* 底部羅馬線 */}
+      <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+        style={{ background: 'linear-gradient(90deg, transparent, #D8CFC3 30%, #D8CFC3 70%, transparent)' }} />
     </div>
   );
 };

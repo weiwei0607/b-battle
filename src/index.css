@@ -1,82 +1,185 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&display=swap');
 
-* {
-  box-sizing: border-box;
+/* ── Roman Marble Design System ────────────────────────────
+   Color tokens:
+     --cream       #F2EDE3  primary background (warm cream)
+     --cream-card  #FAF8F4  card surface (lighter)
+     --stone-dark  #2A2218  primary text (warm near-black)
+     --stone-mid   #6B5B45  secondary text
+     --stone-light #B8A898  muted / placeholder
+     --stone-line  #D8CFC3  borders / dividers
+     --gold        #C5A140  accent (classical Roman gold)
+     --gold-light  #D4B55A  lighter gold
+     --gold-dim    rgba(197,161,64,0.12)  tinted surfaces
+   ──────────────────────────────────────────────────────── */
+
+* { box-sizing: border-box; }
+
+:root {
+  --cream:       #F2EDE3;
+  --cream-card:  #FAF8F4;
+  --stone-dark:  #2A2218;
+  --stone-mid:   #6B5B45;
+  --stone-light: #B8A898;
+  --stone-line:  #D8CFC3;
+  --gold:        #C5A140;
+  --gold-light:  #D4B55A;
+  --gold-dim:    rgba(197,161,64,0.12);
 }
 
 body {
-  background: #F7F4EF;
+  background-color: var(--cream);
+  color: var(--stone-dark);
+  font-family: 'Noto Serif TC', 'Noto Sans TC', serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Marble veining — two very faint diagonal lines */
+  background-image:
+    repeating-linear-gradient(
+      108deg,
+      transparent 0px,
+      transparent 220px,
+      rgba(200,192,178,0.09) 220px,
+      rgba(200,192,178,0.09) 221px,
+      transparent 221px,
+      transparent 280px,
+      rgba(210,200,185,0.06) 280px,
+      rgba(210,200,185,0.06) 281px
+    ),
+    repeating-linear-gradient(
+      72deg,
+      transparent 0px,
+      transparent 310px,
+      rgba(185,175,160,0.07) 310px,
+      rgba(185,175,160,0.07) 311px
+    );
 }
 
 /* ── Scrollbar ─────────────────────────────────── */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* ── Animation keyframes ───────────────────────── */
+/* ── Fonts ──────────────────────────────────────── */
+.font-cinzel      { font-family: 'Cinzel', serif; }
+.font-serif-tc    { font-family: 'Noto Serif TC', serif; }
+
+/* ── Keyframes ──────────────────────────────────── */
 @keyframes bb-fade-in {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 @keyframes bb-slide-up {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(18px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes bb-scale-in {
-  from { opacity: 0; transform: scale(0.93); }
+  from { opacity: 0; transform: scale(0.94); }
   to   { opacity: 1; transform: scale(1); }
-}
-@keyframes bb-shimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-@keyframes bb-pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.0); }
-  50%       { box-shadow: 0 0 0 6px rgba(217, 119, 6, 0.08); }
 }
 @keyframes floating {
   0%   { transform: translateY(0px); }
-  50%  { transform: translateY(-12px); }
+  50%  { transform: translateY(-10px); }
   100% { transform: translateY(0px); }
 }
-
-/* ── Animation utility classes ─────────────────── */
-.bb-fade-in    { animation: bb-fade-in  0.4s ease both; }
-.bb-slide-up   { animation: bb-slide-up 0.45s ease both; }
-.bb-scale-in   { animation: bb-scale-in 0.35s ease both; }
-.bb-float      { animation: floating 3s ease-in-out infinite; }
-
-.delay-100 { animation-delay: 0.1s; }
-.delay-200 { animation-delay: 0.2s; }
-.delay-300 { animation-delay: 0.3s; }
-.delay-500 { animation-delay: 0.5s; }
-.delay-700 { animation-delay: 0.7s; }
-
-/* ── Brand font (Syne) ─────────────────────────── */
-.font-syne { font-family: 'Syne', sans-serif; }
-
-/* ── Glass card ────────────────────────────────── */
-.glass-warm {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.7);
+@keyframes gold-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes gold-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(197,161,64,0); }
+  50%       { box-shadow: 0 0 12px 2px rgba(197,161,64,0.18); }
 }
 
-/* ── Shimmer gradient text ─────────────────────── */
-.text-shimmer {
+/* ── Animation utilities ────────────────────────── */
+.bb-fade-in  { animation: bb-fade-in  0.5s ease both; }
+.bb-slide-up { animation: bb-slide-up 0.55s ease both; }
+.bb-scale-in { animation: bb-scale-in 0.4s  ease both; }
+.bb-float    { animation: floating 3.5s ease-in-out infinite; }
+
+.delay-100 { animation-delay: 0.10s; }
+.delay-200 { animation-delay: 0.20s; }
+.delay-300 { animation-delay: 0.30s; }
+.delay-400 { animation-delay: 0.40s; }
+.delay-500 { animation-delay: 0.50s; }
+.delay-700 { animation-delay: 0.70s; }
+
+/* ── Gold text shimmer ───────────────────────────── */
+.text-gold-shimmer {
   background: linear-gradient(
     90deg,
-    #292524 0%,
-    #78716c 40%,
-    #292524 60%,
-    #78716c 100%
+    #A07E28 0%,
+    #D4B55A 35%,
+    #C5A140 60%,
+    #8B6A1E 100%
   );
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: bb-shimmer 3s linear infinite;
+  animation: gold-shimmer 4s linear infinite;
 }
+
+/* ── Roman divider ───────────────────────────────── */
+.roman-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.roman-divider::before,
+.roman-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--stone-line));
+}
+.roman-divider::after {
+  background: linear-gradient(to left, transparent, var(--stone-line));
+}
+
+/* ── Marble card surface ─────────────────────────── */
+.marble-card {
+  background: var(--cream-card);
+  border: 1px solid var(--stone-line);
+  box-shadow: 0 2px 12px rgba(42,34,24,0.06), 0 1px 3px rgba(42,34,24,0.04);
+}
+.marble-card-elevated {
+  background: var(--cream-card);
+  border: 1px solid var(--stone-line);
+  box-shadow: 0 8px 32px rgba(42,34,24,0.10), 0 2px 8px rgba(42,34,24,0.06),
+              inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+/* ── Gold button ─────────────────────────────────── */
+.btn-gold {
+  background: linear-gradient(135deg, #C5A140 0%, #A8861E 100%);
+  color: #FAF8F4;
+  border: none;
+  box-shadow: 0 4px 14px rgba(197,161,64,0.30), inset 0 1px 0 rgba(255,255,255,0.18);
+  transition: all 0.2s ease;
+}
+.btn-gold:hover { filter: brightness(1.08); }
+.btn-gold:active { transform: scale(0.97); }
+
+/* ── Stone button ────────────────────────────────── */
+.btn-stone {
+  background: var(--stone-dark);
+  color: var(--cream);
+  box-shadow: 0 4px 14px rgba(42,34,24,0.22), inset 0 1px 0 rgba(255,255,255,0.07);
+  transition: all 0.2s ease;
+}
+.btn-stone:hover { filter: brightness(1.12); }
+.btn-stone:active { transform: scale(0.97); }
+
+/* ── Input ────────────────────────────────────────── */
+.input-roman {
+  background: var(--cream);
+  border: 1px solid var(--stone-line);
+  color: var(--stone-dark);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input-roman:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(197,161,64,0.12);
+}
+.input-roman::placeholder { color: var(--stone-light); }
