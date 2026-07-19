@@ -2,6 +2,8 @@
 
 > 不是無聊的記帳 App，是和 AI 隊友一起「打敗衝動消費魔」的戰鬥遊戲
 
+**[Live Demo → b-battle.vercel.app](https://b-battle.vercel.app)**
+
 <p align="center">
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react" />
   <img src="https://img.shields.io/badge/Firebase-12-FFCA28?logo=firebase" />
@@ -123,10 +125,12 @@ npm install
 
 # 設定環境變數
 cp .env.example .env
-# 填入 VITE_GEMINI_API_KEY 和 Firebase 配置
+# 填入 VITE_GEMINI_API_KEY（Firebase 配置已內建於 src/firebase.js）
 
 npm run dev
 ```
+
+部署：Vercel（`main` push 後自動部署），另含 Firebase Hosting 配置（`firebase.json`）。
 
 ---
 

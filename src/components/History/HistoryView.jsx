@@ -293,7 +293,7 @@ const HistoryView = ({
   const getMonthKey = (dateStr) => {
     if (!dateStr) return '';
     // Handle both '2024-05-15' and '2024/05/15'
-    const parts = dateStr.split(/[-\/]/);
+    const parts = dateStr.split(/[-/]/);
     if (parts.length >= 2) {
       const year = parts[0];
       const month = parts[1].padStart(2, '0');

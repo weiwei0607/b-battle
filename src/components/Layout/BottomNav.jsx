@@ -18,7 +18,6 @@ const BottomNav = ({ view, setView, lang }) => {
         background: '#FAF8F4',
         border: '1px solid #D8CFC3',
         boxShadow: '0 8px 32px rgba(42,34,24,0.12), 0 2px 8px rgba(42,34,24,0.06), inset 0 1px 0 rgba(255,255,255,0.9)',
-        paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))',
         padding: '0.375rem',
         paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))',
       }}
