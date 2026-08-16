@@ -16,14 +16,13 @@ import { useCallback } from 'react';
 import { useBattleStore } from '../stores/useBattleStore';
 import { useUserStore } from '../stores/useUserStore';
 
-const GEMINI_ENDPOINT =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
-
-const geminiPost = async (apiKey, body) => {
-  const res = await fetch(`${GEMINI_ENDPOINT}?key=${apiKey}`, {
+// 改走伺服器端 proxy（/api/gemini），金鑰留在後端、不進前端 bundle。
+// 第一個參數 apiKey 保留只為相容既有呼叫端（值不再用於認證）。
+const geminiPost = async (_apiKey, body) => {
+  const res = await fetch('/api/gemini', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ body, model: 'gemini-2.5-flash-lite' }),
   });
   return res.json();
 };

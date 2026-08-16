@@ -267,6 +267,7 @@ export const useFirebaseSync = () => {
 
       const payload = {
         createdAt: Date.now(),
+        creator: user.uid,
         players: {
           ...bots,
           [user.uid]: { uid: user.uid, name: userName, hpSurvival: 100, hpProgress: 100, hpDesire: 100, hpExpedition: 100, lastUpdate: Date.now() },

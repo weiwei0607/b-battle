@@ -25,7 +25,22 @@
     <meta property="og:image" content="https://cdn.iconscout.com/icon/free/png-256/free-swords-icon-download-in-svg-png-gif-file-formats--weapon-battle-armor-war-viking-pack-role-playing-icons-2651347.png" />
   </head>
   <body>
-    <div id="root"></div>
+    <style>
+      /* 首屏骨架：bundle 載入前先顯示，React 掛載後被取代 */
+      #boot{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+        gap:16px;background:#F0EBE4;color:#3A322B;font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif}
+      #boot .ring{width:36px;height:36px;border:2px solid rgba(58,50,43,.18);border-top-color:#3A322B;
+        border-radius:50%;animation:bspin .9s linear infinite}
+      #boot .t{font-size:.9rem;font-weight:700;letter-spacing:.28em}
+      #boot .s{font-size:.74rem;color:#9A8F84;letter-spacing:.05em}
+      @keyframes bspin{to{transform:rotate(360deg)}}
+      @media (prefers-reduced-motion:reduce){#boot .ring{animation:none}}
+    </style>
+    <div id="root"><div id="boot">
+      <div class="ring"></div>
+      <div class="t">B·BATTLE</div>
+      <div class="s">正在整備戰場</div>
+    </div></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

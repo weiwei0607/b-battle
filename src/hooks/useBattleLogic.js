@@ -20,7 +20,8 @@ import { useBattleStore } from '../stores/useBattleStore';
 import { useFirebaseSync } from './useFirebaseSync';
 import { useAIComment } from './useAIComment';
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || window.VITE_GEMINI_API_KEY || '';
+// AI 走 /api/gemini proxy，金鑰在後端。這裡用非空哨兵值讓既有 `if (!apiKey)` 守衛通過。
+const apiKey = 'server';
 
 const TZ = 'Asia/Taipei';
 const taipeiDateStr = (d = new Date()) =>
